@@ -4,6 +4,9 @@ from pyairtable import Table
 from discord import app_commands
 from discord import Status
 import random
+import asyncio
+
+
 
 # setup discord connection
 intents = discord.Intents(messages=True, guilds=True)
@@ -47,8 +50,39 @@ async def on_message(message):
               description="Get a new question",
               guild=discord.Object(id=GUILD_ID))
 async def new_command(interaction):
+    member = interaction.user
+    channel = interaction.channel
+  
+    to_send = f'Suriel acknowledges your choice {member.mention}'
+    await interaction.response.send_message(to_send)
+
+    await asyncio.sleep(2)
+
+    to_send = 'Your path begins in 5...'
+    await channel.send(to_send)
+    await asyncio.sleep(800e-3)
+
+    to_send = '4'
+    await channel.send(to_send)
+    await asyncio.sleep(800e-3)
+
+    to_send = '3'
+    await channel.send(to_send)
+    await asyncio.sleep(800e-3)
+
+    to_send = '2'
+    await channel.send(to_send)
+    await asyncio.sleep(800e-3)
+
+    to_send = '1'
+    await channel.send(to_send)
+    await channel.purge(limit=100)
+
+    await channel.send("15:00 remain")
+    await channel.send("14:59 remain")
+
     random_question = random.choice(question_table.all())
-    await interaction.response.send_message("Here's your question: {}".format(
+    await channel.send("Here's your question: {}".format(
         random_question['fields']['link']))
 
 
@@ -65,7 +99,16 @@ async def on_member_join(member):
     new_channel = await create_channel(member)
 
     # send them a welcome message from the bot in their channel
-    to_send = f'Suriel senses your weakness {member.mention} \n Suriel invites you to /train.'
+    to_send = f'Suriel senses your weakness {member.mention}'
+    await new_channel.send(to_send)
+
+    await asyncio.sleep(1)
+
+    to_send = 'Suriel invites you to train on the path.'
+    await new_channel.send(to_send)
+
+    await asyncio.sleep(1)
+    to_send = 'Suriel suggests /new'
     await new_channel.send(to_send)
 
     # in #general, send the new member a message about their new channel
