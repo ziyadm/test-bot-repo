@@ -1,5 +1,6 @@
 { pkgs }: {
   deps = [
+    pkgs.import uuid
     pkgs.python38Full
   ];
   env = {
