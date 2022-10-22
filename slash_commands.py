@@ -45,8 +45,7 @@ async def new_command(interaction):
         "player_id": player['fields']['user_id'],
         "reviewer_id": random_reviewer['fields']['user_id'],
         "question_id": next_question['fields']['question_id'],
-        "step": "design", 
-        "status": "new"
+        "status": "design"
     })
 
     # create new channel for question and invite user
@@ -62,6 +61,9 @@ async def new_command(interaction):
     return await interaction.followup.send(to_send)
 
 async def submit_command(interaction):
+    # CR hmir: only allow submit in mission channel
+    # CR hmir: we probably wanna rename submit to fit the "mission"/"quest" theme
+
     return await interaction.followup.send("Handle submission")
 
 async def delete_command(interaction):
