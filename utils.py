@@ -71,6 +71,7 @@ async def get_previous_questions(member):
   
     previously_seen_missions_formula = match({"player_id": user['fields']['user_id']})
     previously_seen_missions = missions_table.all(formula=previously_seen_missions_formula)
+  
     return list(map(lambda value: value['fields']['question_id'], previously_seen_missions))
   
 async def get_next_question(member):

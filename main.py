@@ -14,10 +14,7 @@ from events import on_member_join_event, on_presence_update_event
 # ================================
 # === setup discord connection ===
 # ================================
-intents = discord.Intents(messages=True, guilds=True)
-intents.message_content = True
-intents.members = True
-intents.presences = True
+intents = discord.Intents(messages=True, guilds=True, message_content=True, members=True, presences=True)
 discord_client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(discord_client)
 
@@ -25,7 +22,7 @@ tree = app_commands.CommandTree(discord_client)
 # === constants ==
 # ================================
 # discord server id
-GUILD_ID = 1032341469551415318  
+GUILD_ID = 1032341469551415318
 
 # ================================
 # === register slash commands ====
@@ -68,5 +65,4 @@ async def on_member_join(member):
 async def on_presence_update(before, after):
     return await on_presence_update_event(before, after)
 
-# hanis comment
 discord_client.run(os.getenv("TOKEN"))
