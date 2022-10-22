@@ -54,13 +54,12 @@ async def create_channel(member, **kwargs):
     }
 
     channel_name = kwargs['channel_name'] if 'channel_name'in kwargs else member.name
-
-    return await member.guild.create_text_channel(channel_name, overwrites)
+    return await member.guild.create_text_channel(channel_name, overwrites=overwrites)
 
 async def add_new_user(member):
-    return await users_table.create({
-        "discord_id": member.id,
-        "discord_name": member.name
+    users_table.create({
+        'discord_id': str(member.id),
+        'discord_name': member.name
     })
 
 async def questions_already_asked(member):
