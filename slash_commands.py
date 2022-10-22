@@ -25,13 +25,13 @@ async def new_command(interaction):
     question_id = question['fields']['question_id']
 
     missions_table.create({
-        'discord_channel_id': interaction.channel_id,
-        'player_discord_id': player.id,
+        'discord_channel_id': str(interaction.channel_id),
+        'player_discord_id': str(player.id),
         'question_id': question_id,
         'status': 'design'
     })
 
-    channel = await utils.create_channel(player, channel_name=f'{player.mention}-{question_id}')
+    channel = await utils.create_channel(player, channel_name=f'{player.name}-{question_id}')
     leetcode_url = question['fields']['leetcode_url']
     await channel.send(f"Here's your question: {leetcode_url}")
 
