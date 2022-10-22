@@ -3,3 +3,5 @@ __pycache__
 .git
 venv
 .breakpoints
+poetry.lock
+*~undo-tree~
