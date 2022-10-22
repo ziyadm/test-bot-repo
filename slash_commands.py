@@ -36,7 +36,7 @@ async def new_command(interaction):
     player = users_table.first(formula=find_matching_player_formula)
   
     print("Member: {}".format(member))
-    print("Question: {}".format(random_question))
+    print("Question: {}".format(next_question))
     print("Reviewer: {}".format(random_reviewer))
     print("Player: {}".format(player))
   
@@ -44,19 +44,19 @@ async def new_command(interaction):
         "mission_id": str(uuid.uuid4()),
         "player_id": player['fields']['user_id'],
         "reviewer_id": random_reviewer['fields']['user_id'],
-        "question_id": random_question['fields']['question_id'],
+        "question_id": next_question['fields']['question_id'],
         "step": "design", 
         "status": "new"
     })
 
     # create new channel for question and invite user
-    question_name = random_question['fields']['link'].split('problems/')[-1].strip('/')
+    question_name = next_question['fields']['link'].split('problems/')[-1].strip('/')
     print("Question Name: {}".format(question_name))
     question_channel = await create_channel(member, channel_name=question_name)
     
     # message in channel with new question details
     await question_channel.send("Here's your question: {}".format(
-        random_question['fields']['link']))
+        next_question['fields']['link']))
 
     to_send = f'Monarch Suriel has noticed {member.mention} and invites them to {question_channel.mention}'
     return await interaction.followup.send(to_send)
