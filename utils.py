@@ -64,3 +64,26 @@ async def add_new_user(member):
         "discord_id": member.id,
         "role": "player"
     })
+
+async def get_previous_questions(member):
+    this_user_formula = match({"discord_name": member.name, "discord_id": member.id})
+    user = users_table.first(formula=this_user_formula)
+  
+    previously_seen_missions_formula = match({"player_id": user['fields']['user_id']})
+    previously_seen_missions = missions_table.all(formula=previously_seen_missions_formula)
+    return list(map(lambda value: value['fields']['question_id'], previously_seen_missions))
+  
+async def get_next_question(member):
+    # find previously seen questions (completed / open)
+    previous_questions = await get_previous_questions(member)
+
+    print("Previous: {}".format(previous_questions))
+
+    # pick a random new question not previously seen
+    all_questions = questions_table.all()
+    for question in all_questions:
+        if question['fields']['question_id'] not in previous_questions:
+            print("Current: {}".format(question['fields']))
+            return question
+
+    return None
