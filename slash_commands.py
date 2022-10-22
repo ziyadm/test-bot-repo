@@ -5,9 +5,8 @@ from discord import app_commands
 from discord import Status
 import random
 import asyncio
-import uuid
+import utils
 from pyairtable.formulas import match
-from utils import inform_player_new_mission, create_channel, add_new_user, get_next_question
 
 # setup airtable connection
 airtable_api_key = os.environ["AIRTABLE_API_KEY"]
@@ -17,53 +16,31 @@ users_table = Table(airtable_api_key, 'app8xDpApplv8WrVJ', 'users')
 missions_table = Table(airtable_api_key, 'app8xDpApplv8WrVJ', 'missions')
 
 async def new_command(interaction):
-    # tell user what is about to happen
-    # await inform_player_new_mission(interaction)
+    player = interaction.user
+    question = await utils.get_unasked_question(player)
 
-    # pick a question and update database
-    member = interaction.user
-    next_question = await get_next_question(member)
+    if not question:
+        return await interaction.followup.send('Monarch Suriel has no new training for you')
 
-    # we have no new questions for them
-    if not next_question:
-        to_send = f'Monarch Suriel has no new training for {member.mention}'
-        return await interaction.followup.send(to_send)
+    question_id = question['fields']['question_id']
 
-    find_reviewer_formula = match({"role": "reviewer"})
-    random_reviewer = random.choice(users_table.all(formula=find_reviewer_formula))
-
-    find_matching_player_formula = match({"discord_name": member.name, "discord_id": member.id})
-    player = users_table.first(formula=find_matching_player_formula)
-  
-    print("Member: {}".format(member))
-    print("Question: {}".format(next_question))
-    print("Reviewer: {}".format(random_reviewer))
-    print("Player: {}".format(player))
-  
     missions_table.create({
-        "mission_id": str(uuid.uuid4()),
-        "player_id": player['fields']['user_id'],
-        "reviewer_id": random_reviewer['fields']['user_id'],
-        "question_id": next_question['fields']['question_id'],
-        "status": "design"
+        'discord_channel_id': str(interaction.channel_id),
+        'player_discord_id': str(player.id),
+        'question_id': question_id,
+        'status': 'design'
     })
 
-    # create new channel for question and invite user
-    question_name = next_question['fields']['link'].split('problems/')[-1].strip('/')
-    print("Question Name: {}".format(question_name))
-    question_channel = await create_channel(member, channel_name=question_name)
-    
-    # message in channel with new question details
-    await question_channel.send("Here's your question: {}".format(
-        next_question['fields']['link']))
+    channel = await utils.create_channel(player, channel_name=f'{player.name}-{question_id}')
+    leetcode_url = question['fields']['leetcode_url']
+    await channel.send(f"Here's your question: {leetcode_url}")
 
-    to_send = f'Monarch Suriel has noticed {member.mention} and invites them to {question_channel.mention}'
-    return await interaction.followup.send(to_send)
+    return await interaction.followup.send(f'Monarch Suriel has noticed {player.mention} and invites them to {channel.mention}')
 
 async def submit_command(interaction):
     # CR hmir: only allow submit in mission channel
     # CR hmir: we probably wanna rename submit to fit the "mission"/"quest" theme
-
+    
     return await interaction.followup.send("Handle submission")
 
 async def delete_command(interaction):

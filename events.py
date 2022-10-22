@@ -1,22 +1,19 @@
 import discord
 import os
 from pyairtable import Table
-from discord import app_commands
 from discord import Status
-import random
 import asyncio
-import uuid
+import utils
 from pyairtable.formulas import match
-from utils import inform_player_new_mission, create_channel, add_new_user
 
 
 # when a new user joins the discord server
 async def on_member_join_event(member):
     # add this user to airtable
-    user = await add_new_user(member)
+    user = await utils.add_new_user(member)
   
     # create a new channel for this new member
-    new_channel = await create_channel(member, channel_name="{}-home".format(member.name))
+    new_channel = await utils.create_channel(member, channel_name="{}-home".format(member.name))
 
     # send them a welcome message from the bot in their channel
     to_send = f'Suriel senses your weakness {member.mention}'
