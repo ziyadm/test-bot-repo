@@ -7,7 +7,7 @@ import random
 import asyncio
 import uuid
 from pyairtable.formulas import match
-from utils import inform_player_new_mission, create_channel, add_new_user
+from utils import inform_player_new_mission, create_channel, add_new_user, get_next_question
 
 # setup airtable connection
 airtable_api_key = os.environ["AIRTABLE_API_KEY"]
@@ -22,7 +22,12 @@ async def new_command(interaction):
 
     # pick a question and update database
     member = interaction.user
-    random_question = random.choice(questions_table.all())
+    next_question = await get_next_question(member)
+
+    # we have no new questions for them
+    if not next_question:
+        to_send = f'Monarch Suriel has no new training for {member.mention}'
+        return await interaction.followup.send(to_send)
 
     find_reviewer_formula = match({"role": "reviewer"})
     random_reviewer = random.choice(users_table.all(formula=find_reviewer_formula))
