@@ -65,5 +65,4 @@ async def on_member_join(member):
 async def on_presence_update(before, after):
     return await on_presence_update_event(before, after)
 
-# hani test comment
 discord_client.run(os.getenv("TOKEN"))
