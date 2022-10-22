@@ -3,11 +3,6 @@ import os
 from pyairtable import Table
 from discord import app_commands
 from discord import Status
-import random
-import asyncio
-import uuid
-from pyairtable.formulas import match
-from utils import inform_player_new_mission, create_channel, add_new_user
 from slash_commands import new_command, submit_command, delete_command
 from events import on_member_join_event, on_presence_update_event
 

@@ -17,34 +17,6 @@ questions_table = Table(airtable_api_key, 'app8xDpApplv8WrVJ', 'questions')
 users_table = Table(airtable_api_key, 'app8xDpApplv8WrVJ', 'users')
 missions_table = Table(airtable_api_key, 'app8xDpApplv8WrVJ', 'missions')
 
-async def inform_player_new_mission(interaction):
-    member = interaction.user
-    channel = interaction.channel
-    to_send = f'Suriel acknowledges your choice {member.mention}'
-    await interaction.response.send_message(to_send)
-
-    await asyncio.sleep(1)
-
-    to_send = 'Your path begins in 5...'
-    await channel.send(to_send)
-    await asyncio.sleep(500e-3)
-
-    to_send = '4'
-    await channel.send(to_send)
-    await asyncio.sleep(500e-3)
-
-    to_send = '3'
-    await channel.send(to_send)
-    await asyncio.sleep(500e-3)
-
-    to_send = '2'
-    await channel.send(to_send)
-    await asyncio.sleep(500e-3)
-
-    to_send = '1'
-    await channel.send(to_send)
-    await channel.purge(limit=6)
-
 async def create_channel(member, **kwargs):
     overwrites = {
         member.guild.default_role:
@@ -62,13 +34,13 @@ async def add_new_user(member):
         'discord_name': member.name
     })
 
-async def questions_already_asked(member):
-    user = users_table.first(formula=match({"discord_id": member.id}))
+async def get_questions_already_asked(member):
+    user = users_table.first(formula=match({'discord_id': member.id}))
     missions = missions_table.all(formula=match({"player_discord_id": user['fields']['discord_id']}))
     return [mission['fields']['question_id'] for mission in missions]
   
 async def get_unasked_question(member):
-    questions_already_asked = await questions_already_asked(member)
+    questions_already_asked = await get_questions_already_asked(member)
 
     # pick a random new question not previously seen
     for question in questions_table.all():

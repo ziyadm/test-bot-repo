@@ -5,9 +5,8 @@ from discord import app_commands
 from discord import Status
 import random
 import asyncio
-import uuid
+import utils
 from pyairtable.formulas import match
-from utils import inform_player_new_mission, create_channel, add_new_user
 
 # setup airtable connection
 airtable_api_key = os.environ["AIRTABLE_API_KEY"]
@@ -18,7 +17,7 @@ missions_table = Table(airtable_api_key, 'app8xDpApplv8WrVJ', 'missions')
 
 async def new_command(interaction):
     player = interaction.user
-    question = await utils.get_unasked_question(member)
+    question = await utils.get_unasked_question(player)
 
     if not question:
         return await interaction.followup.send('Monarch Suriel has no new training for you')
@@ -32,7 +31,7 @@ async def new_command(interaction):
         'status': 'design'
     })
 
-    channel = await create_channel(member, channel_name=f'{player.mention}-{question_id}')
+    channel = await utils.create_channel(player, channel_name=f'{player.mention}-{question_id}')
     leetcode_url = question['fields']['leetcode_url']
     await channel.send(f"Here's your question: {leetcode_url}")
 
