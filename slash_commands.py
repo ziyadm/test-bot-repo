@@ -9,11 +9,12 @@ import utils
 from pyairtable.formulas import match
 
 # setup airtable connection
-airtable_api_key = os.environ["AIRTABLE_API_KEY"]
-interviews_table = Table(airtable_api_key, 'app8xDpApplv8WrVJ', 'interview')
-questions_table = Table(airtable_api_key, 'app8xDpApplv8WrVJ', 'questions')
-users_table = Table(airtable_api_key, 'app8xDpApplv8WrVJ', 'users')
-missions_table = Table(airtable_api_key, 'app8xDpApplv8WrVJ', 'missions')
+airtable_api_key = os.environ['airtable_api_key']
+airtable_database_id = os.environ['airtable_database_id']
+interviews_table = Table(airtable_api_key, airtable_database_id, 'interview')
+questions_table = Table(airtable_api_key, airtable_database_id, 'questions')
+users_table = Table(airtable_api_key, airtable_database_id, 'users')
+missions_table = Table(airtable_api_key, airtable_database_id, 'missions')
 
 async def new_command(interaction):
     player = interaction.user

@@ -11,11 +11,11 @@ from pyairtable.formulas import match
 # ================================
 # === setup airtable connection ==
 # ================================
-airtable_api_key = os.environ["AIRTABLE_API_KEY"]
-interviews_table = Table(airtable_api_key, 'app8xDpApplv8WrVJ', 'interview')
-questions_table = Table(airtable_api_key, 'app8xDpApplv8WrVJ', 'questions')
-users_table = Table(airtable_api_key, 'app8xDpApplv8WrVJ', 'users')
-missions_table = Table(airtable_api_key, 'app8xDpApplv8WrVJ', 'missions')
+airtable_api_key = os.environ['airtable_api_key']
+interviews_table = Table(airtable_api_key, airtable_api_key, 'interview')
+questions_table = Table(airtable_api_key, airtable_api_key, 'questions')
+users_table = Table(airtable_api_key, airtable_api_key, 'users')
+missions_table = Table(airtable_api_key, airtable_api_key, 'missions')
 
 async def create_channel(member, **kwargs):
     overwrites = {
