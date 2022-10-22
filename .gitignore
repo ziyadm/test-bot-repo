@@ -5,3 +5,4 @@ venv
 .breakpoints
 poetry.lock
 *~undo-tree~
+.#*
