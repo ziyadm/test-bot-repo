@@ -6,15 +6,10 @@ import utils
 import os
 
 import discord
-from pyairtable import Table
 
 
 airtable_client = AirtableClient(api_key = os.environ['airtable_api_key'],
                                  base_id = os.environ['airtable_database_id'])
-
-missions_table = Table(os.environ['airtable_api_key'],
-                       os.environ['airtable_database_id'],
-                       'missions')
 
 async def new_command(interaction):
     player = interaction.user
@@ -23,26 +18,26 @@ async def new_command(interaction):
     if not question:
         return await interaction.followup.send('Monarch Suriel has no new training for you')
 
-    question_id = question['fields']['question_id']
-    channel = await utils.create_channel(player, channel_name=f'{player.name}-{question_id}')
-    
-    missions_table.create({
-        'discord_channel_id': str(channel.id),
-        'player_discord_id': str(player.id),
-        'question_id': question_id,
-        'mission_status': 'design'
-    })
+    channel = await utils.create_channel(player, channel_name=f'{player.name}-{question.question_id}')
 
-    leetcode_url = question['fields']['leetcode_url']
-    await channel.send(f"Here's your question: {leetcode_url}")
+    await Mission.create(airtable_client = airtable_client,
+                         discord_channel_id = str(channel.id),
+                         player_discord_id = str(player.id),
+                         reviewer_discord_id = None,
+                         question_id = question.question_id,
+                         mission_status = MissionStatus.design(),
+                         design = None,
+                         code = None)
+
+    await channel.send(f"""Here's your question: {question.leetcode_url}""")
 
     return await interaction.followup.send(f'Monarch Suriel has noticed {player.mention} and invites them to {channel.mention}')
 
 async def submit_command(interaction):
     # CR hmir: only allow submit in mission channel
     # CR hmir: we probably wanna rename submit to fit the "mission"/"quest" theme
-    mission = await Mission.get_one(airtable_client = airtable_client,
-                                    discord_channel_id = str(interaction.channel_id))
+    mission = await Mission.one(airtable_client = airtable_client,
+                                discord_channel_id = str(interaction.channel_id))
 
     if not (mission.mission_status.is_design() or
             mission.mission_status.is_code()):
