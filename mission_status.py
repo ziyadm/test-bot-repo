@@ -1,9 +1,9 @@
 class MissionStatus:
     design_val = 1
     design_review_val = 2
-    code = 3
-    code_review = 4
-    completed = 5
+    code_val = 3
+    code_review_val = 4
+    completed_val = 5
 
     def __init__(self, value):
         self.value = value
@@ -43,8 +43,20 @@ class MissionStatus:
     def is_completed(self):
         return self.value == MissionStatus.completed_val
 
+    def __str__(self):
+        if self.is_design():
+            return 'design'
+        elif self.is_design_review():
+            return 'design-review'
+        elif self.is_code():
+            return 'code'
+        elif self.is_code_review():
+            return 'code-review'
+        elif self.is_completed():
+            return 'completed'
+
     @staticmethod
-    def of_string(s):
+    def of_string(s: str):
         if s == 'design':
             return MissionStatus.design()
         elif s == 'design-review':
