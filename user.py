@@ -4,6 +4,7 @@ from airtable_client import AirtableClient
 from rank import Rank
 
 import pyairtable
+import pyairtable.formulas
 
 
 class User:

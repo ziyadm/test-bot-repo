@@ -1,17 +1,32 @@
-import discord
-import os
-from pyairtable import Table
-from discord import Status
-import asyncio
+from airtable_client import AirtableClient
+from rank import Rank
+from user import User
 import utils
-from pyairtable.formulas import match
 
+import asyncio
+import os
+
+import discord
+
+# CR hmir: pull airtable client stuff into main and pass it around
+airtable_client = AirtableClient(api_key = os.environ['airtable_api_key'],
+                                 base_id = os.environ['airtable_database_id'])
 
 # when a new user joins the discord server
 async def on_member_join_event(member):
-    # add this user to airtable
-    user = await utils.add_new_user(member)
-  
+    user = await User.create(airtable_client = airtable_client,
+                             discord_id = str(member.id),
+                             discord_name = member.name,
+                             rank = Rank(value = Rank.foundation))
+    
+    overwrites = {
+        member.guild.default_role:
+        discord.PermissionOverwrite(read_messages=False),
+        member.guild.me: discord.PermissionOverwrite(read_messages=True),
+        member: discord.PermissionOverwrite(read_messages=True),
+    }
+
+    channel = await member.guild.create_text_channel(channel_name, overwrites=overwrites)
     # create a new channel for this new member
     new_channel = await utils.create_channel(member, channel_name="{}-home".format(member.name))
 
@@ -34,7 +49,7 @@ async def on_member_join_event(member):
 
 # when a user goes online/offline
 async def on_presence_update_event(before, after):
-    if before.status == Status.offline and after.status == Status.online:
+    if before.status == discord.Status.offline and after.status == discord.Status.online:
         print(
             "Handle user going online. Message in their private room and ask to continue training."
         )
