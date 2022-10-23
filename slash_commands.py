@@ -1,3 +1,4 @@
+from airtable_client import AirtableClient
 from mission import Mission
 from mission_status import MissionStatus
 
@@ -11,10 +12,12 @@ import asyncio
 import utils
 from pyairtable.formulas import match
 
-# setup airtable connection
-airtable_api_key = os.environ['airtable_api_key']
-airtable_database_id = os.environ['airtable_database_id']
-missions_table = Table(airtable_api_key, airtable_database_id, 'missions')
+airtable_client = AirtableClient(api_key = os.environ['airtable_api_key'],
+                                 base_id = os.environ['airtable_database_id'])
+
+missions_table = Table(os.environ['airtable_api_key'],
+                       os.environ['airtable_database_id'],
+                       'missions')
 
 async def new_command(interaction):
     player = interaction.user
@@ -41,11 +44,8 @@ async def new_command(interaction):
 async def submit_command(interaction):
     # CR hmir: only allow submit in mission channel
     # CR hmir: we probably wanna rename submit to fit the "mission"/"quest" theme
-    mission = Mission(discord_channel_id = 'test-discord-channel-id',
-                      player_discord_id = 'test-player-discord-id',
-                      reviewer_discord_id = None,
-                      question_id = 'test-question-id',
-                      mission_status = MissionStatus.design())
+    mission = await Mission.get(airtable_client = airtable_client,
+                                discord_channel_id = str(interaction.channel_id))
     
     print(mission.discord_channel_id)
     print(mission.player_discord_id)

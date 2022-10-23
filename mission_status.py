@@ -28,22 +28,30 @@ class MissionStatus:
     def completed():
         return MissionStatus(value = MissionStatus.completed_val)
 
-    @staticmethod
     def is_design(self):
         return self.value == MissionStatus.design_val
 
-    @staticmethod
     def is_design_review(self):
         return self.value == MissionStatus.design_review_val
 
-    @staticmethod
     def is_code(self):
         return self.value == MissionStatus.code_val
 
-    @staticmethod
     def is_code_review(self):
         return self.value == MissionStatus.code_review_val
 
-    @staticmethod
     def is_completed(self):
         return self.value == MissionStatus.completed_val
+
+    @staticmethod
+    def of_string(s):
+        if s == 'design':
+            return MissionStatus.design()
+        elif s == 'design-review':
+            return MissionStatus.design_review()
+        elif s == 'code':
+            return MissionStatus.code()
+        elif s == 'code-review':
+            return MissionStatus.code_review()
+        elif s == 'completed':
+            return MissionStatus.completed()

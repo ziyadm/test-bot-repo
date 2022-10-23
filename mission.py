@@ -1,9 +1,15 @@
+from typing import Optional
+
+from airtable_client import AirtableClient
 from mission_status import MissionStatus
 
-from typing import Optional
+
+import pyairtable
 
 
 class Mission:
+
+    table_name = 'missions'
 
     def __init__(self,
                  discord_channel_id: str,
@@ -16,3 +22,22 @@ class Mission:
                      self.reviewer_discord_id = reviewer_discord_id
                      self.question_id = question_id
                      self.mission_status = mission_status
+
+
+    @staticmethod
+    async def get(airtable_client: AirtableClient,
+                  discord_channel_id: str):
+                      table = airtable_client.table(table_name = Mission.table_name)
+                      response = await table.all(formula = pyairtable.formulas.match({
+                          'discord_channel_id': discord_channel_id}))
+                      
+                      if len(response) != 1:
+                          return None
+
+                      response = response[0]['fields']
+                          
+                      return Mission(discord_channel_id = discord_channel_id,
+                                     player_discord_id = response['player_discord_id'],
+                                     reviewer_discord_id = response['reviewer_discord_id'],
+                                     question_id = response['question_id'],
+                                     mission_status = MissionStatus.of_string(response['mission_status']))
