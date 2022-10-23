@@ -25,19 +25,20 @@ class Mission:
 
 
     @staticmethod
-    async def get(airtable_client: AirtableClient,
-                  discord_channel_id: str):
-                      table = airtable_client.table(table_name = Mission.table_name)
-                      response = await table.all(formula = pyairtable.formulas.match({
-                          'discord_channel_id': discord_channel_id}))
-                      
-                      if len(response) != 1:
-                          return None
-
-                      response = response[0]['fields']
+    async def get_one(airtable_client: AirtableClient,
+                      discord_channel_id: str):
+                          table = airtable_client.table(table_name = Mission.table_name)
+                          response = table.all(formula = pyairtable.formulas.match({
+                              'discord_channel_id': discord_channel_id}))
                           
-                      return Mission(discord_channel_id = discord_channel_id,
-                                     player_discord_id = response['player_discord_id'],
-                                     reviewer_discord_id = response['reviewer_discord_id'],
-                                     question_id = response['question_id'],
-                                     mission_status = MissionStatus.of_string(response['mission_status']))
+                          if len(response) != 1:
+                              return None
+    
+                          response = response[0]['fields']
+                              
+                          return Mission(discord_channel_id = discord_channel_id,
+                                         player_discord_id = response['player_discord_id'],
+                                         reviewer_discord_id = response.get('reviewer_discord_id',
+                                                                            None),
+                                         question_id = response['question_id'],
+                                         mission_status = MissionStatus.of_string(response['mission_status']))

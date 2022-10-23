@@ -1,16 +1,13 @@
 from airtable_client import AirtableClient
 from mission import Mission
 from mission_status import MissionStatus
+import utils
+
+import os
 
 import discord
-import os
 from pyairtable import Table
-from discord import app_commands
-from discord import Status
-import random
-import asyncio
-import utils
-from pyairtable.formulas import match
+
 
 airtable_client = AirtableClient(api_key = os.environ['airtable_api_key'],
                                  base_id = os.environ['airtable_database_id'])
@@ -44,14 +41,23 @@ async def new_command(interaction):
 async def submit_command(interaction):
     # CR hmir: only allow submit in mission channel
     # CR hmir: we probably wanna rename submit to fit the "mission"/"quest" theme
-    mission = await Mission.get(airtable_client = airtable_client,
-                                discord_channel_id = str(interaction.channel_id))
+    mission = await Mission.get_one(airtable_client = airtable_client,
+                                    discord_channel_id = str(interaction.channel_id))
+
+    if not (mission.mission_status.is_design() or
+            mission.mission_status.is_code()):
+                # CR hmir: update text
+                return await interaction.followup.send('Your mission depends on your teammates, wait for them!')
+
+    channel = interaction.channel
     
-    print(mission.discord_channel_id)
-    print(mission.player_discord_id)
-    print(mission.reviewer_discord_id)
-    print(mission.question_id)
-    print(mission.mission_status)
+    messages = [message async for message in channel.history() if message.type == discord.MessageType.default]
+    if len(messages) == 0:
+        # CR hmir: maybe we can frame missions as you having "minions" who you have to give instructions to to solve some problems you come across in your journey? follow up with ziyad
+        return await interaction.followup.send('You need to instruct your minions!')
+
+    last_message = messages[0].content
+    print(last_message)
     
     return await interaction.followup.send("Handle submission")
 
