@@ -1,4 +1,5 @@
 from airtable_client import AirtableClient
+from mission import Mission
 from question import Question 
 
 import os
@@ -41,8 +42,9 @@ async def add_new_user(member):
 
 async def get_questions_already_asked(member):
     user = users_table.first(formula=match({'discord_id': member.id}))
-    missions = missions_table.all(formula=match({"player_discord_id": user['fields']['discord_id']}))
-    return [mission['fields']['question_id'] for mission in missions]
+    missions = await Mission.all_for_player(airtable_client = airtable_client,
+                                            player_discord_id = user['fields']['discord_id'])
+    return [mission.question_id for mission in missions]
   
 async def get_unasked_question(member):
     questions_already_asked = await get_questions_already_asked(member)

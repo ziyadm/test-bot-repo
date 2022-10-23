@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 from airtable_client import AirtableClient
 
@@ -22,10 +22,20 @@ class Question:
                    leetcode_url = fields['leetcode_url'])
 
     @classmethod
+    async def select(cls,
+                     airtable_client: AirtableClient,
+                     formula):
+                         table = airtable_client.table(table_name = cls.table_name)
+
+                         airtable_responses = None
+                         if formula == None:
+                             airtable_responses = table.all()
+                         else:
+                             airtable_responses = table.all(formula = formula)
+
+                         return [cls.of_airtable_response(airtable_response) for airtable_response in airtable_responses]
+    @classmethod
     async def all(cls,
                   airtable_client: AirtableClient):
-                      airtable_response = airtable_client \
-                                              .table(table_name = cls.table_name) \
-                                              .all()
-
-                      return [cls.of_airtable_response(question_response) for question_response in airtable_response]
+                      return await cls.select(airtable_client = airtable_client,
+                                              formula = None)

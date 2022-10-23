@@ -29,7 +29,7 @@ async def new_command(interaction):
                          design = None,
                          code = None)
 
-    await channel.send(f"Here's your question: {question.leetcode_url}")
+    await channel.send(f"""Here's your question: {question.leetcode_url}""")
 
     return await interaction.followup.send(f'Monarch Suriel has noticed {player.mention} and invites them to {channel.mention}')
 

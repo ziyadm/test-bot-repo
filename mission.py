@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from airtable_client import AirtableClient
 from mission_status import MissionStatus
@@ -44,22 +44,42 @@ class Mission:
                                        None),
                    code = fields.get('code',
                                      None))
-        
 
+    # CR hmir: can we deduplicate this and [Question.select]
+    @classmethod
+    async def select(cls,
+                     airtable_client: AirtableClient,
+                     formula):
+                         table = airtable_client.table(table_name = cls.table_name)
+
+                         airtable_responses = None
+                         if formula == None:
+                             airtable_responses = table.all()
+                         else:
+                             airtable_responses = table.all(formula = formula)
+
+                         return [cls.of_airtable_response(airtable_response) for airtable_response in airtable_responses] 
 
     @classmethod
     async def one(cls,
                   airtable_client: AirtableClient,
                   discord_channel_id: str):
-                      airtable_response = airtable_client \
-                                              .table(table_name = cls.table_name) \
-                                              .all(formula = pyairtable.formulas.match({
-                                                  'discord_channel_id': discord_channel_id}))
+                      all_with_matching_discord_channel_id = await cls.select(airtable_client = airtable_client,
+                                                                              formula = pyairtable.formulas.match({
+                                                                                  'discord_channel_id': discord_channel_id}))
                       
-                      if len(airtable_response) != 1:
+                      if len(all_with_matching_discord_channel_id) != 1:
                           return None
                       
-                      return cls.of_airtable_response(airtable_response = airtable_response[0])
+                      return all_with_matching_discord_channel_id[0]
+
+    @classmethod
+    async def all_for_player(cls,
+                             airtable_client: AirtableClient,
+                             player_discord_id: str):
+                     return await cls.select(airtable_client = airtable_client,
+                                             formula = pyairtable.formulas.match({
+                                                 'player_discord_id': player_discord_id}))
 
     @classmethod
     async def create(cls,
@@ -85,7 +105,7 @@ class Mission:
                                                                  'design': optional_to_string(design),
                                                                  'code': optional_to_string(code)}))
 
-    @staticmethod
+    @classmethod
     async def update(cls,
                      airtable_client: AirtableClient,
                      record_id: str,
