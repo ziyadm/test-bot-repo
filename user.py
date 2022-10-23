@@ -38,7 +38,7 @@ class User:
                          return [cls.of_airtable_response(airtable_response) for airtable_response in airtable_responses]
 
     @classmethod
-    async def one(cls,
+    async def get(cls,
                   airtable_client: AirtableClient,
                   discord_id: str):
                       all_with_matching_discord_id = await cls.select(airtable_client = airtable_client,

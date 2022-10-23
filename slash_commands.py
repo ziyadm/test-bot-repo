@@ -36,7 +36,7 @@ async def new_command(interaction):
 async def submit_command(interaction):
     # CR hmir: only allow submit in mission channel
     # CR hmir: we probably wanna rename submit to fit the "mission"/"quest" theme
-    mission = await Mission.one(airtable_client = airtable_client,
+    mission = await Mission.get(airtable_client = airtable_client,
                                 discord_channel_id = str(interaction.channel_id))
 
     if not (mission.mission_status.is_design() or

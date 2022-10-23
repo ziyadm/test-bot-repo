@@ -6,23 +6,11 @@ from user import User
 import os
 
 import discord
-from pyairtable import Table
-from pyairtable.formulas import match
 
-
-# ================================
-# === setup airtable connection ==
-# ================================
-airtable_api_key = os.environ['airtable_api_key']
-airtable_database_id = os.environ['airtable_database_id']
 
 # CR hmir: pull airtable client stuff into main and pass it around
-airtable_client = AirtableClient(api_key = airtable_api_key,
-                                 base_id = airtable_database_id)
-
-questions_table = Table(airtable_api_key, airtable_database_id, 'questions')
-users_table = Table(airtable_api_key, airtable_database_id, 'users')
-missions_table = Table(airtable_api_key, airtable_database_id, 'missions')
+airtable_client = AirtableClient(api_key = os.environ['airtable_api_key'],
+                                 base_id = os.environ['airtable_database_id'])
 
 async def create_channel(member, **kwargs):
     overwrites = {
@@ -41,7 +29,7 @@ async def add_new_user(member):
                              discord_name = member.name)
 
 async def get_unasked_question(member):
-    user = await User.one(airtable_client = airtable_client,
+    user = await User.get(airtable_client = airtable_client,
                           discord_id = str(member.id))
     missions = await Mission.all_for_player(airtable_client = airtable_client,
                                             player_discord_id = user.discord_id)
