@@ -42,9 +42,7 @@ class Mission:
 
                           response = response[0]
                           fields = response['fields']
-
-                          print(response['id'])
-                              
+                          
                           return Mission(record_id = response['id'],
                                          discord_channel_id = discord_channel_id,
                                          player_discord_id = fields['player_discord_id'],
