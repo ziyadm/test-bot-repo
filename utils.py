@@ -1,6 +1,7 @@
 from airtable_client import AirtableClient
 from mission import Mission
 from question import Question 
+from user import User
 
 import os
 
@@ -35,22 +36,17 @@ async def create_channel(member, **kwargs):
     return await member.guild.create_text_channel(channel_name, overwrites=overwrites)
 
 async def add_new_user(member):
-    users_table.create({
-        'discord_id': str(member.id),
-        'discord_name': member.name
-    })
+    return await User.create(airtable_client = airtable_client,
+                             discord_id = str(member.id),
+                             discord_name = member.name)
 
-async def get_questions_already_asked(member):
-    user = users_table.first(formula=match({'discord_id': member.id}))
-    missions = await Mission.all_for_player(airtable_client = airtable_client,
-                                            player_discord_id = user['fields']['discord_id'])
-    return [mission.question_id for mission in missions]
-  
 async def get_unasked_question(member):
-    questions_already_asked = await get_questions_already_asked(member)
-
+    user = await User.one(airtable_client = airtable_client,
+                          discord_id = str(member.id))
+    missions = await Mission.all_for_player(airtable_client = airtable_client,
+                                            player_discord_id = user.discord_id)
+    questions_already_asked = set([mission.question_id for mission in missions])
     questions = await Question.all(airtable_client = airtable_client)
-
     for question in questions:
         if question.question_id not in questions_already_asked:
             return question

@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from airtable_client import AirtableClient
 from mission_status import MissionStatus
