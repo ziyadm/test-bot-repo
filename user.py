@@ -1,6 +1,7 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from airtable_client import AirtableClient
+from rank import Rank
 
 import pyairtable
 
@@ -10,18 +11,24 @@ class User:
     table_name = 'users'
 
     def __init__(self,
+                 record_id: str,
                  discord_id: str,
-                 discord_name: str):
+                 discord_name: str,
+                 rank: Rank):
+                     self.record_id = record_id
                      self.discord_id = discord_id
                      self.discord_name = discord_name
+                     self.rank = rank
 
     @classmethod
     def of_airtable_response(cls,
                              airtable_response: Dict[str, str]):
                                  fields = airtable_response['fields']
 
-                                 return cls(discord_id = fields['discord_id'],
-                                            discord_name = fields['discord_name'])
+                                 return cls(record_id = airtable_response['id'],
+                                            discord_id = fields['discord_id'],
+                                            discord_name = fields['discord_name'],
+                                            rank = Rank.of_string(fields['rank']))
 
     @classmethod
     async def select(cls,
@@ -54,9 +61,25 @@ class User:
     async def create(cls,
                      airtable_client: AirtableClient,
                      discord_id: str,
-                     discord_name: str):
+                     discord_name: str,
+                     rank: Rank):
                          return cls.of_airtable_response(airtable_response = airtable_client \
                                                              .table(table_name = cls.table_name) \
                                                              .create({
                                                                  'discord_id': discord_id,
-                                                                 'discord_name': discord_name}))
+                                                                 'discord_name': discord_name,
+                                                                 'rank': str(rank)}))
+
+    @classmethod
+    async def update(cls,
+                     airtable_client: AirtableClient,
+                     record_id: str,
+                     rank: Optional[Rank] = None):
+                         fields = [
+                             ('rank', rank)]
+
+                         airtable_client \
+                             .table(table_name = cls.table_name) \
+                             .update(record_id,
+                                     fields = {field: str(new_value) for
+                                               (field, new_value) in fields if new_value})

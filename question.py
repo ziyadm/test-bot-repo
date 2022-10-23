@@ -14,7 +14,7 @@ class Question:
                      self.leetcode_url = leetcode_url
 
     @classmethod
-    def of_airtable_response(cls,
+    def __of_airtable_response(cls,
                              airtable_response: Dict[str, str]):
         fields = airtable_response['fields']
                           
@@ -33,7 +33,7 @@ class Question:
                          else:
                              airtable_responses = table.all(formula = formula)
 
-                         return [cls.of_airtable_response(airtable_response) for airtable_response in airtable_responses]
+                         return [cls.__of_airtable_response(airtable_response) for airtable_response in airtable_responses]
 
     @classmethod
     async def all(cls,

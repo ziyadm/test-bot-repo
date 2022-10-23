@@ -1,6 +1,7 @@
 from airtable_client import AirtableClient
 from mission import Mission
 from question import Question 
+from rank import Rank
 from user import User
 
 import os
@@ -26,7 +27,8 @@ async def create_channel(member, **kwargs):
 async def add_new_user(member):
     return await User.create(airtable_client = airtable_client,
                              discord_id = str(member.id),
-                             discord_name = member.name)
+                             discord_name = member.name,
+                             rank = Rank(value = Rank.foundation))
 
 async def get_unasked_question(member):
     user = await User.get(airtable_client = airtable_client,
