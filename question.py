@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict
 
 from airtable_client import AirtableClient
 
@@ -34,6 +34,7 @@ class Question:
                              airtable_responses = table.all(formula = formula)
 
                          return [cls.of_airtable_response(airtable_response) for airtable_response in airtable_responses]
+
     @classmethod
     async def all(cls,
                   airtable_client: AirtableClient):
