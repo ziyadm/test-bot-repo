@@ -1,13 +1,23 @@
-import discord
+from airtable_client import AirtableClient
+from question import Question 
+
 import os
+
+import discord
 from pyairtable import Table
 from pyairtable.formulas import match
+
 
 # ================================
 # === setup airtable connection ==
 # ================================
 airtable_api_key = os.environ['airtable_api_key']
 airtable_database_id = os.environ['airtable_database_id']
+
+# CR hmir: pull airtable client stuff into main and pass it around
+airtable_client = AirtableClient(api_key = airtable_api_key,
+                                 base_id = airtable_database_id)
+
 questions_table = Table(airtable_api_key, airtable_database_id, 'questions')
 users_table = Table(airtable_api_key, airtable_database_id, 'users')
 missions_table = Table(airtable_api_key, airtable_database_id, 'missions')
@@ -37,7 +47,8 @@ async def get_questions_already_asked(member):
 async def get_unasked_question(member):
     questions_already_asked = await get_questions_already_asked(member)
 
-    # pick a random new question not previously seen
-    for question in questions_table.all():
-        if question['fields']['question_id'] not in questions_already_asked:
+    questions = await Question.all(airtable_client = airtable_client)
+
+    for question in questions:
+        if question.question_id not in questions_already_asked:
             return question
