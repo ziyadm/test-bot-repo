@@ -1,3 +1,6 @@
+from mission import Mission
+from mission_status import MissionStatus
+
 import discord
 import os
 from pyairtable import Table
@@ -38,6 +41,17 @@ async def new_command(interaction):
 async def submit_command(interaction):
     # CR hmir: only allow submit in mission channel
     # CR hmir: we probably wanna rename submit to fit the "mission"/"quest" theme
+    mission = Mission(discord_channel_id = 'test-discord-channel-id',
+                      player_discord_id = 'test-player-discord-id',
+                      reviewer_discord_id = None,
+                      question_id = 'test-question-id',
+                      mission_status = MissionStatus.design())
+    
+    print(mission.discord_channel_id)
+    print(mission.player_discord_id)
+    print(mission.reviewer_discord_id)
+    print(mission.question_id)
+    print(mission.mission_status)
     
     return await interaction.followup.send("Handle submission")
 
