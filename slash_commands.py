@@ -24,15 +24,15 @@ async def new_command(interaction):
         return await interaction.followup.send('Monarch Suriel has no new training for you')
 
     question_id = question['fields']['question_id']
-
+    channel = await utils.create_channel(player, channel_name=f'{player.name}-{question_id}')
+    
     missions_table.create({
-        'discord_channel_id': str(interaction.channel_id),
+        'discord_channel_id': str(channel.id),
         'player_discord_id': str(player.id),
         'question_id': question_id,
-        'status': 'design'
+        'mission_status': 'design'
     })
 
-    channel = await utils.create_channel(player, channel_name=f'{player.name}-{question_id}')
     leetcode_url = question['fields']['leetcode_url']
     await channel.send(f"Here's your question: {leetcode_url}")
 

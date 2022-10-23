@@ -3,7 +3,6 @@ from typing import Optional
 from airtable_client import AirtableClient
 from mission_status import MissionStatus
 
-
 import pyairtable
 
 

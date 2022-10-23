@@ -1,11 +1,6 @@
 import discord
 import os
 from pyairtable import Table
-from discord import app_commands
-from discord import Status
-import random
-import asyncio
-import uuid
 from pyairtable.formulas import match
 
 # ================================
