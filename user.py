@@ -8,7 +8,6 @@ import pyairtable.formulas
 
 
 class User:
-
     table_name = 'users'
 
     def __init__(self, record_id: str, discord_id: str, discord_name: str, rank: Rank):
