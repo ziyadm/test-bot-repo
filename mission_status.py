@@ -10,8 +10,7 @@ class MissionStatus:
         design_review: 'design-review',
         code: 'code',
         code_review: 'code-review',
-        completed: 'completed'
-    }
+        completed: 'completed'}
     
     def __init__(self, value: int):
         self.value = value

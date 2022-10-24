@@ -3,27 +3,24 @@ import discord
 
 class DiscordClient:
 
-    def __init__(self,
-                 guild_id: str,
-                 secret_token: str):
-                     self.secret_token = secret_token
-                     self.guild = discord.Object(id = guild_id)
-                     self.client = discord.Client(intents = discord.Intents(messages=True,
-                                                                            guilds=True,
-                                                                            message_content=True,
-                                                                            members=True,
-                                                                            presences=True))
-                     self.command_tree = discord.app_commands.CommandTree(self.client)
+    def __init__(self, guild_id: int, secret_token: str):
+        self.client = discord.Client(intents = discord.Intents(messages=True,
+                                                               guilds=True,
+                                                               message_content=True,
+                                                               members=True,
+                                                               presences=True)) 
+        self.guild_id = guild_id
+        self.command_tree = discord.app_commands.CommandTree(self.client) 
+        self.secret_token = secret_token
 
-    # async def create_home_base(self,
-    #                            discord_id: str,
-    #                            discord_name: str):
-    #                                roles = await self.discord_client.guild
-    #                              overwrites = {
-    #                                  member.guild.default_role: discord.PermissionOverwrite(read_messages = False),
-    #                                  member: discord.PermissionOverwrite(read_messages=True)}
-# 
-    # channel_name = kwargs['channel_name'] if 'channel_name'in kwargs else member.name
-    # return await member.guild.create_text_channel(channel_name, overwrites=overwrites)
+    @staticmethod
+    async def __create_channel(member: discord.Member, channel_name: str):
+        return await member.guild.create_text_channel(channel_name,
+                                                      overwrites = {member.guild.default_role: discord.PermissionOverwrite(read_messages = False),
+                                                                    member: discord.PermissionOverwrite(read_messages = True)})
+
+    async def create_path_channel(self, member: discord.Member):
+        return await self.__create_channel(member = member, channel_name = f'{member.name}s-path')
         
-        
+    async def create_mission_channel(self, member: discord.Member, question_id: str):
+        return await self.__create_channel(member = member, channel_name = f'{member.name}-{question_id}')
