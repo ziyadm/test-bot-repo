@@ -22,8 +22,7 @@ class Rank:
         underlord: 'underlord',
         overlord: 'overlord',
         archlord: 'archlord',
-        monarch: 'monarch'
-    }
+        monarch: 'monarch'}
     
     description = {
         foundation: 'New to the path',
@@ -36,8 +35,7 @@ class Rank:
         underlord: 'Revelation and control of soulpower',
         overlord: 'Challenges are nothing',
         archlord: 'Kneel only for the Monarch',
-        monarch: 'Maximum power'
-    }
+        monarch: 'Maximum power'}
 
     def __init__(self, value: int):
         self.value = value
