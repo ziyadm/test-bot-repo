@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import pyairtable
 
@@ -21,7 +21,7 @@ class AirtableClient:
                                 base_id = self.base_id,
                                 table_name = table_name)
 
-    async def get_rows(self, table_name: str, formula):
+    async def rows(self, table_name: str, formula: Optional[str]):
         table = self.__table(table_name = table_name)
 
         responses = None
@@ -32,8 +32,8 @@ class AirtableClient:
 
         return [Response(response) for response in responses]
 
-    async def get_row(self, table_name: str, formula):
-        responses = await self.get_rows(table_name, formula)
+    async def row(self, table_name: str, formula: Optional[str]):
+        responses = await self.rows(table_name, formula)
         
         if len(responses) != 1:
             return None

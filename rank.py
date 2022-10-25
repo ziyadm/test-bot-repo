@@ -41,7 +41,7 @@ class Rank:
     def __init__(self, value: int):
         self.value = value
 
-    def has_value(self, value):
+    def has_value(self, value: int):
         return self.value == value
 
     def __str__(self):
@@ -52,3 +52,6 @@ class Rank:
         for (value, name) in cls.name.items():
             if s == name:
                 return cls(value = value)
+
+    def to_string_hum(self):
+        return ' '.join([word.capitalize() for word in str(self).split('-')])
