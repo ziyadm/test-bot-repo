@@ -1,4 +1,5 @@
 class Rank:
+
     foundation = 1
     copper = 2
     iron = 3
@@ -10,7 +11,7 @@ class Rank:
     overlord = 9
     archlord = 10
     monarch = 11
-    
+
     name = {
         foundation: 'foundation',
         copper: 'copper',
@@ -40,9 +41,8 @@ class Rank:
     def __init__(self, value: int):
         self.value = value
 
-    @staticmethod
-    def equal(left, right):
-        return left.value == right.value
+    def has_value(self, value):
+        return self.value == value
 
     def __str__(self):
         return self.name[self.value]
