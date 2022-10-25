@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 import airtable_client
 
@@ -32,6 +32,6 @@ class Question:
         return cls(record_id = response.record_id, fields = Fields.of_dict(response.fields))
 
     @classmethod
-    async def all(cls, airtable_client: AirtableClient):
-        responses = await airtable_client.get_rows(table_name = cls.table_name, formula = None)
+    async def rows(cls, formula: Optional[str], airtable_client: AirtableClient):
+        responses = await airtable_client.rows(table_name = cls.table_name, formula = formula)
         return [cls.__of_airtable_response(response) for response in responses]

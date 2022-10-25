@@ -16,7 +16,7 @@ class MissionStatus:
     def __init__(self, value: int):
         self.value = value
 
-    def has_value(self, value):
+    def has_value(self, value: int):
         return self.value == value
 
     def __str__(self):
