@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, List
 
 import airtable_client
 
@@ -68,16 +68,25 @@ class User:
         return cls.__of_airtable_response(response)
 
     @classmethod
+    async def all(cls, airtable_client: AirtableClient):
+        responses = await airtable_client.get_rows(table_name = cls.table_name, formula = None)
+        return [cls.__of_airtable_response(response) for response in responses]
+
+    @classmethod
     async def get_by_discord_name(cls, discord_name: str, airtable_client: AirtableClient):
         response = await airtable_client.get_row(
             table_name = cls.table_name,
             formula = pyairtable.formulas.match({Fields.discord_name_field: discord_name}))
         return cls.__of_airtable_response(response)
 
-    async def set_rank(self,
-                       rank: Rank,
-                       airtable_client: AirtableClient,
-                       discord_client: DiscordClient):
+    @classmethod
+    async def delete_rows(cls, users_to_delete, airtable_client: AirtableClient):
+        await airtable_client.delete_rows(
+            table_name = cls.table_name,
+            record_ids = [user_to_delete.record_id for user_to_delete in users_to_delete])
+        return None
+
+    async def set_rank(self, rank: Rank, airtable_client: AirtableClient, discord_client: DiscordClient):
         await airtable_client.update_row(
             table_name = self.table_name,
             record_id = self.record_id,
@@ -85,3 +94,4 @@ class User:
                            
         role_name = ' '.join([word.capitalize() for word in str(rank).split('-')])
         await discord_client.set_role(member_id = self.fields.discord_id, role_name = role_name)
+        return None

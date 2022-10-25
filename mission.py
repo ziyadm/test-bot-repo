@@ -1,8 +1,9 @@
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import airtable_client
 
 from airtable_client import AirtableClient
+from discord_client import DiscordClient
 from mission_status import MissionStatus
 
 import pyairtable.formulas
@@ -93,10 +94,27 @@ class Mission:
         return cls.__of_airtable_response(response)
 
     @classmethod
+    async def all(cls, airtable_client: AirtableClient):
+        responses = await airtable_client.get_rows(table_name = cls.table_name, formula = None)
+        return [cls.__of_airtable_response(response) for response in responses]
+
+    @classmethod
     async def all_with_player(cls, player_discord_id: str, airtable_client: AirtableClient):
-        responses = await airtable_client.get_all(
+        responses = await airtable_client.get_rows(
             table_name = cls.table_name, formula = {Fields.player_discord_id_field: player_discord_id})
         return [cls.__of_airtable_response(response) for response in responses]
+
+    @classmethod
+    async def delete_rows_and_channels(cls,
+                                       missions_to_delete,
+                                       airtable_client: AirtableClient,
+                                       discord_client: DiscordClient):
+        await airtable_client.delete_rows(
+            table_name = cls.table_name,
+            record_ids = [mission_to_delete.record_id for mission_to_delete in missions_to_delete])
+        await discord_client.delete_channels(
+            channel_ids = [mission_to_delete.fields.discord_channel_id for mission_to_delete in missions_to_delete])
+        return None
 
     async def update(self, fields: Fields, airtable_client: AirtableClient):
         response = await airtable_client.update_row(
