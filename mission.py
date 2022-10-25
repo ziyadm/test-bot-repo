@@ -1,6 +1,10 @@
 from typing import Dict, Optional
 
+import airtable_client
+
+from airtable_client import AirtableClient
 from mission_status import MissionStatus
+
 
 class Fields:
 
@@ -45,7 +49,7 @@ class Fields:
     def of_dict(cls, fields):
         return cls(discord_channel_id = fields[cls.discord_channel_id_field],
                    player_discord_id = fields[cls.player_discord_id_field],
-                   reviewer_discord_id j= fields[cls.reviewer_discord_id_field],
+                   reviewer_discord_id = fields[cls.reviewer_discord_id_field],
                    question_id = fields[cls.question_id_field],
                    mission_status = MissionStatus.of_string(fields[cls.mission_status_field]),
                    design = fields[cls.design_field],
@@ -53,7 +57,8 @@ class Fields:
 
     # CR hmir: pull this into a module [Immutable_dict] to deduplicate with other Fields modules
     def immutable_updates(self, updates):
-        return self.of_dict(dict(self).update({key: str(value) for update in updates.items()))
+        updates = {key: str(value) for update in updates.items()}
+        return self.of_dict(dict(self).update(updates))
 
     def immutable_update(self, field, value):
         return self.immutable_updates({field: value})
@@ -68,7 +73,7 @@ class Mission:
         self.fields = fields
 
     @classmethod
-    def __of_airtable_response(cls, response: airtable.Response):
+    def __of_airtable_response(cls, response: airtable_client.Response):
         return cls(record_id = response.record_id, fields = Fields.of_dict(response.fields))
 
     @classmethod

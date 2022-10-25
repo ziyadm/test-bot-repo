@@ -27,9 +27,10 @@ class CommandHandler:
             if question.fields.question_id not in questions_already_asked:
                 return question
 
-    async def new_command(self, interaction):
+    async def new_command(self, interaction: discord.Interaction):
         player_discord_id = str(interaction.user.id)
-        player = await User.get(discord_id = player_discord_id, airtable_client = self.airtable_client)
+        player = await User.get(
+            discord_id = player_discord_id, airtable_client = self.airtable_client)
         question = await self.get_first_unasked_question(user)
 
         if not question:
@@ -42,7 +43,6 @@ class CommandHandler:
             channel_name = f"""{user.fields.discord_name}-{question_id}""")
 
         mission_fields = mission.Fields(
-            airtable_client = self.airtable_client,
             discord_channel_id = str(mission_channel.id),
             player_discord_id = player_discord_id,
             reviewer_discord_id = None,
@@ -51,16 +51,17 @@ class CommandHandler:
             design = None,
             code = None)
 
-        await Mission.create(fields = mission_fields, airtable_client: AirtableClient)
+        await Mission.create(fields = mission_fields, airtable_client = self.airtable_client)
         await mission_channel.send(f"""Here's your mission: {question.leetcode_url}""")
         return await interaction.followup.send(
             f"""Monarch Suriel has invited you to {mission_channel.mention}""")
 
-    async def submit_command(self, interaction):
+    async def submit_command(self, interaction: discord.Interaction):
         # CR hmir: only allow submit in mission channel
         # CR hmir: we probably wanna rename submit to fit the "mission"/"quest" theme
         mission = await Mission.get(
-            discord_channel_id = str(interaction.channel_id), airtable_client = self.airtable_client)
+            discord_channel_id = str(interaction.channel_id),
+            airtable_client = self.airtable_client)
     
         if not (mission.fields.mission_status.has_value(MissionStatus.design) or
                 mission.fields.mission_status.has_value(MissionStatus.code)):
@@ -92,8 +93,10 @@ class CommandHandler:
         mission.update(fields = updated_mission_fields, airtable_client = self.airtable_client)
         return await interaction.followup.send(response)
 
-    async def set_rank(self, interaction, user_discord_name: str, rank: Rank):
-        user = await User.get_by_name(
+    async def set_rank(self, interaction: discord.Interaction, user_discord_name: str, rank: str):
+        user = await User.get_by_discord_name(
             discord_name = user_discord_name, airtable_client = self.airtable_client)
         return await user.set_rank(
-            rank, airtable_client = self.airtable_client, discord_client = self.discord_client)
+            rank = Rank.of_string(rank),
+            airtable_client = self.airtable_client,
+            discord_client = self.discord_client)

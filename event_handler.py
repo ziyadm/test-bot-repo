@@ -15,9 +15,9 @@ class EventHandler:
         self.discord_client = discord_client
 
     async def on_ready(self):
-        guild = discord.Object(id = self.discord_client.guild_id)
         # CR hmir: sync roles from ranks
-        await self.discord_client.command_tree.sync(guild)
+        await self.discord_client.command_tree.sync(
+            guild = discord.Object(id = self.discord_client.guild_id))
         print(f'Logged in as {self.discord_client.client.user}')
 
     async def on_member_join(self, member):

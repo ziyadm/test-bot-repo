@@ -1,5 +1,7 @@
 from typing import Dict
 
+import airtable_client
+
 from airtable_client import AirtableClient
 
 
@@ -26,7 +28,7 @@ class Question:
         self.fields = fields
 
     @classmethod
-    def __of_airtable_response(cls, response: airtable.Response):
+    def __of_airtable_response(cls, response: airtable_client.Response):
         return cls(record_id = response.record_id, fields = Fields.of_dict(response.fields))
 
     @classmethod
