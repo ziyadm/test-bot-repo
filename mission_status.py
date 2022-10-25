@@ -1,4 +1,5 @@
 class MissionStatus:
+
     design = 1
     design_review = 2
     code = 3
@@ -15,8 +16,8 @@ class MissionStatus:
     def __init__(self, value: int):
         self.value = value
 
-    def __eq__(self, value):
-        return self.value == value
+    def has_value(self, value):
+        return left.value == value
 
     def __str__(self):
         return self.name[self.value]
@@ -26,3 +27,9 @@ class MissionStatus:
         for (value, name) in cls.name.items():
             if s == name:
                 return cls(value = value)
+
+    def next(self):
+        if self.has_value(self.completed):
+            return None
+        else:
+            return MissionStatus(value = self.value + 1)

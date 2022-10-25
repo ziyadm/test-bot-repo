@@ -1,17 +1,18 @@
 from typing import Dict, Optional
 
-from airtable_client import AirtableClient
 from mission_status import MissionStatus
 
-import pyairtable
+class Fields:
 
-
-class Mission:
-
-    table_name = 'missions'
-
+    discord_channel_id_field = 'discord_channel_id'
+    player_discord_id_field = 'player_discord_id'
+    reviewer_discord_id_field = 'reviewer_discord_id'
+    question_id_field = 'question_id'
+    mission_status_field = 'mission_status'
+    design_field = 'design'
+    code_field = 'code'
+        
     def __init__(self,
-                 record_id: str,
                  discord_channel_id: str,
                  player_discord_id: str,
                  reviewer_discord_id: Optional[str],
@@ -19,7 +20,6 @@ class Mission:
                  mission_status: MissionStatus,
                  design: Optional[str],
                  code: Optional[str]):
-                     self.record_id = record_id
                      self.discord_channel_id = discord_channel_id
                      self.player_discord_id = player_discord_id
                      self.reviewer_discord_id = reviewer_discord_id
@@ -28,83 +28,67 @@ class Mission:
                      self.design = design
                      self.code = code
 
-    @classmethod
-    def __of_airtable_response(cls, airtable_response: Dict[str, str]):
-        fields = airtable_response['fields']
-                          
-        return cls(record_id = airtable_response['id'],
-                   discord_channel_id = fields['discord_channel_id'],
-                   player_discord_id = fields['player_discord_id'],
-                   reviewer_discord_id = fields.get('reviewer_discord_id', None),
-                   question_id = fields['question_id'],
-                   mission_status = MissionStatus.of_string(fields['mission_status']),
-                   design = fields.get('design', None),
-                   code = fields.get('code', None))
-
-    # CR hmir: can we deduplicate this and [Question.select]
-    @classmethod
-    async def select(cls, airtable_client: AirtableClient, formula):
-        table = airtable_client.table(table_name = cls.table_name)
-
-        airtable_responses = None
-        if formula == None:
-            airtable_responses = table.all()
-        else:
-            airtable_responses = table.all(formula = formula)
-
-        return [cls.__of_airtable_response(airtable_response) for airtable_response in airtable_responses] 
+    def __dict__(self):
+        def optional_to_string(optional: Optional[str]):
+            return str(optional) if optional != None else ''
+            
+        return {
+            self.discord_channel_id_field: self.discord_channel_id,
+            self.player_discord_id_field: self.player_discord_id,
+            self.reviewer_discord_id_field: optional_to_string(self.reviewer_discord_id),
+            self.question_id_field: self.question_id,
+            self.mission_status_field: str(self.mission_status),
+            self.design_field: optional_to_string(self.design),
+            self.code_field: optional_to_string(self.code)}
 
     @classmethod
-    async def get(cls, airtable_client: AirtableClient, discord_channel_id: str):
-        all_with_matching_discord_channel_id = await cls.select(airtable_client = airtable_client,
-                                                                formula = pyairtable.formulas.match({'discord_channel_id': discord_channel_id}))
-        
-        if len(all_with_matching_discord_channel_id) != 1:
-            return None
-        
-        return all_with_matching_discord_channel_id[0]
+    def of_dict(cls, fields):
+        return cls(discord_channel_id = fields[cls.discord_channel_id_field],
+                   player_discord_id = fields[cls.player_discord_id_field],
+                   reviewer_discord_id j= fields[cls.reviewer_discord_id_field],
+                   question_id = fields[cls.question_id_field],
+                   mission_status = MissionStatus.of_string(fields[cls.mission_status_field]),
+                   design = fields[cls.design_field],
+                   code = fields[cls.code_field])
+
+    # CR hmir: pull this into a module [Immutable_dict] to deduplicate with other Fields modules
+    def immutable_updates(self, updates):
+        return self.of_dict(dict(self).update({key: str(value) for update in updates.items()))
+
+    def immutable_update(self, field, value):
+        return self.immutable_updates({field: value})
+
+
+class Mission:
+
+    table_name = 'missions'
+
+    def __init__(self, record_id: str, fields: Fields):
+        self.record_id = record_id
+        self.fields = fields
 
     @classmethod
-    async def all_for_player(cls, airtable_client: AirtableClient, player_discord_id: str):
-        return await cls.select(airtable_client = airtable_client,
-                                formula = pyairtable.formulas.match({'player_discord_id': player_discord_id}))
+    def __of_airtable_response(cls, response: airtable.Response):
+        return cls(record_id = response.record_id, fields = Fields.of_dict(response.fields))
 
     @classmethod
-    async def create(cls,
-                     airtable_client: AirtableClient,
-                     discord_channel_id: str,
-                     player_discord_id: str,
-                     reviewer_discord_id: Optional[str],
-                     question_id: str,
-                     mission_status: MissionStatus,
-                     design: Optional[str],
-                     code: Optional[str]):
-                         def optional_to_string(optional: Optional[str]):
-                             return str(optional) if optional != None else ''
-                             
-                         return cls.__of_airtable_response(airtable_response = airtable_client \
-                                                               .table(table_name = cls.table_name) \
-                                                               .create({'discord_channel_id': discord_channel_id,
-                                                                        'player_discord_id': player_discord_id,
-                                                                        'reviewer_discord_id': optional_to_string(reviewer_discord_id),
-                                                                        'question_id': question_id,
-                                                                        'mission_status': str(mission_status),
-                                                                        'design': optional_to_string(design),
-                                                                        'code': optional_to_string(code)}))
+    async def create(cls, fields: Fields, airtable_client: AirtableClient):
+        response = await airtable_client.write_row(table_name, fields = dict(fields))
+        return cls.__of_airtable_response(response)
 
     @classmethod
-    async def update(cls,
-                     airtable_client: AirtableClient,
-                     record_id: str,
-                     reviewer_discord_id: Optional[str] = None,
-                     mission_status: Optional[MissionStatus] = None,
-                     design: Optional[str] = None,
-                     code: Optional[str] = None):
-                         fields = [('reviewer_discord_id', reviewer_discord_id),
-                                   ('mission_status', mission_status),
-                                   ('design', design),
-                                   ('code', code)]
+    async def get(cls, discord_channel_id: str, airtable_client: AirtableClient):
+        response = await airtable_client.get_row(
+            table_name = cls.table_name,
+            formula = pyairtable.formulas.match({Fields.discord_channel_id_field: discord_channel_id}))
+        return self.__of_airtable_response(response)
 
-                         airtable_client \
-                             .table(table_name = cls.table_name) \
-                             .update(record_id, fields = {field: str(new_value) for (field, new_value) in fields if new_value})
+    @classmethod
+    async def all_with_player(cls, player_discord_id: str, airtable_client: AirtableClient):
+        responses = await airtable_client.get_all(
+            table_name = cls.table_name, formula = {Fields.player_discord_id_field: player_discord_id})
+        return [cls.__of_airtable_response(response) for response in responses]
+
+    async def update(self, fields: Fields, airtable_client: AirtableClient):
+        response = await airtable_client.update_row(record_id = self.record_id, fields = fields)
+        return self.__of_airtable_response(response)

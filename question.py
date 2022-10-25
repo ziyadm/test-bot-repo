@@ -3,32 +3,33 @@ from typing import Dict
 from airtable_client import AirtableClient
 
 
-class Question:
+class Fields:
 
-    table_name = 'questions'
+    question_id_field = 'question_id'
+    leetcode_url_field = 'leetcode_url'
 
     def __init__(self, question_id: str, leetcode_url: str):
         self.question_id = question_id
         self.leetcode_url = leetcode_url
 
     @classmethod
-    def __of_airtable_response(cls, airtable_response: Dict[str, str]):
-        fields = airtable_response['fields']
-                          
-        return cls(question_id = fields['question_id'], leetcode_url = fields['leetcode_url'])
+    def of_dict(cls, fields):
+        return cls(question_id = fields[cls.question_id_field],
+                   leetcode_url = fields[cls.leetcode_url_field])
+
+class Question:
+
+    table_name = 'questions'
+
+    def __init__(self, record_id: str, fields: Fields):
+        self.record_id = record_id
+        self.fields = fields
 
     @classmethod
-    async def select(cls, airtable_client: AirtableClient, formula):
-        table = airtable_client.table(table_name = cls.table_name)
-
-        airtable_responses = None
-        if formula == None:
-            airtable_responses = table.all()
-        else:
-            airtable_responses = table.all(formula = formula)
-
-        return [cls.__of_airtable_response(airtable_response) for airtable_response in airtable_responses]
+    def __of_airtable_response(cls, response: airtable.Response):
+        return cls(record_id = response.record_id, fields = Fields.of_dict(response.fields))
 
     @classmethod
     async def all(cls, airtable_client: AirtableClient):
-        return await cls.select(airtable_client = airtable_client, formula = None)
+        responses = await airtable_client.get_all(table_name = cls.table_name, formula = None)
+        return [cls.__of_airtable_response(response) for response in responses]

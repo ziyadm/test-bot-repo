@@ -30,6 +30,13 @@ async def register_submit_command(interaction):
   await interaction.response.defer()
   return await command_handler.submit_command(interaction)
 
+@discord_client.command_tree.command(name = 'set_rank', description = """Set a user's rank""", guild = guild)
+async def register_set_rank_command(interaction, user_discord_name, rank):
+    await interaction.response.defer()
+    return await command_handler.set_rank(interaction = interaction,
+                                          user_discord_name = user_discord_name,
+                                          rank = rank)
+
 @discord_client.client.event
 async def on_ready():
     return await event_handler.on_ready()

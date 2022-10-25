@@ -1,62 +1,73 @@
 from typing import Dict, Optional
 
 from airtable_client import AirtableClient
+from discord_client import DiscordClient
 from rank import Rank
 
-import pyairtable
-import pyairtable.formulas
 
+class Fields:
 
-class User:
-    table_name = 'users'
+    discord_id_field = 'discord_id'
+    discord_name_field = 'discord_name'
+    rank_field = 'rank'
 
-    def __init__(self, record_id: str, discord_id: str, discord_name: str, rank: Rank):
-        self.record_id = record_id
+    def __init__(self, discord_id: str, discord_name: str, rank: Rank):
         self.discord_id = discord_id
         self.discord_name = discord_name
         self.rank = rank
-
-    @classmethod
-    def __of_airtable_response(cls, airtable_response: Dict[str, str]):
-        fields = airtable_response['fields']
-
-        return cls(record_id = airtable_response['id'],
-                   discord_id = fields['discord_id'],
-                   discord_name = fields['discord_name'],
-                   rank = Rank.of_string(fields['rank']))
-
-    @classmethod
-    async def select(cls, airtable_client: AirtableClient, formula):
-        table = airtable_client.table(table_name = cls.table_name)
-     
-        airtable_responses = None
-        if formula == None:
-            airtable_responses = table.all()
-        else:
-            airtable_responses = table.all(formula = formula)
-     
-        return [cls.__of_airtable_response(airtable_response) for airtable_response in airtable_responses]
-
-    @classmethod
-    async def get(cls, airtable_client: AirtableClient, discord_id: str):
-        all_with_matching_discord_id = await cls.select(airtable_client = airtable_client,
-                                                        formula = pyairtable.formulas.match({ 'discord_id': discord_id}))
         
-        if len(all_with_matching_discord_id) != 1:
-            return None
-        
-        return all_with_matching_discord_id[0]
+    def __dict__(self):
+        return {
+            self.discord_id_field: self.discord_id,
+            self.discord_name_field: self.discord_name,
+            self.rank_field: str(self.rank)}
 
     @classmethod
-    async def create(cls, airtable_client: AirtableClient, discord_id: str, discord_name: str, rank: Rank):
-        return cls.__of_airtable_response(airtable_response = airtable_client \
-                                            .table(table_name = cls.table_name) \
-                                            .create({'discord_id': discord_id,
-                                                     'discord_name': discord_name,
-                                                     'rank': str(rank)}))
+    def of_dict(cls, fields):
+        return cls(discord_id = fields[cls.discord_id_field],
+                   discord_name = fields[cls.discord_name_field],
+                   rank = Rank.of_string(fields[cls.rank_field]))
+
+    def immutable_updates(self, updates):
+        return self.of_dict(dict(self).update({key: str(value) for update in updates.items()))
+
+    def immutable_update(self, field, value):
+        return self.immutable_updates({field: value})
+
+
+class User:
+    
+    table_name = 'users'
+    
+    def __init__(self, record_id: str, fields: Fields):
+        self.record_id = record_id
+        self.fields = fields
 
     @classmethod
-    async def update(cls, airtable_client: AirtableClient, record_id: str, rank: Optional[Rank] = None):
-        airtable_client \
-            .table(table_name = cls.table_name) \
-            .update(record_id, fields = {'rank': rank})
+    def __of_airtable_response(cls, response: airtable.Response):
+        return cls(record_id = response.record_id, fields = Fields.of_dict(response.fields))
+
+    @classmethod
+    async def create(cls, fields: Fields, airtable_client: AirtableClient):
+        response = await airtable_client.write_row(table_name, fields = dict(fields))
+        return cls.__of_airtable_response(response)
+
+    @classmethod
+    async def get(cls, discord_id: str, airtable_client: AirtableClient):
+        response = await airtable_client.get_row(
+            table_name = cls.table_name,
+            formula = pyairtable.formulas.match({Fields.discord_id_field: discord_id}))
+        return self.__of_airtable_response(response)
+
+    async def set_rank(self,
+                       rank: Rank,
+                       airtable_client: AirtableClient,
+                       discord_client: DiscordClient):
+        response = await airtable_client.update_row(
+            record_id = self.record_id,
+            fields = self.fields.immutable_update(field = Fields.rank_field, value = rank))
+
+        updated_user = self.__of_airtable_response(response)
+                           
+        role_name = ' '.join([word.capitalize() for word in str(rank).split('-')])
+        await discord_client.set_role(member_id = self.discord_id, role_name = role_name)

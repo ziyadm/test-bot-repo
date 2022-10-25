@@ -1,4 +1,13 @@
+from typing import Dict
+
 import pyairtable
+
+
+class Response:
+
+    def __init__(self, response: Dict[str, str]):
+        self.record_id = response['id']
+        self.fields = response['fields']
 
 
 class AirtableClient:
@@ -7,5 +16,32 @@ class AirtableClient:
         self.api_key = api_key
         self.base_id = base_id
 
-    def table(self, table_name: str):
-        return pyairtable.Table(api_key = self.api_key, base_id = self.base_id, table_name = table_name)
+    def __table(self, table_name: str):
+        return pyairtable.Table(api_key = self.api_key,
+                                base_id = self.base_id,
+                                table_name = table_name)
+
+    async def get_all(self, table_name: str, formula):
+        table = self.__table(table_name = table_name)
+
+        responses = None
+        if formula == None:
+            responses = table.all()
+        else:
+            responses = table.all(formula = formula)
+
+        return [Response(response) for response in responses]
+
+    async def get_row(self, table_name: str, formula):
+        responses = await self.get_all(table_name, formula)
+        
+        if len(responses) != 1:
+            return None
+
+        return responses[0]
+
+    async def write_row(self, table_name: str, fields: Dict[str, str]):
+        return Response(self.__table(table_name).create(fields))
+
+    async def update_row(self, table_name: str, record_id: str, fields: Dict[str, str]):
+        return Response(self.__table(table_name).update(record_id, fields))

@@ -1,7 +1,18 @@
+from typing import List
+
 import discord
 
 
 class DiscordClient:
+    
+    default_permissions = discord.Permissions(
+        read_messages = True,
+        send_messages = True,
+        create_instant_invite = True,
+        read_message_history = True,
+        use_application_commands = True) 
+    
+    admin_permissions = discord.Permissions.all
 
     def __init__(self, guild_id: int, secret_token: str):
         self.client = discord.Client(intents = discord.Intents(messages=True,
@@ -13,14 +24,33 @@ class DiscordClient:
         self.command_tree = discord.app_commands.CommandTree(self.client) 
         self.secret_token = secret_token
 
-    @staticmethod
-    async def __create_channel(member: discord.Member, channel_name: str):
-        return await member.guild.create_text_channel(channel_name,
-                                                      overwrites = {member.guild.default_role: discord.PermissionOverwrite(read_messages = False),
-                                                                    member: discord.PermissionOverwrite(read_messages = True)})
+    async def __guild(self):
+        return await self.client.fetch_guild(guild_id = self.guild_id)
 
-    async def create_path_channel(self, member: discord.Member):
-        return await self.__create_channel(member = member, channel_name = f'{member.name}s-path')
+    async def create_private_channel(self, member_id: str, channel_name: str):
+        guild = await self.__guild()
+        member = await guild.fetch_member(id = member_id)
+        permission_overwrites = {
+            guild.default_role: discord.PermissionOverwrite(read_messages = False),
+            member: discord.PermissionOverwrite(read_messages = True)}
+        return await guild.create_text_channel(channel_name, overwrites = permission_overwrites)
+
+    @staticmethod
+    async def __get_role(role_name: str, roles: List[discord.Role]):
+        for role in roles:
+            if role.name == role_name:
+                return role
+
+    async def set_role(self, member_id: str, role_name: int):
+        guild = await self.__guild()
+        member = await guild.fetch_member(id = member_id)
         
-    async def create_mission_channel(self, member: discord.Member, question_id: str):
-        return await self.__create_channel(member = member, channel_name = f'{member.name}-{question_id}')
+        old_roles = member.roles.copy()
+        new_role = self.__get_role(role_name, roles = guild.roles)
+
+        if new_role.id in [role.id for role in old_roles]:
+            return None
+
+        await member.edit(nick = f"""[{role_name}] {member.name}""")
+        await member.add_roles(new_role)
+        return await member.remove_roles(old_roles)
