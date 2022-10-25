@@ -6,6 +6,8 @@ from airtable_client import AirtableClient
 from discord_client import DiscordClient
 from rank import Rank
 
+import pyairtable.formulas
+
 
 class Fields:
 
@@ -18,22 +20,24 @@ class Fields:
         self.discord_name = discord_name
         self.rank = rank
         
-    def __dict__(self):
+    def to_dict(self):
         return {
             self.discord_id_field: self.discord_id,
             self.discord_name_field: self.discord_name,
             self.rank_field: str(self.rank)}
 
     @classmethod
-    def of_dict(cls, fields):
+    def of_dict(cls, fields: Dict[str, str]):
         return cls(discord_id = fields[cls.discord_id_field],
                    discord_name = fields[cls.discord_name_field],
                    rank = Rank.of_string(fields[cls.rank_field]))
 
     # CR hmir: pull this into a module [Immutable_dict] to deduplicate with other Fields modules
     def immutable_updates(self, updates):
-        updates = {key: str(value) for update in updates.items()}
-        return self.of_dict(dict(self).update(updates))
+        updated = self.to_dict()
+        for key, value in updates.items():
+            updated[key] = str(value)
+        return self.of_dict(updated)
 
     def immutable_update(self, field, value):
         return self.immutable_updates({field: value})
@@ -53,7 +57,7 @@ class User:
 
     @classmethod
     async def create(cls, fields: Fields, airtable_client: AirtableClient):
-        response = await airtable_client.write_row(table_name, fields = dict(fields))
+        response = await airtable_client.write_row(table_name = cls.table_name, fields = fields.to_dict())
         return cls.__of_airtable_response(response)
 
     @classmethod
@@ -61,24 +65,23 @@ class User:
         response = await airtable_client.get_row(
             table_name = cls.table_name,
             formula = pyairtable.formulas.match({Fields.discord_id_field: discord_id}))
-        return self.__of_airtable_response(response)
+        return cls.__of_airtable_response(response)
 
     @classmethod
     async def get_by_discord_name(cls, discord_name: str, airtable_client: AirtableClient):
         response = await airtable_client.get_row(
             table_name = cls.table_name,
             formula = pyairtable.formulas.match({Fields.discord_name_field: discord_name}))
-        return self.__of_airtable_response(response)
+        return cls.__of_airtable_response(response)
 
     async def set_rank(self,
                        rank: Rank,
                        airtable_client: AirtableClient,
                        discord_client: DiscordClient):
-        response = await airtable_client.update_row(
+        await airtable_client.update_row(
+            table_name = self.table_name,
             record_id = self.record_id,
-            fields = self.fields.immutable_update(field = Fields.rank_field, value = rank))
-
-        updated_user = self.__of_airtable_response(response)
+            fields = self.fields.immutable_update(field = Fields.rank_field, value = rank).to_dict())
                            
         role_name = ' '.join([word.capitalize() for word in str(rank).split('-')])
-        await discord_client.set_role(member_id = self.discord_id, role_name = role_name)
+        await discord_client.set_role(member_id = self.fields.discord_id, role_name = role_name)

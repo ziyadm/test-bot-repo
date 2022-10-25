@@ -15,7 +15,7 @@ class Fields:
         self.leetcode_url = leetcode_url
 
     @classmethod
-    def of_dict(cls, fields):
+    def of_dict(cls, fields: Dict[str, str]):
         return cls(question_id = fields[cls.question_id_field],
                    leetcode_url = fields[cls.leetcode_url_field])
 

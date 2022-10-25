@@ -17,7 +17,7 @@ class MissionStatus:
         self.value = value
 
     def has_value(self, value):
-        return left.value == value
+        return self.value == value
 
     def __str__(self):
         return self.name[self.value]

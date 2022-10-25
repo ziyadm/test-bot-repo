@@ -31,7 +31,7 @@ class CommandHandler:
         player_discord_id = str(interaction.user.id)
         player = await User.get(
             discord_id = player_discord_id, airtable_client = self.airtable_client)
-        question = await self.get_first_unasked_question(user)
+        question = await self.get_first_unasked_question(player)
 
         if not question:
             return await interaction.followup.send('Monarch Suriel has no new training for you')
@@ -40,7 +40,7 @@ class CommandHandler:
         
         mission_channel = await self.discord_client.create_private_channel(
             member_id = player_discord_id,
-            channel_name = f"""{user.fields.discord_name}-{question_id}""")
+            channel_name = f"""{player.fields.discord_name}-{question_id}""")
 
         mission_fields = mission.Fields(
             discord_channel_id = str(mission_channel.id),
@@ -52,19 +52,19 @@ class CommandHandler:
             code = None)
 
         await Mission.create(fields = mission_fields, airtable_client = self.airtable_client)
-        await mission_channel.send(f"""Here's your mission: {question.leetcode_url}""")
+        await mission_channel.send(f"""Here's your mission: {question.fields.leetcode_url}""")
         return await interaction.followup.send(
             f"""Monarch Suriel has invited you to {mission_channel.mention}""")
 
     async def submit_command(self, interaction: discord.Interaction):
         # CR hmir: only allow submit in mission channel
         # CR hmir: we probably wanna rename submit to fit the "mission"/"quest" theme
-        mission = await Mission.get(
+        mission_to_update = await Mission.get(
             discord_channel_id = str(interaction.channel_id),
             airtable_client = self.airtable_client)
     
-        if not (mission.fields.mission_status.has_value(MissionStatus.design) or
-                mission.fields.mission_status.has_value(MissionStatus.code)):
+        if not (mission_to_update.fields.mission_status.has_value(MissionStatus.design) or
+                mission_to_update.fields.mission_status.has_value(MissionStatus.code)):
                     return await interaction.followup.send(
                         """You've completed your objective, wait for Monarch Suriel's instructions!""")
     
@@ -80,23 +80,25 @@ class CommandHandler:
         
         field_to_submit_contents_for = None
         response = None
-        if mission.fields.mission_status.has_value(MissionStatus.design):
+        if mission_to_update.fields.mission_status.has_value(MissionStatus.design):
             field_to_submit_contents_for = mission.Fields.design_field
             response = """Planning is half the battle! We've sent your plan to Monarch Suriel for approval. Check back in about 30 minutes to find out your next objective."""
-        elif mission.fields.mission_status == MissionStatus.code:
+        elif mission_to_update.fields.mission_status.has_value(MissionStatus.code):
             field_to_submit_contents_for = mission.Fields.code_field
             response = """Monarch Suriel will be pleased! We've sent your instructions to Him for approval. Once they're approved, they'll be sent directly to your minions on the frontlines!"""
             
-        updated_mission_fields = mission.fields.immutable_updates({
-            mission.Fields.mission_status_field: mission.fields.mission_status.next(),
+        updated_mission_fields = mission_to_update.fields.immutable_updates({
+            mission.Fields.mission_status_field: mission_to_update.fields.mission_status.next(),
             field_to_submit_contents_for: messages[0].content})
-        mission.update(fields = updated_mission_fields, airtable_client = self.airtable_client)
+        await mission_to_update.update(
+            fields = updated_mission_fields, airtable_client = self.airtable_client)
         return await interaction.followup.send(response)
 
     async def set_rank(self, interaction: discord.Interaction, user_discord_name: str, rank: str):
-        user = await User.get_by_discord_name(
+        user_to_update = await User.get_by_discord_name(
             discord_name = user_discord_name, airtable_client = self.airtable_client)
-        return await user.set_rank(
+        await user_to_update.set_rank(
             rank = Rank.of_string(rank),
             airtable_client = self.airtable_client,
             discord_client = self.discord_client)
+        return await interaction.followup.send(f"""Updated {user_discord_name}'s rank to {rank}""")

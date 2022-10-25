@@ -24,13 +24,13 @@ class EventHandler:
         member_id = str(member.id) 
         member_name = member.name
         rank = Rank(value = Rank.foundation)
-        user_fields = user.Fields(discord_id = member_id, discord_name = member_name, rank = rank)
-        user = await User.create(fields = user_fields, airtable_client = self.airtable_client)
+        player_fields = user.Fields(discord_id = member_id, discord_name = member_name, rank = rank)
+        player = await User.create(fields = player_fields, airtable_client = self.airtable_client)
         path_channel = await self.discord_client.create_private_channel(
             member_id,
             channel_name = f"""{member_name}-path""")
         
-        await user.set_rank(
+        await player.set_rank(
             rank,
             airtable_client = self.airtable_client,
             discord_client = self.discord_client)

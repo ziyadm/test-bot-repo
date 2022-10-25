@@ -25,27 +25,27 @@ class DiscordClient:
         self.secret_token = secret_token
 
     async def __guild(self):
-        return await self.client.fetch_guild(guild_id = self.guild_id)
+        return await self.client.fetch_guild(self.guild_id)
 
     async def create_private_channel(self, member_id: str, channel_name: str):
         guild = await self.__guild()
-        member = await guild.fetch_member(id = member_id)
+        member = await guild.fetch_member(member_id)
         permission_overwrites = {
             guild.default_role: discord.PermissionOverwrite(read_messages = False),
             member: discord.PermissionOverwrite(read_messages = True)}
         return await guild.create_text_channel(channel_name, overwrites = permission_overwrites)
 
     @staticmethod
-    async def __get_role(role_name: str, roles: List[discord.Role]):
+    def __get_role(role_name: str, roles: List[discord.Role]):
         for role in roles:
             if role.name == role_name:
                 return role
 
     async def set_role(self, member_id: str, role_name: int):
         guild = await self.__guild()
-        member = await guild.fetch_member(id = member_id)
+        member = await guild.fetch_member(member_id)
         
-        old_roles = member.roles.copy()
+        old_roles = [role for role in member.roles if role != guild.default_role]
         new_role = self.__get_role(role_name, roles = guild.roles)
 
         if new_role.id in [role.id for role in old_roles]:
@@ -53,4 +53,5 @@ class DiscordClient:
 
         await member.edit(nick = f"""[{role_name}] {member.name}""")
         await member.add_roles(new_role)
-        return await member.remove_roles(old_roles)
+        if len(old_roles) > 0:
+            return await member.remove_roles(*old_roles)

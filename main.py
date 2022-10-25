@@ -30,6 +30,7 @@ async def register_submit_command(interaction: discord.Interaction):
   await interaction.response.defer()
   return await command_handler.submit_command(interaction)
 
+# CR hmir: permissions for this command
 @discord_client.command_tree.command(
     name = 'set_rank', description = """Set a user's rank""", guild = guild)
 async def register_set_rank_command(interaction: discord.Interaction, user_discord_name: str, rank: str):

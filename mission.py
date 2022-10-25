@@ -5,6 +5,8 @@ import airtable_client
 from airtable_client import AirtableClient
 from mission_status import MissionStatus
 
+import pyairtable.formulas
+
 
 class Fields:
 
@@ -32,7 +34,7 @@ class Fields:
                      self.design = design
                      self.code = code
 
-    def __dict__(self):
+    def to_dict(self):
         def optional_to_string(optional: Optional[str]):
             return str(optional) if optional != None else ''
             
@@ -46,19 +48,21 @@ class Fields:
             self.code_field: optional_to_string(self.code)}
 
     @classmethod
-    def of_dict(cls, fields):
+    def of_dict(cls, fields: Dict[str, str]):
         return cls(discord_channel_id = fields[cls.discord_channel_id_field],
                    player_discord_id = fields[cls.player_discord_id_field],
-                   reviewer_discord_id = fields[cls.reviewer_discord_id_field],
+                   reviewer_discord_id = fields.get(cls.reviewer_discord_id_field, None),
                    question_id = fields[cls.question_id_field],
                    mission_status = MissionStatus.of_string(fields[cls.mission_status_field]),
-                   design = fields[cls.design_field],
-                   code = fields[cls.code_field])
+                   design = fields.get(cls.design_field, None),
+                   code = fields.get(cls.code_field, None))
 
     # CR hmir: pull this into a module [Immutable_dict] to deduplicate with other Fields modules
     def immutable_updates(self, updates):
-        updates = {key: str(value) for update in updates.items()}
-        return self.of_dict(dict(self).update(updates))
+        updated = self.to_dict()
+        for key, value in updates.items():
+            updated[key] = str(value)
+        return self.of_dict(updated)
 
     def immutable_update(self, field, value):
         return self.immutable_updates({field: value})
@@ -78,7 +82,7 @@ class Mission:
 
     @classmethod
     async def create(cls, fields: Fields, airtable_client: AirtableClient):
-        response = await airtable_client.write_row(table_name, fields = dict(fields))
+        response = await airtable_client.write_row(table_name = cls.table_name, fields = fields.to_dict())
         return cls.__of_airtable_response(response)
 
     @classmethod
@@ -86,7 +90,7 @@ class Mission:
         response = await airtable_client.get_row(
             table_name = cls.table_name,
             formula = pyairtable.formulas.match({Fields.discord_channel_id_field: discord_channel_id}))
-        return self.__of_airtable_response(response)
+        return cls.__of_airtable_response(response)
 
     @classmethod
     async def all_with_player(cls, player_discord_id: str, airtable_client: AirtableClient):
@@ -95,5 +99,6 @@ class Mission:
         return [cls.__of_airtable_response(response) for response in responses]
 
     async def update(self, fields: Fields, airtable_client: AirtableClient):
-        response = await airtable_client.update_row(record_id = self.record_id, fields = fields)
+        response = await airtable_client.update_row(
+            table_name = self.table_name, record_id = self.record_id, fields = fields.to_dict())
         return self.__of_airtable_response(response)
