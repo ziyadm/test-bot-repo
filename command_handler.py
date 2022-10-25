@@ -1,3 +1,5 @@
+from typing import List
+
 import mission
 
 from airtable_client import AirtableClient
@@ -19,8 +21,7 @@ class CommandHandler:
 
     async def get_first_unasked_question(self, user: User):
         missions = await Mission.all_with_player(
-            player_discord_id = user.fields.discord_id,
-            airtable_client = self.airtable_client)
+            player_discord_id = user.fields.discord_id, airtable_client = self.airtable_client)
         questions_already_asked = set([mission.fields.question_id for mission in missions])
         questions = await Question.all(airtable_client = self.airtable_client)
         for question in questions:
@@ -29,8 +30,7 @@ class CommandHandler:
 
     async def new_command(self, interaction: discord.Interaction):
         player_discord_id = str(interaction.user.id)
-        player = await User.get(
-            discord_id = player_discord_id, airtable_client = self.airtable_client)
+        player = await User.get(discord_id = player_discord_id, airtable_client = self.airtable_client)
         question = await self.get_first_unasked_question(player)
 
         if not question:
@@ -102,3 +102,47 @@ class CommandHandler:
             airtable_client = self.airtable_client,
             discord_client = self.discord_client)
         return await interaction.followup.send(f"""Updated {user_discord_name}'s rank to {rank}""")
+
+    # CR hmir: add user's path channel id to user record so we can delete that when deleting the user
+    async def delete_users_who_arent_in_discord(self, all_users_in_discord: List[str]):
+        all_users_in_db = await User.all(airtable_client = self.airtable_client)
+        
+        users_to_delete = []
+        for user_to_delete in all_users_in_db:
+            if user_to_delete.fields.discord_id not in all_users_in_discord:
+                users_to_delete.append(user_to_delete)
+
+        await User.delete_rows(users_to_delete, airtable_client = self.airtable_client)
+
+        return users_to_delete
+
+    async def delete_missions_with_players_who_arent_in_discord(self, all_users_in_discord: List[str]):
+        all_missions_in_db = await Mission.all(airtable_client = self.airtable_client)
+        
+        missions_to_delete = []
+        for mission_to_delete in all_missions_in_db:
+            if mission_to_delete.fields.player_discord_id not in all_users_in_discord:
+                missions_to_delete.append(mission_to_delete)
+
+        await Mission.delete_rows_and_channels(
+            missions_to_delete, airtable_client = self.airtable_client, discord_client = self.discord_client)
+
+        return missions_to_delete
+
+    # CR hmir: remove users from the discord who arent in the db
+    # CR hmir: remove channels that arent referenced in the db
+    async def clean_up_state(self, interaction: discord.Interaction):
+        all_users_in_discord = await self.discord_client.all_members()
+        
+        await interaction.channel.send('Deleting users who arent in discord')
+        deleted_users = await self.delete_users_who_arent_in_discord(all_users_in_discord)
+        deleted_users = ', '.join([deleted_user.fields.discord_name for deleted_user in deleted_users])
+        await interaction.channel.send(f"""Deleted users: {deleted_users}""")
+
+        await interaction.channel.send('Deleting missions with players who arent in discord')
+        deleted_missions = await self.delete_missions_with_players_who_arent_in_discord(all_users_in_discord)
+        deleted_missions = ', '.join(
+            [deleted_mission.fields.discord_channel_id for deleted_mission in deleted_missions])
+        await interaction.channel.send(f"""Deleted missions with channel ids: {deleted_missions}""")
+
+        return await interaction.followup.send(f"""Finished""")

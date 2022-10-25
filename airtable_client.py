@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 import pyairtable
 
@@ -21,7 +21,7 @@ class AirtableClient:
                                 base_id = self.base_id,
                                 table_name = table_name)
 
-    async def get_all(self, table_name: str, formula):
+    async def get_rows(self, table_name: str, formula):
         table = self.__table(table_name = table_name)
 
         responses = None
@@ -33,7 +33,7 @@ class AirtableClient:
         return [Response(response) for response in responses]
 
     async def get_row(self, table_name: str, formula):
-        responses = await self.get_all(table_name, formula)
+        responses = await self.get_rows(table_name, formula)
         
         if len(responses) != 1:
             return None
@@ -45,3 +45,7 @@ class AirtableClient:
 
     async def update_row(self, table_name: str, record_id: str, fields: Dict[str, str]):
         return Response(self.__table(table_name).update(record_id, fields))
+
+    async def delete_rows(self, table_name: str, record_ids: List[str]):
+        self.__table(table_name).batch_delete(record_ids)
+        return None

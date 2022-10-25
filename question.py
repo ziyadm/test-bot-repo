@@ -33,5 +33,5 @@ class Question:
 
     @classmethod
     async def all(cls, airtable_client: AirtableClient):
-        responses = await airtable_client.get_all(table_name = cls.table_name, formula = None)
+        responses = await airtable_client.get_rows(table_name = cls.table_name, formula = None)
         return [cls.__of_airtable_response(response) for response in responses]

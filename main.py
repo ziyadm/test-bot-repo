@@ -38,6 +38,13 @@ async def register_set_rank_command(interaction: discord.Interaction, user_disco
     return await command_handler.set_rank(
         interaction = interaction, user_discord_name = user_discord_name, rank = rank)
 
+# CR hmir: permissions for this command
+@discord_client.command_tree.command(
+    name = 'clean_up_state', description = """Clean up the db and discord""", guild = guild)
+async def register_clean_up_state_command(interaction: discord.Interaction):
+    await interaction.response.defer()
+    return await command_handler.clean_up_state(interaction)
+
 @discord_client.client.event
 async def on_ready():
     return await event_handler.on_ready()

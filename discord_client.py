@@ -27,6 +27,10 @@ class DiscordClient:
     async def __guild(self):
         return await self.client.fetch_guild(self.guild_id)
 
+    async def all_members(self):
+        guild = await self.__guild()
+        return set([member.id async for member in guild.fetch_members(limit = None)])
+
     async def create_private_channel(self, member_id: str, channel_name: str):
         guild = await self.__guild()
         member = await guild.fetch_member(member_id)
@@ -34,6 +38,16 @@ class DiscordClient:
             guild.default_role: discord.PermissionOverwrite(read_messages = False),
             member: discord.PermissionOverwrite(read_messages = True)}
         return await guild.create_text_channel(channel_name, overwrites = permission_overwrites)
+
+    async def delete_channels(self, channel_ids: List[str]):
+        guild = await self.__guild()
+        all_channels = await guild.fetch_channels()
+        deleted_channels = []
+        for channel in all_channels:
+            if channel.id in channel_ids:
+                deleted_channels.append(channel)
+                await channel.delete()
+        return deleted_channels
 
     @staticmethod
     def __get_role(role_name: str, roles: List[discord.Role]):
