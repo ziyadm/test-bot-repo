@@ -3,10 +3,7 @@ from typing import Dict, Optional
 import airtable_client
 
 from airtable_client import AirtableClient
-from discord_client import DiscordClient
 from rank import Rank
-
-import pyairtable.formulas
 
 
 class Fields:
@@ -61,9 +58,8 @@ class User:
         return cls(record_id = response.record_id, fields = Fields.of_dict(response.fields))
 
     @classmethod
-    async def create(cls, fields: Fields, airtable_client: AirtableClient, discord_client: DiscordClient):
+    async def create(cls, fields: Fields, airtable_client: AirtableClient):
         response = await airtable_client.write_row(table_name = cls.table_name, fields = fields.to_dict())
-        
         return cls.__of_airtable_response(response)
 
     @classmethod
@@ -89,7 +85,3 @@ class User:
             record_id = self.record_id,
             fields = self.fields.immutable_update(field = Fields.rank_field, value = rank).to_dict())
         return self.__of_airtable_response(response)
-
-    async def sync_discord_role(self, discord_client: DiscordClient):
-        return await discord_client.set_role(
-            member_id = self.fields.discord_id, role_name = self.fields.rank.to_string_hum())

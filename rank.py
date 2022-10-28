@@ -47,6 +47,9 @@ class Rank:
     def __str__(self):
         return self.name[self.value]
 
+    def __gt__(self, other):
+        return self.value > other.value
+
     @classmethod
     def of_string(cls, s: str):
         for (value, name) in cls.name.items():
@@ -55,3 +58,10 @@ class Rank:
 
     def to_string_hum(self):
         return ' '.join([word.capitalize() for word in str(self).split('-')])
+
+    @classmethod
+    def of_string_hum(cls, s: str):
+        for value in cls.name.keys():
+            potential_match = cls(value)
+            if s == potential_match.to_string_hum():
+                return potential_match

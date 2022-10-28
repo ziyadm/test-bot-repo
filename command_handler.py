@@ -3,12 +3,10 @@ from typing import List
 import mission
 import user
 
-from airtable_client import AirtableClient
-from discord_client import DiscordClient
 from mission import Mission
 from mission_status import MissionStatus
-from question import Question
 from rank import Rank
+from state import State
 from user import User
 
 import discord
@@ -17,46 +15,11 @@ import pyairtable.formulas
 
 class CommandHandler:
 
-    def __init__(self, airtable_client: AirtableClient, discord_client: DiscordClient):
-        self.airtable_client = airtable_client
-        self.discord_client = discord_client
-
-    async def first_unasked_question(self, user: User):
-        missions = await Mission.rows(
-            formula = pyairtable.formulas.match({mission.Fields.player_discord_id_field: user.fields.discord_id}),
-            airtable_client = self.airtable_client)
-        questions_already_asked = set([mission.fields.question_id for mission in missions])
-        questions = await Question.rows(formula = None, airtable_client = self.airtable_client)
-        for question in questions:
-            if question.fields.question_id not in questions_already_asked:
-                return question
+    def __init__(self, state: State):
+        self.state = state
 
     async def new_command(self, interaction: discord.Interaction):
-        member_id = str(interaction.user.id)
-        player = await User.row(
-            formula = pyairtable.formulas.match({user.Fields.discord_id_field: member_id}),
-            airtable_client = self.airtable_client)
-        
-        question = await self.first_unasked_question(player)
-        if not question:
-            return await interaction.followup.send('Monarch Suriel has no new training for you')
-
-        question_id = question.fields.question_id
-        mission_channel = await self.discord_client.create_private_channel(
-            member_id, channel_name = f"""{player.fields.discord_name}-{question_id}""")
-        
-        await Mission.create(
-            fields = mission.Fields(
-                discord_channel_id = str(mission_channel.id),
-                player_discord_id = member_id,
-                reviewer_discord_id = None,
-                question_id = question_id,
-                mission_status = MissionStatus(value = MissionStatus.design),
-                design = None,
-                code = None),
-            airtable_client = self.airtable_client)
-        
-        await mission_channel.send(f"""Here's your mission: {question.fields.leetcode_url}""")
+        _, mission_channel = await self.state.create_mission(player_discord_id = str(interaction.user.id))
         
         return await interaction.followup.send(
             f"""Monarch Suriel has invited you to {mission_channel.mention}""")
@@ -65,8 +28,9 @@ class CommandHandler:
         # CR hmir: only allow submit in mission channel
         # CR hmir: we probably wanna rename submit to fit the "mission"/"quest" theme
         mission_to_update = await Mission.row(
-            formula = pyairtable.formulas.match({mission.Fields.discord_channel_id_field: str(interaction.channel_id)}),
-            airtable_client = self.airtable_client)
+            formula = pyairtable.formulas.match({
+                mission.Fields.discord_channel_id_field: str(interaction.channel_id)}),
+            airtable_client = self.state.airtable_client)
     
         if not (mission_to_update.fields.mission_status.has_value(MissionStatus.design) or
                 mission_to_update.fields.mission_status.has_value(MissionStatus.code)):
@@ -96,57 +60,56 @@ class CommandHandler:
             fields = mission_to_update.fields.immutable_updates({
                 mission.Fields.mission_status_field: mission_to_update.fields.mission_status.next(),
                 field_to_submit_contents_for: messages[0].content}),
-            airtable_client = self.airtable_client)
+            airtable_client = self.state.airtable_client)
         
         return await interaction.followup.send(response)
 
     async def set_rank(self, interaction: discord.Interaction, user_discord_name: str, rank: str):
         user_to_update = await User.row(
             formula = pyairtable.formulas.match({user.Fields.discord_name_field: user_discord_name}),
-            airtable_client = self.airtable_client)
+            airtable_client = self.state.airtable_client)
         
         updated_user = await user_to_update.set_rank(
-            rank = Rank.of_string(rank), airtable_client = self.airtable_client)
+            rank = Rank.of_string(rank), airtable_client = self.state.airtable_client)
         
-        await updated_user.sync_discord_role(discord_client = self.discord_client)
+        await self.state.sync_discord_role(for_user = updated_user)
         
         return await interaction.followup.send(f"""Updated {user_discord_name}'s rank to {rank}""")
 
-    async def delete_users_who_arent_in_discord(self, users_in_discord: List[str]):
-        users_in_db = await User.rows(formula = None, airtable_client = self.airtable_client)
+    async def delete_users_who_arent_in_discord(self, users_in_discord: List[discord.Member], users_in_db: List[User]):
+        user_ids_in_discord = [str(user_in_discord.id) for user_in_discord in users_in_discord]
         
         users_to_delete = []
         for user_to_delete in users_in_db:
-            if user_to_delete.fields.discord_id not in users_in_discord:
+            if user_to_delete.fields.discord_id not in user_ids_in_discord:
                 users_to_delete.append(user_to_delete)
 
-        await User.delete_rows(users_to_delete, airtable_client = self.airtable_client)
+        await User.delete_rows(users_to_delete, airtable_client = self.state.airtable_client)
                                                     
         return users_to_delete
 
-    async def delete_missions_with_players_who_arent_in_discord(self, users_in_discord: List[str]):
-        missions_in_db = await Mission.rows(formula = None, airtable_client = self.airtable_client)
+    async def delete_missions_with_players_who_arent_in_discord(self, users_in_discord: List[discord.Member]):
+        user_ids_in_discord = [str(user_in_discord.id) for user_in_discord in users_in_discord]
+        missions_in_db = await Mission.rows(formula = None, airtable_client = self.state.airtable_client)
         
         missions_to_delete = []
         for mission_to_delete in missions_in_db:
-            if mission_to_delete.fields.player_discord_id not in users_in_discord:
+            if mission_to_delete.fields.player_discord_id not in user_ids_in_discord:
                 missions_to_delete.append(mission_to_delete)
 
-        await Mission.delete_rows(
-            missions_to_delete, airtable_client = self.airtable_client, discord_client = self.discord_client)
+        await Mission.delete_rows(missions_to_delete, airtable_client = self.state.airtable_client)
 
         return missions_to_delete
 
-    async def delete_inactive_channels(self, reviewers_channel_id: str):
-        users = await User.rows(formula = None, airtable_client = self.airtable_client)
-        active_user_channels = [user.fields.discord_channel_id for user in users]
+    async def delete_inactive_channels(self, reviewers_channel_id: str, users_in_db: List[User]):
+        active_user_channels = [user_in_db.fields.discord_channel_id for user_in_db in users_in_db]
         
-        missions = await Mission.rows(formula = None, airtable_client = self.airtable_client)
+        missions = await Mission.rows(formula = None, airtable_client = self.state.airtable_client)
         active_mission_channels = [mission.fields.discord_channel_id for mission in missions]
 
         active_channels = set(active_user_channels + active_mission_channels + [reviewers_channel_id])
 
-        channels = await self.discord_client.channels()
+        channels = await self.state.discord_client.channels()
         
         deleted_channels = []
         for channel in channels:
@@ -156,12 +119,33 @@ class CommandHandler:
 
         return deleted_channels
 
-    # CR hmir: remove users from the discord who arent in the db
+    async def sync_discord_users_to_db(self, users_in_discord: List[discord.Member], users_in_db: List[User]):
+        user_ids_in_db = [user_in_db.fields.discord_id for user_in_db in users_in_db]
+        
+        synced_users = []
+        for user_to_sync in users_in_discord:
+            discord_id = str(user_to_sync.id)
+            if discord_id not in user_ids_in_db:
+                highest_rank_held_by_user = Rank(value = Rank.foundation)
+                
+                for role in user_to_sync.roles:
+                    rank_held_by_user = Rank.of_string_hum(role.name)
+                    if rank_held_by_user != None and rank_held_by_user > highest_rank_held_by_user:
+                        highest_rank_held_by_user = rank_held_by_user
+
+                new_user, _ = await self.state.create_user(
+                    discord_id, discord_name = user_to_sync.name, rank = highest_rank_held_by_user)
+
+                synced_users.append(new_user)
+
+        return synced_users
+
     async def clean_up_state(self, interaction: discord.Interaction):
-        users_in_discord = await self.discord_client.member_set()
+        users_in_discord = await self.state.discord_client.members()
+        users_in_db = await User.rows(formula = None, airtable_client = self.state.airtable_client)
         
         await interaction.channel.send('Deleting users who arent in discord')
-        deleted_users = await self.delete_users_who_arent_in_discord(users_in_discord)
+        deleted_users = await self.delete_users_who_arent_in_discord(users_in_discord, users_in_db)
         deleted_users = ', '.join([deleted_user.fields.discord_name for deleted_user in deleted_users])
         if len(deleted_users) > 0:
             await interaction.channel.send(f"""Deleted users: {deleted_users}""")
@@ -174,9 +158,17 @@ class CommandHandler:
             await interaction.channel.send(f"""Deleted missions: {deleted_missions}""")
 
         await interaction.channel.send('Deleting inactive channels')
-        deleted_channels = await self.delete_inactive_channels(reviewers_channel_id = str(interaction.channel.id))
+        deleted_channels = await self.delete_inactive_channels(
+            reviewers_channel_id = str(interaction.channel.id), users_in_db = users_in_db)
         deleted_channels = ', '.join([str(deleted_channel.id) for deleted_channel in deleted_channels])
         if len(deleted_channels) > 0:
             await interaction.channel.send(f"""Deleted inactive channels: {deleted_channels}""")
+
+        await interaction.channel.send('Syncing discord users to db')
+        synced_users = await self.sync_discord_users_to_db(users_in_discord, users_in_db)
+        synced_users = ', '.join(
+            [synced_user.fields.discord_name for synced_user in synced_users])
+        if len(deleted_channels) > 0:
+            await interaction.channel.send(f"""Synced discord users: {synced_users}""")
 
         return await interaction.followup.send(f"""Finished""")
