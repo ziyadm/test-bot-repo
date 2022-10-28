@@ -84,4 +84,5 @@ class User:
             table_name = self.table_name,
             record_id = self.record_id,
             fields = self.fields.immutable_update(field = Fields.rank_field, value = rank).to_dict())
+
         return self.__of_airtable_response(response)

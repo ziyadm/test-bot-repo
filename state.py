@@ -18,10 +18,6 @@ class State:
         self.airtable_client = airtable_client
         self.discord_client = discord_client
 
-    async def sync_discord_role(self, for_user: User):
-        return await self.discord_client.set_role(
-            member_id = for_user.fields.discord_id, role_name = for_user.fields.rank.to_string_hum())
-
     async def first_unasked_question(self, for_user: User):
         existing_missions = await Mission.rows(
             formula = pyairtable.formulas.match({mission.Fields.player_discord_id_field: for_user.fields.discord_id}),
@@ -66,6 +62,11 @@ class State:
         
         return (new_mission, mission_channel)
 
+    async def sync_discord_role(self, for_user: User):
+        await self.discord_client.set_role(
+            member_id = for_user.fields.discord_id, role_name = for_user.fields.rank.to_string_hum())
+        return None
+
     async def create_user(self, discord_id: str, discord_name: str, rank: Rank):
         user_channel = await self.discord_client.create_private_channel(discord_id, channel_name = f"""{discord_name}-path""")
         discord_channel_id = str(user_channel.id)
@@ -76,3 +77,8 @@ class State:
         await self.sync_discord_role(for_user = new_user)
 
         return (new_user, user_channel)
+
+    async def set_rank(self, for_user: User, rank: Rank):
+        updated_user = await for_user.set_rank(rank, airtable_client = self.airtable_client)
+        await self.sync_discord_role(for_user = updated_user)
+        return updated_user
