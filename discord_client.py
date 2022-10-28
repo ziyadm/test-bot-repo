@@ -57,13 +57,12 @@ class DiscordClient:
         old_roles = [role for role in member.roles if role != guild.default_role]
         new_role = self.__get_role(role_name, roles = guild.roles)
 
-        if new_role.id in [role.id for role in old_roles]:
-            return None
+        if new_role.id not in [role.id for role in old_roles]:
+            await member.add_roles(new_role)
+            
+            if len(old_roles) > 0:
+                await member.remove_roles(*old_roles)
 
         await member.edit(nick = f"""[{role_name}] {member.name}""")
-        await member.add_roles(new_role)
-        
-        if len(old_roles) > 0:
-            await member.remove_roles(*old_roles)
 
         return None

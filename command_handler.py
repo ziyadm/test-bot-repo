@@ -68,11 +68,8 @@ class CommandHandler:
         user_to_update = await User.row(
             formula = pyairtable.formulas.match({user.Fields.discord_name_field: user_discord_name}),
             airtable_client = self.state.airtable_client)
-        
-        updated_user = await user_to_update.set_rank(
-            rank = Rank.of_string(rank), airtable_client = self.state.airtable_client)
-        
-        await self.state.sync_discord_role(for_user = updated_user)
+
+        await self.state.set_rank(for_user = user_to_update, rank = Rank.of_string(rank))
         
         return await interaction.followup.send(f"""Updated {user_discord_name}'s rank to {rank}""")
 
