@@ -2,6 +2,7 @@ from airtable_client import AirtableClient
 from discord_client import DiscordClient
 from command_handler import CommandHandler
 from event_handler import EventHandler
+from state import State
 
 import discord
 import os
@@ -14,8 +15,9 @@ discord_secret_token = os.environ['discord_secret_token']
 
 airtable_client = AirtableClient(api_key = airtable_api_key, base_id = airtable_database_id)
 discord_client = DiscordClient(guild_id = discord_guild_id, secret_token = discord_secret_token)
-command_handler = CommandHandler(airtable_client, discord_client)
-event_handler = EventHandler(airtable_client, discord_client)
+state = State(airtable_client, discord_client)
+command_handler = CommandHandler(state)
+event_handler = EventHandler(state)
 
 guild = discord.Object(id = discord_guild_id)
 

@@ -1,12 +1,9 @@
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 import airtable_client
 
 from airtable_client import AirtableClient
-from discord_client import DiscordClient
 from mission_status import MissionStatus
-
-import pyairtable.formulas
 
 
 class Fields:
@@ -97,10 +94,7 @@ class Mission:
         return [cls.__of_airtable_response(response) for response in responses]
 
     @classmethod
-    async def delete_rows(cls,
-                                       missions_to_delete,
-                                       airtable_client: AirtableClient,
-                                       discord_client: DiscordClient):
+    async def delete_rows(cls, missions_to_delete, airtable_client: AirtableClient):
         await airtable_client.delete_rows(
             table_name = cls.table_name,
             record_ids = [mission_to_delete.record_id for mission_to_delete in missions_to_delete])

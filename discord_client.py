@@ -27,9 +27,10 @@ class DiscordClient:
     async def __guild(self):
         return await self.client.fetch_guild(self.guild_id)
 
-    async def member_set(self):
+    async def members(self):
         guild = await self.__guild()
-        return set([member.id async for member in guild.fetch_members(limit = None)])
+        members = [member async for member in guild.fetch_members(limit = None)]
+        return members
 
     async def channels(self):
         guild = await self.__guild()
