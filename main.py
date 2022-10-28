@@ -41,6 +41,7 @@ async def register_set_rank_command(interaction: discord.Interaction, user_disco
         interaction = interaction, user_discord_name = user_discord_name, rank = rank)
 
 # CR hmir: permissions for this command
+# TODO ziyadm: filter out monarchs (higher rank than bot)
 @discord_client.command_tree.command(
     name = 'clean_up_state', description = """Clean up the db and discord""", guild = guild)
 async def register_clean_up_state_command(interaction: discord.Interaction):
