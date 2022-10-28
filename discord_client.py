@@ -1,6 +1,7 @@
 from typing import List
 
 import discord
+import os
 
 
 class DiscordClient:
@@ -66,3 +67,6 @@ class DiscordClient:
         await member.edit(nick = f"""[{role_name}] {member.name}""")
 
         return None
+
+    async def get_review_channel(self):
+        return await self.client.fetch_channel(os.environ['discord_review_channel_id'])

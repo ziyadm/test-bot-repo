@@ -9,6 +9,7 @@ from mission_status import MissionStatus
 class Fields:
 
     discord_channel_id_field = 'discord_channel_id'
+    review_discord_channel_id_field = 'review_discord_channel_id'
     player_discord_id_field = 'player_discord_id'
     reviewer_discord_id_field = 'reviewer_discord_id'
     question_id_field = 'question_id'
@@ -18,6 +19,7 @@ class Fields:
         
     def __init__(self,
                  discord_channel_id: str,
+                 review_discord_channel_id: Optional[str],
                  player_discord_id: str,
                  reviewer_discord_id: Optional[str],
                  question_id: str,
@@ -31,6 +33,7 @@ class Fields:
                      self.mission_status = mission_status
                      self.design = design
                      self.code = code
+                     self.review_discord_channel_id = review_discord_channel_id
 
     def to_dict(self):
         def optional_to_string(optional: Optional[str]):
@@ -38,6 +41,7 @@ class Fields:
             
         return {
             self.discord_channel_id_field: self.discord_channel_id,
+            self.review_discord_channel_id_field: optional_to_string(self.review_discord_channel_id),
             self.player_discord_id_field: self.player_discord_id,
             self.reviewer_discord_id_field: optional_to_string(self.reviewer_discord_id),
             self.question_id_field: self.question_id,
@@ -48,6 +52,7 @@ class Fields:
     @classmethod
     def of_dict(cls, fields: Dict[str, str]):
         return cls(discord_channel_id = fields[cls.discord_channel_id_field],
+                   review_discord_channel_id = fields.get(cls.review_discord_channel_id_field, None),
                    player_discord_id = fields[cls.player_discord_id_field],
                    reviewer_discord_id = fields.get(cls.reviewer_discord_id_field, None),
                    question_id = fields[cls.question_id_field],

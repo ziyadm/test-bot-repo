@@ -1,4 +1,10 @@
-# Python Discord Bot + Airtable
+# Discord bot for SWE interview prep
+
+## How to run locally
+
+* install deps
+* python3 main.py
+
 
 ## Airtable
 

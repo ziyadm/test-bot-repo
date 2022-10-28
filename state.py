@@ -50,6 +50,7 @@ class State:
         new_mission = await Mission.create(
             fields = mission.Fields(
                 discord_channel_id = str(mission_channel.id),
+                review_discord_channel_id = None,
                 player_discord_id = player_discord_id,
                 reviewer_discord_id = None,
                 question_id = question_id,

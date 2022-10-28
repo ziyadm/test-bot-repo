@@ -2,12 +2,14 @@ from airtable_client import AirtableClient
 from discord_client import DiscordClient
 from command_handler import CommandHandler
 from event_handler import EventHandler
+from dotenv import load_dotenv
 from state import State
 
 import discord
 import os
 
 
+load_dotenv()
 airtable_api_key = os.environ['airtable_api_key']
 airtable_database_id = os.environ['airtable_database_id']
 discord_guild_id = int(os.environ['discord_guild_id'])
@@ -25,6 +27,12 @@ guild = discord.Object(id = discord_guild_id)
 async def register_new_command(interaction: discord.Interaction):
     await interaction.response.defer()
     return await command_handler.new_command(interaction)
+
+@discord_client.command_tree.command(
+    name="review", description="Review a mission", guild=guild)
+async def register_review_command(interaction: discord.Interaction):
+  await interaction.response.defer()
+  return await command_handler.review_command(interaction)
 
 @discord_client.command_tree.command(
     name="submit", description="Attempt to complete the current stage of a mission", guild=guild)
