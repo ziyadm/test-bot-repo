@@ -2,13 +2,11 @@
 
 
 ## How to set up local environment
-python3 -m pip install --upgrade poetry
+./setup.sh
 
 
 ## How to run locally
-python3 -m poetry lock --no-update
-python3 -m poetry install
-python3 -m poetry run python3 main.py
+./build.sh
 
 
 ## Airtable
