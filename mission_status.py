@@ -8,9 +8,9 @@ class MissionStatus:
 
     name = {
         design: "design",
-        design_review: "design-review",
+        design_review: "design_review",
         code: "code",
-        code_review: "code-review",
+        code_review: "code_review",
         completed: "completed",
     }
 
@@ -19,6 +19,9 @@ class MissionStatus:
 
     def has_value(self, value: int):
         return self.value == value
+
+    def get_field(self):
+        return self.__str__()
 
     def __str__(self):
         return self.name[self.value]

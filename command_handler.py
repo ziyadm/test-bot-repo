@@ -122,6 +122,38 @@ class CommandHandler:
 
         return await interaction.followup.send(response)
 
+    async def handle_submission(self, interaction, mission_to_update, messages):
+        field_to_submit_contents_for = mission.Fields.design_field if mission_to_update.fields.mission_status.has_value(MissionStatus.design) else mission.Fields.code_field
+        response = """Planning is half the battle! We've sent your plan to Monarch Suriel for approval. Check back in about 30 minutes to find out your next objective."""
+
+        next_field = mission_to_update.fields.mission_status.next().get_field()
+        if mission_to_update.fields.to_dict()[next_field]:
+            # review is not new: it is a revision and we need to update the original reviewer
+            original_review_channel = await self.state.discord_client.client.fetch_channel(mission_to_update.fields.review_discord_channel_id)
+            await original_review_channel.send(f"Followup for review: {messages[0].content}")
+        else:
+            # review is new, we need to ping the reviews channel for this mission
+            review_channel = await self.state.discord_client.get_review_channel()
+            review_message = await review_channel.send(
+                f"Ready for review: {interaction.channel.mention}"
+            )
+            review_thread = await review_message.create_thread(
+                name=f"review-{interaction.channel.mention}"
+            )
+
+        await mission_to_update.update(
+            fields=mission_to_update.fields.immutable_updates(
+                {
+                    mission.Fields.mission_status_field: mission_to_update.fields.mission_status.next(),
+                    field_to_submit_contents_for: messages[0].content,
+                }
+            ),
+            airtable_client=self.state.airtable_client,
+        )
+
+        return response
+
+
     async def submit_command(self, interaction: discord.Interaction):
         # TODO prointerviewschool: only allow submit in mission channel
         # TODO prointerviewschool: we probably wanna rename submit to fit the "mission"/"quest" theme
@@ -152,40 +184,7 @@ class CommandHandler:
             # follow up with ziyad
             return await interaction.followup.send("You need to instruct your minions!")
 
-        field_to_submit_contents_for = None
-        response = None
-        if mission_to_update.fields.mission_status.has_value(MissionStatus.design):
-            field_to_submit_contents_for = mission.Fields.design_field
-            response = """Planning is half the battle! We've sent your plan to Monarch Suriel for approval. Check back in about 30 minutes to find out your next objective."""
-
-            # can use .next() field and field lookup here so we can share this across design and code review
-            if mission_to_update.fields.design_review:
-                # review is not new: it is a revision and we need to update the original reviewer
-                original_review_channel = await self.state.discord_client.client.fetch_channel(mission_to_update.fields.review_discord_channel_id)
-                await original_review_channel.send(f"Followup for review: {messages[0].content}")
-            else:
-                # review is new, we need to ping the reviews channel for this mission
-                review_channel = await self.state.discord_client.get_review_channel()
-                review_message = await review_channel.send(
-                    f"Ready for review: {interaction.channel.mention}"
-                )
-                review_thread = await review_message.create_thread(
-                    name=f"review-{interaction.channel.mention}"
-                )
-
-        elif mission_to_update.fields.mission_status.has_value(MissionStatus.code):
-            field_to_submit_contents_for = mission.Fields.code_field
-            response = """Monarch Suriel will be pleased! We've sent your instructions to Him for approval. Once they're approved, they'll be sent directly to your minions on the frontlines!"""
-
-        await mission_to_update.update(
-            fields=mission_to_update.fields.immutable_updates(
-                {
-                    mission.Fields.mission_status_field: mission_to_update.fields.mission_status.next(),
-                    field_to_submit_contents_for: messages[0].content,
-                }
-            ),
-            airtable_client=self.state.airtable_client,
-        )
+        response = await self.handle_submission(interaction, mission_to_update, messages)
 
         return await interaction.followup.send(response)
 
