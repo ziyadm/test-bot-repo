@@ -240,6 +240,8 @@ class CommandHandler:
 
         return synced_users
 
+    # TODO prointerviewschool: dont do anything with anyone with a higher rank than the bot
+    # TODO prointerviewschool: dont delete the review channel
     async def clean_up_state(self, interaction: discord.Interaction):
         users_in_discord = await self.state.discord_client.members()
         users_in_db = await User.rows(
