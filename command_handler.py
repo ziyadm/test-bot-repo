@@ -43,7 +43,8 @@ class CommandHandler:
 
         await mission_to_update.update(
             fields = mission_to_update.fields.immutable_updates({
-                mission.Fields.review_discord_channel_id_field: str(question_review_channel.id)}),
+                mission.Fields.review_discord_channel_id_field: str(question_review_channel.id),
+                mission.Fields.reviewer_discord_id_field: interaction.user.id}),
             airtable_client = self.state.airtable_client)
 
         return await interaction.followup.send(response)
