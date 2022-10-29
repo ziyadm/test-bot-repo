@@ -15,7 +15,9 @@ class Fields:
     question_id_field = "question_id"
     mission_status_field = "mission_status"
     design_field = "design"
+    design_review_field = "design_review"
     code_field = "code"
+    code_review_field = "code_review"
 
     def __init__(
         self,
@@ -26,16 +28,20 @@ class Fields:
         question_id: str,
         mission_status: MissionStatus,
         design: Optional[str],
+        design_review: Optional[str],
         code: Optional[str],
+        code_review: Optional[str],
     ):
         self.discord_channel_id = discord_channel_id
+        self.review_discord_channel_id = review_discord_channel_id
         self.player_discord_id = player_discord_id
         self.reviewer_discord_id = reviewer_discord_id
         self.question_id = question_id
         self.mission_status = mission_status
         self.design = design
+        self.design_review = design_review
         self.code = code
-        self.review_discord_channel_id = review_discord_channel_id
+        self.code_review = code_review
 
     def to_dict(self):
         def optional_to_string(optional: Optional[str]):
@@ -53,7 +59,9 @@ class Fields:
             self.question_id_field: self.question_id,
             self.mission_status_field: str(self.mission_status),
             self.design_field: optional_to_string(self.design),
+            self.design_review_field: optional_to_string(self.design_review),
             self.code_field: optional_to_string(self.code),
+            self.code_review_field: optional_to_string(self.code_review),
         }
 
     @classmethod
@@ -68,7 +76,9 @@ class Fields:
             question_id=fields[cls.question_id_field],
             mission_status=MissionStatus.of_string(fields[cls.mission_status_field]),
             design=fields.get(cls.design_field, None),
+            design_review=fields.get(cls.design_review_field, None),
             code=fields.get(cls.code_field, None),
+            code_review=fields.get(cls.code_review_field, None),
         )
 
     # TODO prointerviewschool: pull this into a module [Immutable_dict] to deduplicate with other Fields modules

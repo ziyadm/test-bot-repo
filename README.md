@@ -24,6 +24,9 @@
 
 ## TODOs
 
+* TODO: figure out if we can limit commands to specific roles/channels
+* TODO: turn off all messages
+* TODO: make one channel for general chat
 * TODO ziyadm: reviewing flow
 * claiming a review flow
 	** go to thread for the review notification

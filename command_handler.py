@@ -27,6 +27,57 @@ class CommandHandler:
         )
 
     async def review_command(self, interaction: discord.Interaction):
+        messages = [
+            message
+            async for message in interaction.channel.history()
+            if message.type == discord.MessageType.default
+        ]
+
+        mission_to_update = await Mission.row(
+            formula=pyairtable.formulas.match(
+                {mission.Fields.review_discord_channel_id_field: str(interaction.channel_id)}
+            ),
+            airtable_client=self.state.airtable_client,
+        )
+
+        if not (
+            mission_to_update.fields.mission_status.has_value(
+                MissionStatus.design_review
+            )
+            or mission_to_update.fields.mission_status.has_value(
+                MissionStatus.code_review
+            )
+        ):
+            return await interaction.followup.send("""Review already completed!""")
+
+        review_field = mission.Fields.design_review_field if mission_to_update.fields.mission_status.has_value(MissionStatus.design_review) else mission.Fields.code_review_field
+        review_value = messages[0].content
+
+        state_field = mission.Fields.mission_status_field
+        state_value = mission_to_update.fields.mission_status.previous()
+
+        await mission_to_update.update(
+            fields=mission_to_update.fields.immutable_updates(
+                {
+                    review_field: review_value,
+                    state_field: state_value,
+                }
+            ),
+            airtable_client=self.state.airtable_client,
+        )
+
+        response = f"Sent review followups."
+
+        question_channel = (
+            await self.state.discord_client.client.fetch_channel(
+                mission_to_update.fields.discord_channel_id
+            )
+        )
+
+        await question_channel.send(f"Feedback: {review_value}")
+        return await interaction.followup.send(response)
+
+    async def claim_command(self, interaction: discord.Interaction):
         # TODO ziyadm: only allow in mission channel -> maybe decorator for commands that limit
         question_discord_channel_id = interaction.channel.name.split("review-")[-1]
 
@@ -52,6 +103,9 @@ class CommandHandler:
                 interaction.user.id, f"review-{mission_to_update.fields.question_id}"
             )
         )
+        content_field = mission_to_update.fields.design if mission_to_update.fields.mission_status.has_value(MissionStatus.design_review) else mission_to_update.fields.code
+
+        await question_review_channel.send(content_field)
         response = f"Review claimed: {question_review_channel.mention}"
 
         await mission_to_update.update(
@@ -104,13 +158,20 @@ class CommandHandler:
             field_to_submit_contents_for = mission.Fields.design_field
             response = """Planning is half the battle! We've sent your plan to Monarch Suriel for approval. Check back in about 30 minutes to find out your next objective."""
 
-            review_channel = await self.state.discord_client.get_review_channel()
-            review_message = await review_channel.send(
-                f"Ready for review: {interaction.channel.mention}"
-            )
-            review_thread = await review_message.create_thread(
-                name=f"review-{interaction.channel.mention}"
-            )
+            # can use .next() field and field lookup here so we can share this across design and code review
+            if mission_to_update.fields.design_review:
+                # review is not new: it is a revision and we need to update the original reviewer
+                original_review_channel = await self.state.discord_client.client.fetch_channel(mission_to_update.fields.review_discord_channel_id)
+                await original_review_channel.send(f"Followup for review: {messages[0].content}")
+            else:
+                # review is new, we need to ping the reviews channel for this mission
+                review_channel = await self.state.discord_client.get_review_channel()
+                review_message = await review_channel.send(
+                    f"Ready for review: {interaction.channel.mention}"
+                )
+                review_thread = await review_message.create_thread(
+                    name=f"review-{interaction.channel.mention}"
+                )
 
         elif mission_to_update.fields.mission_status.has_value(MissionStatus.code):
             field_to_submit_contents_for = mission.Fields.code_field

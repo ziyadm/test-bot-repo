@@ -34,3 +34,9 @@ class MissionStatus:
             return None
         else:
             return MissionStatus(value=self.value + 1)
+
+    def previous(self):
+        if self.has_value(self.design):
+            return None
+        else:
+            return MissionStatus(value=self.value - 1)
