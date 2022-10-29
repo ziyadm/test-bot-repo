@@ -35,7 +35,15 @@ async def register_new_command(interaction: discord.Interaction):
 
 
 @discord_client.command_tree.command(
-    name="review", description="Review a mission", guild=guild
+    name="claim", description="Claim review of a mission", guild=guild
+)
+async def register_claim_command(interaction: discord.Interaction):
+    await interaction.response.defer()
+    return await command_handler.claim_command(interaction)
+
+
+@discord_client.command_tree.command(
+    name="review", description="Submit review of a mission", guild=guild
 )
 async def register_review_command(interaction: discord.Interaction):
     await interaction.response.defer()

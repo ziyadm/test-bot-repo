@@ -69,7 +69,9 @@ class State:
                 question_id=question_id,
                 mission_status=MissionStatus(value=MissionStatus.design),
                 design=None,
+                design_review=None,
                 code=None,
+                code_review=None,
             ),
             airtable_client=self.airtable_client,
         )
