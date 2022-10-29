@@ -1,9 +1,14 @@
 # Discord bot for SWE interview prep
 
-## How to run locally
 
-* install deps
-* python3 main.py
+## How to set up local environment
+1. python3 -m pip install --upgrade poetry
+
+
+## How to run locally
+1. python3 -m poetry lock --no-update
+2. python3 -m poetry install
+3. python3 -m poetry run python3 main.py
 
 
 ## Airtable
