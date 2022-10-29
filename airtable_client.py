@@ -4,37 +4,35 @@ import pyairtable
 
 
 class Response:
-
     def __init__(self, response: Dict[str, str]):
-        self.record_id = response['id']
-        self.fields = response['fields']
+        self.record_id = response["id"]
+        self.fields = response["fields"]
 
 
 class AirtableClient:
-
     def __init__(self, api_key: str, base_id: str):
         self.api_key = api_key
         self.base_id = base_id
 
     def __table(self, table_name: str):
-        return pyairtable.Table(api_key = self.api_key,
-                                base_id = self.base_id,
-                                table_name = table_name)
+        return pyairtable.Table(
+            api_key=self.api_key, base_id=self.base_id, table_name=table_name
+        )
 
     async def rows(self, table_name: str, formula: Optional[str]):
-        table = self.__table(table_name = table_name)
+        table = self.__table(table_name=table_name)
 
         responses = None
-        if formula == None:
+        if formula is None:
             responses = table.all()
         else:
-            responses = table.all(formula = formula)
+            responses = table.all(formula=formula)
 
         return [Response(response) for response in responses]
 
     async def row(self, table_name: str, formula: Optional[str]):
         responses = await self.rows(table_name, formula)
-        
+
         if len(responses) != 1:
             return None
 

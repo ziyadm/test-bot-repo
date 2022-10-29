@@ -5,14 +5,15 @@ class MissionStatus:
     code = 3
     code_review = 4
     completed = 5
-    
+
     name = {
-        design: 'design',
-        design_review: 'design-review',
-        code: 'code',
-        code_review: 'code-review',
-        completed: 'completed'}
-    
+        design: "design",
+        design_review: "design-review",
+        code: "code",
+        code_review: "code-review",
+        completed: "completed",
+    }
+
     def __init__(self, value: int):
         self.value = value
 
@@ -26,10 +27,10 @@ class MissionStatus:
     def of_string(cls, s: str):
         for (value, name) in cls.name.items():
             if s == name:
-                return cls(value = value)
+                return cls(value=value)
 
     def next(self):
         if self.has_value(self.completed):
             return None
         else:
-            return MissionStatus(value = self.value + 1)
+            return MissionStatus(value=self.value + 1)
