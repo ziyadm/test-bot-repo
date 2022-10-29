@@ -24,6 +24,30 @@ class CommandHandler:
         return await interaction.followup.send(
             f"""Monarch Suriel has invited you to {mission_channel.mention}""")
 
+    async def review_command(self, interaction: discord.Interaction):
+        # CR ziyadm: only allow in mission channel -> maybe decorator for commands that limit
+        question_discord_channel_id = interaction.channel.name.split('review-')[-1]
+
+        mission_to_update = await Mission.row(
+            formula = pyairtable.formulas.match({
+                mission.Fields.discord_channel_id_field: question_discord_channel_id}),
+            airtable_client = self.state.airtable_client)
+
+        if not (mission_to_update.fields.mission_status.has_value(MissionStatus.design_review) or
+                mission_to_update.fields.mission_status.has_value(MissionStatus.code_review)):
+                    return await interaction.followup.send(
+                        """Review already claimed!""")
+
+        question_review_channel = await self.state.discord_client.create_private_channel(interaction.user.id, f"review-{mission_to_update.fields.question_id}")
+        response = f"Review claimed: {question_review_channel.mention}"
+
+        await mission_to_update.update(
+            fields = mission_to_update.fields.immutable_updates({
+                mission.Fields.review_discord_channel_id_field: str(question_review_channel.id)}),
+            airtable_client = self.state.airtable_client)
+
+        return await interaction.followup.send(response)
+
     async def submit_command(self, interaction: discord.Interaction):
         # CR hmir: only allow submit in mission channel
         # CR hmir: we probably wanna rename submit to fit the "mission"/"quest" theme
@@ -52,6 +76,11 @@ class CommandHandler:
         if mission_to_update.fields.mission_status.has_value(MissionStatus.design):
             field_to_submit_contents_for = mission.Fields.design_field
             response = """Planning is half the battle! We've sent your plan to Monarch Suriel for approval. Check back in about 30 minutes to find out your next objective."""
+
+            review_channel = await self.state.discord_client.get_review_channel()
+            review_message = await review_channel.send(f"Ready for review: {interaction.channel.mention}")
+            review_thread = await review_message.create_thread(name=f"review-{interaction.channel.mention}")
+
         elif mission_to_update.fields.mission_status.has_value(MissionStatus.code):
             field_to_submit_contents_for = mission.Fields.code_field
             response = """Monarch Suriel will be pleased! We've sent your instructions to Him for approval. Once they're approved, they'll be sent directly to your minions on the frontlines!"""
