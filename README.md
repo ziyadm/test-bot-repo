@@ -69,6 +69,10 @@ TODO: show players an example training mission when they first join the server
 
 TODO: update time spent with suriels spren typing (when sending player instructions) to a realistic value
 
+TODO: leaderboard channel
+* nobody can message anything
+* suriels spren continuously edits the one and only message in the channel to display the current top N
+
 TODO: refactor immutable updates logic into an [Immutable_dict] module
 
 TODO: sync roles from ranks
