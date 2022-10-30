@@ -112,3 +112,7 @@ TODO: log errors
 TODO: deploy to aws
 
 TODO: feedback / bug reporting mechanism
+
+TODO: limit how many invites a player can send
+* lower ranks can send fewer invites
+* give 1 level per invited user who actually finishes 1 mission
