@@ -1,7 +1,7 @@
+import os
 from typing import List
 
 import discord
-import os
 
 
 class DiscordClient:

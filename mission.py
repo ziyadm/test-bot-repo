@@ -1,7 +1,6 @@
 from typing import Dict, Optional
 
 import airtable_client
-
 from airtable_client import AirtableClient
 from mission_status import MissionStatus
 

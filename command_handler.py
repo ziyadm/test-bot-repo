@@ -1,16 +1,15 @@
 from typing import List
 
+import discord
+import pyairtable.formulas
+
 import mission
 import user
-
 from mission import Mission
 from mission_status import MissionStatus
 from rank import Rank
 from state import State
 from user import User
-
-import discord
-import pyairtable.formulas
 
 
 class CommandHandler:
@@ -26,18 +25,24 @@ class CommandHandler:
             f"""Monarch Suriel has invited you to {mission_channel.mention}"""
         )
 
-    async def review_command(self, interaction: discord.Interaction):
-        messages = [
+    async def get_mission(self, field: mission.Fields, value: str):
+        return await Mission.row(
+            formula=pyairtable.formulas.match({field: value}),
+            airtable_client=self.state.airtable_client,
+        )
+
+    async def get_messages(self, interaction: discord.Interaction):
+        return [
             message
             async for message in interaction.channel.history()
             if message.type == discord.MessageType.default
         ]
 
-        mission_to_update = await Mission.row(
-            formula=pyairtable.formulas.match(
-                {mission.Fields.review_discord_channel_id_field: str(interaction.channel_id)}
-            ),
-            airtable_client=self.state.airtable_client,
+    async def review_command(self, interaction: discord.Interaction):
+        messages = await self.get_messages(interaction)
+        mission_to_update = await self.get_mission(
+            field=mission.Fields.review_discord_channel_id_field,
+            value=str(interaction.channel_id),
         )
 
         if not (
@@ -50,7 +55,13 @@ class CommandHandler:
         ):
             return await interaction.followup.send("""Review already completed!""")
 
-        review_field = mission.Fields.design_review_field if mission_to_update.fields.mission_status.has_value(MissionStatus.design_review) else mission.Fields.code_review_field
+        review_field = (
+            mission.Fields.design_review_field
+            if mission_to_update.fields.mission_status.has_value(
+                MissionStatus.design_review
+            )
+            else mission.Fields.code_review_field
+        )
         review_value = messages[0].content
 
         state_field = mission.Fields.mission_status_field
@@ -66,29 +77,19 @@ class CommandHandler:
             airtable_client=self.state.airtable_client,
         )
 
-        response = f"Sent review followups."
+        response = "Sent review followups."
 
-        question_channel = (
-            await self.state.discord_client.client.fetch_channel(
-                mission_to_update.fields.discord_channel_id
-            )
+        question_channel = await self.state.discord_client.client.fetch_channel(
+            mission_to_update.fields.discord_channel_id
         )
 
         await question_channel.send(f"Feedback: {review_value}")
         return await interaction.followup.send(response)
 
     async def lgtm_command(self, interaction: discord.Interaction, score: float):
-        messages = [
-            message
-            async for message in interaction.channel.history()
-            if message.type == discord.MessageType.default
-        ]
-
-        mission_to_update = await Mission.row(
-            formula=pyairtable.formulas.match(
-                {mission.Fields.review_discord_channel_id_field: str(interaction.channel_id)}
-            ),
-            airtable_client=self.state.airtable_client,
+        messages = await self.get_messages(interaction)
+        mission_to_update = await self.get_mission(
+            interaction, field=mission.Fields.review_discord_channel_id_field
         )
 
         if not (
@@ -101,13 +102,21 @@ class CommandHandler:
         ):
             return await interaction.followup.send("""LGTM already provided!""")
 
-        review_field = mission.Fields.code_review_field if mission_to_update.completing() else mission.Fields.design_review_field
+        review_field = (
+            mission.Fields.code_review_field
+            if mission_to_update.completing()
+            else mission.Fields.design_review_field
+        )
         review_value = messages[0].content
 
         state_field = mission.Fields.mission_status_field
         state_value = mission_to_update.fields.mission_status.next()
 
-        score_field = mission.Fields.code_score_field if mission_to_update.completing() else mission.Fields.design_score_field
+        score_field = (
+            mission.Fields.code_score_field
+            if mission_to_update.completing()
+            else mission.Fields.design_score_field
+        )
 
         await mission_to_update.update(
             fields=mission_to_update.fields.immutable_updates(
@@ -120,19 +129,27 @@ class CommandHandler:
             airtable_client=self.state.airtable_client,
         )
 
-        response = f"Approved question." if mission_to_update.completing() else "Approved design."
+        response = (
+            "Approved question."
+            if mission_to_update.completing()
+            else "Approved design."
+        )
 
-        question_channel = (
-            await self.state.discord_client.client.fetch_channel(
-                mission_to_update.fields.discord_channel_id
-            )
+        question_channel = await self.state.discord_client.client.fetch_channel(
+            mission_to_update.fields.discord_channel_id
         )
 
         # TODO add hook to calculate updated score and update rank if necessary
         # if mission_to_update.completing()
 
-        base_response_to_user = "Suriel approved of your work! Suriel left you the following to help you along your path" if mission_to_update.completing() else "Suriel approved your design. Continue along to coding."
-        response_to_user = f"{base_response_to_user} \n Feedback: {review_value} \n Score: {score}"
+        base_response_to_user = (
+            "Suriel approved of your work! Suriel left you the following to help you along your path"
+            if mission_to_update.completing()
+            else "Suriel approved your design. Continue along to coding."
+        )
+        response_to_user = (
+            f"{base_response_to_user} \n Feedback: {review_value} \n Score: {score}"
+        )
 
         await question_channel.send(response_to_user)
         return await interaction.followup.send(response)
@@ -140,6 +157,7 @@ class CommandHandler:
     async def claim_command(self, interaction: discord.Interaction):
         # TODO ziyadm: only allow in mission channel -> maybe decorator for commands that limit
         question_discord_channel_id = interaction.channel.name.split("review-")[-1]
+        mission_to_update = await self.get_mission(interaction)
 
         mission_to_update = await Mission.row(
             formula=pyairtable.formulas.match(
@@ -163,7 +181,13 @@ class CommandHandler:
                 interaction.user.id, f"review-{mission_to_update.fields.question_id}"
             )
         )
-        content_field = mission_to_update.fields.design if mission_to_update.fields.mission_status.has_value(MissionStatus.design_review) else mission_to_update.fields.code
+        content_field = (
+            mission_to_update.fields.design
+            if mission_to_update.fields.mission_status.has_value(
+                MissionStatus.design_review
+            )
+            else mission_to_update.fields.code
+        )
 
         await question_review_channel.send(content_field)
         response = f"Review claimed: {question_review_channel.mention}"
@@ -183,21 +207,31 @@ class CommandHandler:
         return await interaction.followup.send(response)
 
     async def handle_submission(self, interaction, mission_to_update, messages):
-        field_to_submit_contents_for = mission.Fields.design_field if mission_to_update.fields.mission_status.has_value(MissionStatus.design) else mission.Fields.code_field
+        field_to_submit_contents_for = (
+            mission.Fields.design_field
+            if mission_to_update.fields.mission_status.has_value(MissionStatus.design)
+            else mission.Fields.code_field
+        )
         response = """Planning is half the battle! We've sent your plan to Monarch Suriel for approval. Check back in about 30 minutes to find out your next objective."""
 
         next_field = mission_to_update.fields.mission_status.next().get_field()
         if mission_to_update.fields.to_dict()[next_field]:
             # review is not new: it is a revision and we need to update the original reviewer
-            original_review_channel = await self.state.discord_client.client.fetch_channel(mission_to_update.fields.review_discord_channel_id)
-            await original_review_channel.send(f"Followup for review: {messages[0].content}")
+            original_review_channel = (
+                await self.state.discord_client.client.fetch_channel(
+                    mission_to_update.fields.review_discord_channel_id
+                )
+            )
+            await original_review_channel.send(
+                f"Followup for review: {messages[0].content}"
+            )
         else:
             # review is new, we need to ping the reviews channel for this mission
             review_channel = await self.state.discord_client.get_review_channel()
             review_message = await review_channel.send(
                 f"Ready for review: {interaction.channel.mention}"
             )
-            review_thread = await review_message.create_thread(
+            _ = await review_message.create_thread(
                 name=f"review-{interaction.channel.mention}"
             )
 
@@ -216,12 +250,8 @@ class CommandHandler:
     async def submit_command(self, interaction: discord.Interaction):
         # TODO prointerviewschool: only allow submit in mission channel
         # TODO prointerviewschool: we probably wanna rename submit to fit the "mission"/"quest" theme
-        mission_to_update = await Mission.row(
-            formula=pyairtable.formulas.match(
-                {mission.Fields.discord_channel_id_field: str(interaction.channel_id)}
-            ),
-            airtable_client=self.state.airtable_client,
-        )
+        messages = await self.get_messages(interaction)
+        mission_to_update = await self.get_mission(interaction)
 
         if not (
             mission_to_update.fields.mission_status.has_value(MissionStatus.design)
@@ -231,19 +261,15 @@ class CommandHandler:
                 """You've completed your objective, wait for Monarch Suriel's instructions!"""
             )
 
-        messages = [
-            message
-            async for message in interaction.channel.history()
-            if message.type == discord.MessageType.default
-        ]
-
         if len(messages) == 0:
             # TODO prointerviewschool: maybe we can frame missions as you having "minions" who you have to give instructions to to solve some problems you come across in your journey?
             # alternatively it could be framed as being a world of machines and you need to make the machines do what you want. i think theres a pretty popular recent game thats similar to this
             # follow up with ziyad
             return await interaction.followup.send("You need to instruct your minions!")
 
-        response = await self.handle_submission(interaction, mission_to_update, messages)
+        response = await self.handle_submission(
+            interaction, mission_to_update, messages
+        )
 
         return await interaction.followup.send(response)
 
@@ -414,4 +440,4 @@ class CommandHandler:
         if len(deleted_channels) > 0:
             await interaction.channel.send(f"""Synced discord users: {synced_users}""")
 
-        return await interaction.followup.send(f"""Finished""")
+        return await interaction.followup.send("""Finished""")

@@ -1,13 +1,13 @@
-from airtable_client import AirtableClient
-from discord_client import DiscordClient
-from command_handler import CommandHandler
-from event_handler import EventHandler
-from dotenv import load_dotenv
-from state import State
-
-import discord
 import os
 
+import discord
+from dotenv import load_dotenv
+
+from airtable_client import AirtableClient
+from command_handler import CommandHandler
+from discord_client import DiscordClient
+from event_handler import EventHandler
+from state import State
 
 load_dotenv()
 airtable_api_key = os.environ["airtable_api_key"]

@@ -1,7 +1,7 @@
+import discord
+
 from rank import Rank
 from state import State
-
-import discord
 
 
 class EventHandler:
@@ -22,7 +22,8 @@ class EventHandler:
             rank=Rank(value=Rank.foundation),
         )
 
-        # TODO prointerviewschool: make this send the full game instructions and about the roles
+        # TODO prointerviewschool: make this send the full
+        # game instructions and about the roles
         await user_channel.send(f"""Suriel senses your weakness {member.mention}""")
 
         return None

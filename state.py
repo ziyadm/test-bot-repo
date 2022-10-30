@@ -1,15 +1,14 @@
+import pyairtable.formulas
+
 import mission
 import user
-
 from airtable_client import AirtableClient
 from discord_client import DiscordClient
-from question import Question
 from mission import Mission
 from mission_status import MissionStatus
+from question import Question
 from rank import Rank
 from user import User
-
-import pyairtable.formulas
 
 
 class State:
