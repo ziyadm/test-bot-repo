@@ -1,15 +1,16 @@
 from typing import List
 
-import discord
-import pyairtable.formulas
-
 import mission
 import user
+
 from mission import Mission
 from mission_status import MissionStatus
 from rank import Rank
 from state import State
 from user import User
+
+import discord
+import pyairtable.formulas
 
 
 class CommandHandler:
@@ -319,33 +320,24 @@ class CommandHandler:
         self, users_in_discord: List[discord.Member], users_in_db: List[User]
     ):
         bot_discord_id = str(self.state.discord_client.client.user.id)
-        _, bot_user = await self.state.create_user(
-            discord_id=bot_discord_id,
-            discord_name=self.state.discord_client.client.user.name,
-            rank=Rank(value=Rank.archlord),
+        bot_discord_member = await self.state.discord_client.get_member(
+            member_id=bot_discord_id
         )
-        user_ids_in_db = [bot_discord_id] + [
-            user_in_db.fields.discord_id for user_in_db in users_in_db
-        ]
+
+        user_ids_in_db = [user_in_db.fields.discord_id for user_in_db in users_in_db]
+
+        if bot_discord_id not in user_ids_in_db:
+            _, bot_user = await self.state.create_user(
+                discord_member=bot_discord_member
+            )
+            user_ids_in_db = [bot_discord_id] + user_ids_in_db
 
         synced_users = []
         for user_to_sync in users_in_discord:
             discord_id = str(user_to_sync.id)
             if discord_id not in user_ids_in_db:
-                highest_rank_held_by_user = Rank(value=Rank.foundation)
-
-                for role in user_to_sync.roles:
-                    rank_held_by_user = Rank.of_string_hum(role.name)
-                    if (
-                        rank_held_by_user is not None
-                        and rank_held_by_user > highest_rank_held_by_user
-                    ):
-                        highest_rank_held_by_user = rank_held_by_user
-
-                new_user, _ = await self.state.create_user(
-                    discord_id,
-                    discord_name=user_to_sync.name,
-                    rank=highest_rank_held_by_user,
+                new_user, _user_channel = await self.state.create_user(
+                    discord_member=user_to_sync
                 )
 
                 synced_users.append(new_user)

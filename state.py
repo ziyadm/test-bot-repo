@@ -9,6 +9,7 @@ from question import Question
 from rank import Rank
 from user import User
 
+import discord
 import pyairtable.formulas
 
 
@@ -102,16 +103,57 @@ class State:
         )
         return None
 
-    async def create_user(self, discord_id: str, discord_name: str, rank: Rank):
+    @staticmethod
+    def get_rank(discord_member: discord.Member):
+        highest_rank = Rank(value=Rank.foundation)
+
+        for role in discord_member.roles:
+            active_rank = Rank.of_string_hum(role.name)
+            if active_rank is not None and active_rank > highest_rank:
+                highest_rank = active_rank
+
+        return highest_rank
+
+    async def create_user(self, discord_member: discord.Member):
+        discord_id = str(discord_member.id)
+        discord_name = discord_member.name
         user_channel = await self.discord_client.create_private_channel(
             discord_id, channel_name=f"""{discord_name}-path"""
         )
+
         discord_channel_id = str(user_channel.id)
+        rank = self.get_rank(discord_member)
 
         new_user = await User.create(
             fields=user.Fields(discord_id, discord_name, discord_channel_id, rank),
             airtable_client=self.airtable_client,
         )
+
+        # TODO prointerviewschool: make this send the full game instructions
+        # TODO prointerviewschool: replace instances of "Suriel" with the actual suriel username in discord
+        await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message=f"""Suriel senses your weakness {discord_member.mention}""",
+            channel=user_channel,
+        )
+
+        await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message="Suriel invites you to follow The Way",
+            channel=user_channel,
+        )
+
+        await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message="While following your Path along The Way, you will be challenged to rise through the ranks:",
+            channel=user_channel,
+        )
+
+        for rank_to_explain in Rank.all():
+            rank_name = Rank.to_string_hum(rank_to_explain)
+            rank_description = rank_to_explain.description()
+
+            await DiscordClient.with_typing_time_determined_by_number_of_words(
+                message=f"""`{rank_name}: {rank_description}`""",
+                channel=user_channel,
+            )
 
         await self.sync_discord_role(for_user=new_user)
 
