@@ -8,7 +8,6 @@ class EventHandler:
         self.state = state
 
     async def on_ready(self):
-        # TODO prointerviewschool: sync roles from ranks
         await self.state.discord_client.command_tree.sync(
             guild=discord.Object(id=self.state.discord_client.guild_id)
         )

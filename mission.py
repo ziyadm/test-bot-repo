@@ -95,7 +95,6 @@ class Fields:
             code_score=fields.get(cls.code_score_field, None),
         )
 
-    # TODO prointerviewschool: pull this into a module [Immutable_dict] to deduplicate with other Fields modules
     def immutable_updates(self, updates):
         updated = self.to_dict()
         for key, value in updates.items():

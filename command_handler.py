@@ -146,9 +146,6 @@ class CommandHandler:
             mission_to_update.fields.discord_channel_id
         )
 
-        # TODO add hook to calculate updated score and update rank if necessary
-        # if mission_to_update.completing()
-
         base_response_to_user = (
             "Suriel approved of your work! Suriel left you the following to help you along your path"
             if mission_to_update.completing()
@@ -161,12 +158,7 @@ class CommandHandler:
         await question_channel.send(response_to_user)
         return await interaction.followup.send(response)
 
-    # TODO prointerviewschool: set the name to something thats guaranteed
-    # unique. this current implementation will only allow a question to be
-    # reviewed once ever
     async def claim_command(self, interaction: discord.Interaction):
-        # TODO ziyadm: only allow in mission channel -> maybe decorator for
-        # commands that limit
         question_discord_channel_id = str(interaction.channel.name.split("review-")[-1])
         mission_to_update = await self.get_mission(
             field=mission.Fields.discord_channel_id_field,
@@ -208,8 +200,6 @@ class CommandHandler:
         return await interaction.followup.send(response)
 
     async def submit_command(self, interaction: discord.Interaction):
-        # TODO prointerviewschool: only allow submit in mission channel
-        # TODO prointerviewschool: we probably wanna rename submit to fit the "mission"/"quest" theme
         mission_to_update = await self.get_mission(
             field=mission.Fields.discord_channel_id_field,
             value=str(interaction.channel.id),
@@ -225,9 +215,6 @@ class CommandHandler:
 
         messages = await Mission.get_messages(interaction)
         if len(messages) == 0:
-            # TODO prointerviewschool: maybe we can frame missions as you having "minions" who you have to give instructions to to solve some problems you come across in your journey?
-            # alternatively it could be framed as being a world of machines and you need to make the machines do what you want. i think theres a pretty popular recent game thats similar to this
-            # follow up with ziyad
             return await interaction.followup.send("You need to instruct your minions!")
 
         response = await self.handle_submission(

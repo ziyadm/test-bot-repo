@@ -71,7 +71,6 @@ async def register_submit_command(interaction: discord.Interaction):
     return await command_handler.submit_command(interaction)
 
 
-# TODO prointerviewschool: permissions for this command
 @discord_client.command_tree.command(
     name="set_rank", description="""Set a user's rank""", guild=guild
 )
@@ -84,7 +83,6 @@ async def register_set_rank_command(
     )
 
 
-# TODO prointerviewschool: permissions for this command
 @discord_client.command_tree.command(
     name="sync_db_and_discord", description="""Sync the db and discord""", guild=guild
 )
