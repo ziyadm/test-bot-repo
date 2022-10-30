@@ -94,4 +94,4 @@ TODO: handle case when there are no more questions gracefully
 TODO: replace instances of "Suriel" with the actual suriel username in discord
 
 TODO: update review channel names to be unique, the current implementation will use the same name every time a question is asked
-* <stage>-<question_id>-<player_name>
+* <stage_name>-<question_id>-<player_name>
