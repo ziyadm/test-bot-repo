@@ -1,5 +1,7 @@
 from typing import Dict, Optional
 
+import discord
+
 import airtable_client
 from airtable_client import AirtableClient
 from mission_status import MissionStatus
@@ -151,6 +153,30 @@ class Mission:
     def completing(self):
         return self.fields.mission_status.next().has_value(MissionStatus.completed)
 
+    def in_review(self):
+        return self.fields.mission_status.has_value(
+            MissionStatus.design_review
+        ) or self.fields.mission_status.has_value(MissionStatus.code_review)
+
+    def get_review_field(self):
+        return (
+            Fields.design_review_field
+            if self.fields.mission_status.has_value(MissionStatus.design_review)
+            else Fields.code_review_field
+        )
+
+    def get_content_field(self):
+        design_stage = self.fields.mission_status.has_value(
+            MissionStatus.design_review
+        ) or self.fields.mission_status.has_value(MissionStatus.design)
+        return Fields.design_field if design_stage else Fields.code_field
+
+    async def get_review_values(self, interaction: discord.Interaction):
+        review_field = self.get_review_field()
+        messages = await Mission.get_messages(interaction)
+        review_value = messages[0].content
+        return review_field, review_value
+
     async def update(self, fields: Fields, airtable_client: AirtableClient):
         response = await airtable_client.update_row(
             table_name=self.table_name,
@@ -158,3 +184,11 @@ class Mission:
             fields=fields.to_dict(),
         )
         return self.__of_airtable_response(response)
+
+    @staticmethod
+    async def get_messages(interaction: discord.Interaction):
+        return [
+            message
+            async for message in interaction.channel.history()
+            if message.type == discord.MessageType.default
+        ]
