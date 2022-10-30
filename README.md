@@ -25,7 +25,7 @@ discord: https://discord.gg/Qbm4mgSr
 
 TODO: send reviewer the question link when they claim a question for review
 
-TODO ziyadm: evolution
+TODO(ziyadm): evolution
 
 TODO: have suriels spren explain how to do a mission at the start of every mission channel
 
@@ -116,3 +116,7 @@ TODO: feedback / bug reporting mechanism
 TODO: limit how many invites a player can send
 * lower ranks can send fewer invites
 * give 1 level per invited user who actually finishes 1 mission
+
+TODO: daily summaries (so we can recap for people to keep them engaged over time)
+
+TODO(ziyad): action logs? take noom/future overall UI and try to translate into discord equivalent
