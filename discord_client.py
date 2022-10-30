@@ -89,7 +89,6 @@ class DiscordClient:
         message: str, channel: discord.TextChannel
     ):
         number_of_words = len(message.split(" "))
-        # TODO prointerviewschool: change this value to a more realistic feeling value in prod
         seconds_to_type_one_word = 0
 
         if seconds_to_type_one_word > 0:

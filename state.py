@@ -51,7 +51,6 @@ class State:
         )
 
         mission_question = await self.first_unasked_question(player)
-        # TODO: handle case when there are no more questions gracefully
         if not mission_question:
             return None
 
@@ -128,8 +127,6 @@ class State:
             airtable_client=self.airtable_client,
         )
 
-        # TODO prointerviewschool: make this send the full game instructions
-        # TODO prointerviewschool: replace instances of "Suriel" with the actual suriel username in discord
         await DiscordClient.with_typing_time_determined_by_number_of_words(
             message=f"""Suriel senses your weakness {discord_member.mention}""",
             channel=user_channel,

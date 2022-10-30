@@ -37,8 +37,6 @@ class Fields:
             rank=Rank.of_string(fields[cls.rank_field]),
         )
 
-    # TODO prointerviewschool: pull this into a module
-    # [Immutable_dict] to deduplicate with other Fields modules
     def immutable_updates(self, updates):
         updated = self.to_dict()
         for key, value in updates.items():
