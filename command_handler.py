@@ -89,7 +89,8 @@ class CommandHandler:
     async def lgtm_command(self, interaction: discord.Interaction, score: float):
         messages = await self.get_messages(interaction)
         mission_to_update = await self.get_mission(
-            interaction, field=mission.Fields.review_discord_channel_id_field
+            field=mission.Fields.review_discord_channel_id_field,
+            value=str(interaction.channel_id),
         )
 
         if not (
@@ -156,8 +157,11 @@ class CommandHandler:
 
     async def claim_command(self, interaction: discord.Interaction):
         # TODO ziyadm: only allow in mission channel -> maybe decorator for commands that limit
-        question_discord_channel_id = interaction.channel.name.split("review-")[-1]
-        mission_to_update = await self.get_mission(interaction)
+        question_discord_channel_id = str(interaction.channel.name.split("review-")[-1])
+        mission_to_update = await self.get_mission(
+            field=mission.Fields.discord_channel_id_field,
+            value=question_discord_channel_id,
+        )
 
         mission_to_update = await Mission.row(
             formula=pyairtable.formulas.match(
@@ -251,7 +255,10 @@ class CommandHandler:
         # TODO prointerviewschool: only allow submit in mission channel
         # TODO prointerviewschool: we probably wanna rename submit to fit the "mission"/"quest" theme
         messages = await self.get_messages(interaction)
-        mission_to_update = await self.get_mission(interaction)
+        mission_to_update = await self.get_mission(
+            field=mission.Fields.discord_channel_id_field,
+            value=str(interaction.channel.id),
+        )
 
         if not (
             mission_to_update.fields.mission_status.has_value(MissionStatus.design)

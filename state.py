@@ -50,6 +50,7 @@ class State:
         )
 
         mission_question = await self.first_unasked_question(player)
+        # TODO: handle case when there are no more questions gracefully
         if not mission_question:
             return None
 
@@ -69,8 +70,10 @@ class State:
                 mission_status=MissionStatus(value=MissionStatus.design),
                 design=None,
                 design_review=None,
+                design_score=None,
                 code=None,
                 code_review=None,
+                code_score=None,
             ),
             airtable_client=self.airtable_client,
         )
