@@ -85,6 +85,16 @@ class State:
         return (new_mission, mission_channel)
 
     async def sync_discord_role(self, for_user: User):
+        bot_user = await User.row(
+            formula=pyairtable.formulas.match(
+                {user.Fields.discord_id: self.discord_client.client.user.id}
+            ),
+            airtable_client=self.airtable_client,
+        )
+
+        if for_user.fields.rank > bot_user.rank:
+            return None
+
         await self.discord_client.set_role(
             member_id=for_user.fields.discord_id,
             role_name=for_user.fields.rank.to_string_hum(),
