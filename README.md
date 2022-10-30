@@ -39,8 +39,23 @@ TODO: create one general chat that all users can chat in
 
 TODO: only allow users to send messages in mission channels
 
+TODO: /stats command for players to see all their stats
+* how many questions
+* progress in evolution
+
 TODO: update all text / command names to fit one theme:
 * seems like we want some sort of mission/quest based theme
+
+TODO: time limit for player to submit a mission stage
+* 1 hour per stage, we send our solution for that stage if time runs out
+
+TODO: time limit for someone to have claimed an unclaimed question
+* 5 minutes
+
+TODO: time limit for reviewers to review a claimed question
+* 25 minutes per stage
+
+TODO: tell player to do another training mission while they wait for feedback
 
 TODO: update time spent with suriels spren typing (when sending player instructions) to a realistic value
 
