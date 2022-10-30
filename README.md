@@ -57,6 +57,12 @@ TODO: time limit for reviewers to review a claimed question
 
 TODO: tell player to do another training mission while they wait for feedback
 
+TODO: idle state player goes offline
+* pause mission timers
+
+TODO: when player goes online, send some sort of message or do something to get them back in the groove
+* remind them of what they were doing and where they were at
+
 TODO: update time spent with suriels spren typing (when sending player instructions) to a realistic value
 
 TODO: refactor immutable updates logic into an [Immutable_dict] module
