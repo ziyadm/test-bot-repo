@@ -80,6 +80,11 @@ TODO: overhaul ui/ux
 * TODO: custom emojis per rank / rank emoji in nickname
 * TODO: sprite for the user + pick your character
 
+TODO: set up question bank
+* probably just pull all of neetcodes questions
+
+TODO: give training missions with difficulty matching players rank
+
 TODO: refactor immutable updates logic into an [Immutable_dict] module
 
 TODO: sync roles from ranks
@@ -89,3 +94,4 @@ TODO: handle case when there are no more questions gracefully
 TODO: replace instances of "Suriel" with the actual suriel username in discord
 
 TODO: update review channel names to be unique, the current implementation will use the same name every time a question is asked
+* <stage>-<question_id>-<player_name>
