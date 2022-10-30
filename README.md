@@ -73,6 +73,13 @@ TODO: leaderboard channel
 * nobody can message anything
 * suriels spren continuously edits the one and only message in the channel to display the current top N
 
+TODO: overhaul ui/ux
+* TODO: modal based submit / review instead of pulling last message
+* TODO: background images
+* TODO: background music
+* TODO: custom emojis per rank / rank emoji in nickname
+* TODO: sprite for the user + pick your character
+
 TODO: refactor immutable updates logic into an [Immutable_dict] module
 
 TODO: sync roles from ranks
