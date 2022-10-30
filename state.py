@@ -74,6 +74,7 @@ class State:
                 code=None,
                 code_review=None,
                 code_score=None,
+                last_updated_ts=None,
             ),
             airtable_client=self.airtable_client,
         )
@@ -89,17 +90,17 @@ class State:
         )
 
         await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"""`Design`: *Describe how you plan to solve the question. Make sure to write this **in english** without getting too close to the code!*""",
+            message="""`Design`: *Describe how you plan to solve the question. Make sure to write this **in english** without getting too close to the code!*""",
             channel=mission_channel,
         )
 
         await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"""`Code`: *Implement the solution your described in the* `Design` *stage in the programming language of your choice.*""",
+            message="""`Code`: *Implement the solution your described in the* `Design` *stage in the programming language of your choice.*""",
             channel=mission_channel,
         )
 
         await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"""Type `/submit` to send your work on a stage to Suriel for review. Only your most recent message will be used in your submission.""",
+            message="""Type `/submit` to send your work on a stage to Suriel for review. Only your most recent message will be used in your submission.""",
             channel=mission_channel,
         )
 
