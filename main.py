@@ -51,6 +51,14 @@ async def register_review_command(interaction: discord.Interaction):
 
 
 @discord_client.command_tree.command(
+    name="lgtm", description="Approve a mission", guild=guild
+)
+async def register_lgtm_command(interaction: discord.Interaction, score: float):
+    await interaction.response.defer()
+    return await command_handler.lgtm_command(interaction, score)
+
+
+@discord_client.command_tree.command(
     name="submit",
     description="Attempt to complete the current stage of a mission",
     guild=guild,

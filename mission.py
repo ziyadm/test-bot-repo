@@ -16,8 +16,10 @@ class Fields:
     mission_status_field = "mission_status"
     design_field = "design"
     design_review_field = "design_review"
+    design_score_field = "design_score"
     code_field = "code"
     code_review_field = "code_review"
+    code_score_field = "code_score"
 
     def __init__(
         self,
@@ -29,8 +31,10 @@ class Fields:
         mission_status: MissionStatus,
         design: Optional[str],
         design_review: Optional[str],
+        design_score: Optional[float],
         code: Optional[str],
         code_review: Optional[str],
+        code_score: Optional[float],
     ):
         self.discord_channel_id = discord_channel_id
         self.review_discord_channel_id = review_discord_channel_id
@@ -40,12 +44,17 @@ class Fields:
         self.mission_status = mission_status
         self.design = design
         self.design_review = design_review
+        self.design_score = design_score
         self.code = code
         self.code_review = code_review
+        self.code_score = code_score
 
     def to_dict(self):
         def optional_to_string(optional: Optional[str]):
             return str(optional) if optional is not None else ""
+
+        def optional_to_float(optional: Optional[float]):
+            return optional if optional is not None else 0.0
 
         return {
             self.discord_channel_id_field: self.discord_channel_id,
@@ -60,8 +69,10 @@ class Fields:
             self.mission_status_field: str(self.mission_status),
             self.design_field: optional_to_string(self.design),
             self.design_review_field: optional_to_string(self.design_review),
+            self.design_score_field: optional_to_float(self.design_score),
             self.code_field: optional_to_string(self.code),
             self.code_review_field: optional_to_string(self.code_review),
+            self.code_score_field: optional_to_float(self.code_score),
         }
 
     @classmethod
@@ -77,15 +88,20 @@ class Fields:
             mission_status=MissionStatus.of_string(fields[cls.mission_status_field]),
             design=fields.get(cls.design_field, None),
             design_review=fields.get(cls.design_review_field, None),
+            design_score=fields.get(cls.design_score_field, None),
             code=fields.get(cls.code_field, None),
             code_review=fields.get(cls.code_review_field, None),
+            code_score=fields.get(cls.code_score_field, None),
         )
 
     # TODO prointerviewschool: pull this into a module [Immutable_dict] to deduplicate with other Fields modules
     def immutable_updates(self, updates):
         updated = self.to_dict()
         for key, value in updates.items():
-            updated[key] = str(value)
+            if type(value) is float:
+                updated[key] = float(value)
+            else:
+                updated[key] = str(value)
         return self.of_dict(updated)
 
     def immutable_update(self, field, value):
@@ -132,6 +148,9 @@ class Mission:
             ],
         )
         return None
+
+    def completing(self):
+        return self.fields.mission_status.next().has_value(MissionStatus.completed)
 
     async def update(self, fields: Fields, airtable_client: AirtableClient):
         response = await airtable_client.update_row(

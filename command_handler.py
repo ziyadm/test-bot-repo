@@ -77,6 +77,66 @@ class CommandHandler:
         await question_channel.send(f"Feedback: {review_value}")
         return await interaction.followup.send(response)
 
+    async def lgtm_command(self, interaction: discord.Interaction, score: float):
+        messages = [
+            message
+            async for message in interaction.channel.history()
+            if message.type == discord.MessageType.default
+        ]
+
+        mission_to_update = await Mission.row(
+            formula=pyairtable.formulas.match(
+                {mission.Fields.review_discord_channel_id_field: str(interaction.channel_id)}
+            ),
+            airtable_client=self.state.airtable_client,
+        )
+
+        if not (
+            mission_to_update.fields.mission_status.has_value(
+                MissionStatus.design_review
+            )
+            or mission_to_update.fields.mission_status.has_value(
+                MissionStatus.code_review
+            )
+        ):
+            return await interaction.followup.send("""LGTM already provided!""")
+
+        review_field = mission.Fields.code_review_field if mission_to_update.completing() else mission.Fields.design_review_field
+        review_value = messages[0].content
+
+        state_field = mission.Fields.mission_status_field
+        state_value = mission_to_update.fields.mission_status.next()
+
+        score_field = mission.Fields.code_score_field if mission_to_update.completing() else mission.Fields.design_score_field
+
+        await mission_to_update.update(
+            fields=mission_to_update.fields.immutable_updates(
+                {
+                    review_field: review_value,
+                    state_field: state_value,
+                    score_field: score,
+                }
+            ),
+            airtable_client=self.state.airtable_client,
+        )
+
+        response = f"Approved question." if mission_to_update.completing() else "Approved design."
+
+        question_channel = (
+            await self.state.discord_client.client.fetch_channel(
+                mission_to_update.fields.discord_channel_id
+            )
+        )
+
+        # TODO add hook to calculate updated score and update rank if necessary
+        # if mission_to_update.completing()
+
+        base_response_to_user = "Suriel approved of your work! Suriel left you the following to help you along your path" if mission_to_update.completing() else "Suriel approved your design. Continue along to coding."
+        response_to_user = f"{base_response_to_user} \n Feedback: {review_value} \n Score: {score}"
+
+        await question_channel.send(response_to_user)
+        return await interaction.followup.send(response)
+
     async def claim_command(self, interaction: discord.Interaction):
         # TODO ziyadm: only allow in mission channel -> maybe decorator for commands that limit
         question_discord_channel_id = interaction.channel.name.split("review-")[-1]
@@ -152,7 +212,6 @@ class CommandHandler:
         )
 
         return response
-
 
     async def submit_command(self, interaction: discord.Interaction):
         # TODO prointerviewschool: only allow submit in mission channel
