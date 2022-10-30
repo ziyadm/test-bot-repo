@@ -47,8 +47,11 @@ TODO: /stats command for players to see all their stats
 * how many questions
 * progress in evolution
 
+TODO: /time command for players to see how long they have left in the current stage of a mission
+
 TODO: update all text / command names to fit one theme:
 * seems like we want some sort of mission/quest based theme
+* generally need to come up with one story and one consistent theme
 
 TODO: time limit for player to submit a mission stage
 * 1 hour per stage, we send our solution for that stage if time runs out
