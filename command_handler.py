@@ -318,7 +318,15 @@ class CommandHandler:
     async def sync_discord_users_to_db(
         self, users_in_discord: List[discord.Member], users_in_db: List[User]
     ):
-        user_ids_in_db = [user_in_db.fields.discord_id for user_in_db in users_in_db]
+        bot_discord_id = str(self.state.discord_client.client.user.id)
+        _, bot_user = await self.state.create_user(
+            discord_id=bot_discord_id,
+            discord_name=self.state.discord_client.client.user.name,
+            rank=Rank(value=Rank.archlord),
+        )
+        user_ids_in_db = [bot_discord_id] + [
+            user_in_db.fields.discord_id for user_in_db in users_in_db
+        ]
 
         synced_users = []
         for user_to_sync in users_in_discord:
