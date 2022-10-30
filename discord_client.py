@@ -89,10 +89,12 @@ class DiscordClient:
         message: str, channel: discord.TextChannel
     ):
         number_of_words = len(message.split(" "))
-        seconds_to_type_one_word = 0.01
+        # TODO prointerviewschool: change this value to a more realistic feeling value in prod
+        seconds_to_type_one_word = 0
 
-        async with channel.typing():
-            await asyncio.sleep(number_of_words * seconds_to_type_one_word)
+        if seconds_to_type_one_word > 0:
+            async with channel.typing():
+                await asyncio.sleep(number_of_words * seconds_to_type_one_word)
 
         await channel.send(message)
         return None

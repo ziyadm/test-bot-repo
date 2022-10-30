@@ -30,7 +30,7 @@ guild = discord.Object(id=discord_guild_id)
 
 
 @discord_client.command_tree.command(
-    name="new", description="Get a new question", guild=guild
+    name="train", description="Enter the training realm", guild=guild
 )
 async def register_new_command(interaction: discord.Interaction):
     await interaction.response.defer()
@@ -85,13 +85,12 @@ async def register_set_rank_command(
 
 
 # TODO prointerviewschool: permissions for this command
-# TODO ziyadm: filter out monarchs (higher rank than bot)
 @discord_client.command_tree.command(
-    name="clean_up_state", description="""Clean up the db and discord""", guild=guild
+    name="sync_db_and_discord", description="""Sync the db and discord""", guild=guild
 )
-async def register_clean_up_state_command(interaction: discord.Interaction):
+async def register_sync_db_and_discord_command(interaction: discord.Interaction):
     await interaction.response.defer()
-    return await command_handler.clean_up_state(interaction)
+    return await command_handler.sync_db_and_discord(interaction)
 
 
 @discord_client.client.event
