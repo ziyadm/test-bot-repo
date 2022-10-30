@@ -16,7 +16,7 @@ class DiscordClient:
 
     admin_permissions = discord.Permissions.all
 
-    def __init__(self, guild_id: int, secret_token: str):
+    def __init__(self, guild_id: int, secret_token: str, review_channel_id: str):
         self.client = discord.Client(
             intents=discord.Intents(
                 messages=True,
@@ -29,6 +29,7 @@ class DiscordClient:
         self.guild_id = guild_id
         self.command_tree = discord.app_commands.CommandTree(self.client)
         self.secret_token = secret_token
+        self.review_channel_id = review_channel_id
 
     async def __guild(self):
         return await self.client.fetch_guild(self.guild_id)
@@ -76,5 +77,5 @@ class DiscordClient:
 
         return None
 
-    async def get_review_channel(self):
-        return await self.client.fetch_channel(os.environ["discord_review_channel_id"])
+    async def review_channel(self):
+        return await self.client.fetch_channel(self.review_channel_id)

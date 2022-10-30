@@ -39,7 +39,7 @@ class CommandHandler:
             )
         else:
             # review is new, we need to ping the reviews channel for this mission
-            review_channel = await self.state.discord_client.get_review_channel()
+            review_channel = await self.state.discord_client.review_channel()
             review_message = await review_channel.send(
                 f"Ready for review: {interaction.channel.mention}"
             )
@@ -287,9 +287,7 @@ class CommandHandler:
 
         return missions_to_delete
 
-    async def delete_inactive_channels(
-        self, reviewers_channel_id: str, users_in_db: List[User]
-    ):
+    async def delete_inactive_channels(self, users_in_db: List[User]):
         active_user_channels = [
             user_in_db.fields.discord_channel_id for user_in_db in users_in_db
         ]
@@ -302,7 +300,9 @@ class CommandHandler:
         ]
 
         active_channels = set(
-            active_user_channels + active_mission_channels + [reviewers_channel_id]
+            active_user_channels
+            + active_mission_channels
+            + [self.state.discord_client.review_channel_id]
         )
 
         channels = await self.state.discord_client.channels()
@@ -378,9 +378,7 @@ class CommandHandler:
             await interaction.channel.send(f"""Deleted missions: {deleted_missions}""")
 
         await interaction.channel.send("Deleting inactive channels")
-        deleted_channels = await self.delete_inactive_channels(
-            reviewers_channel_id=str(interaction.channel.id), users_in_db=users_in_db
-        )
+        deleted_channels = await self.delete_inactive_channels(users_in_db=users_in_db)
         deleted_channels = ", ".join(
             [str(deleted_channel.id) for deleted_channel in deleted_channels]
         )

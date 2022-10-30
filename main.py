@@ -14,10 +14,13 @@ airtable_api_key = os.environ["airtable_api_key"]
 airtable_database_id = os.environ["airtable_database_id"]
 discord_guild_id = int(os.environ["discord_guild_id"])
 discord_secret_token = os.environ["discord_secret_token"]
+discord_review_channel_id = os.environ["discord_review_channel_id"]
 
 airtable_client = AirtableClient(api_key=airtable_api_key, base_id=airtable_database_id)
 discord_client = DiscordClient(
-    guild_id=discord_guild_id, secret_token=discord_secret_token
+    guild_id=discord_guild_id,
+    secret_token=discord_secret_token,
+    review_channel_id=discord_review_channel_id,
 )
 state = State(airtable_client, discord_client)
 command_handler = CommandHandler(state)
