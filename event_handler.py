@@ -1,10 +1,6 @@
-from discord_client import DiscordClient
-from rank import Rank
-from state import State
-
-import asyncio
-
 import discord
+
+from state import State
 
 
 class EventHandler:

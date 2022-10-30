@@ -1,6 +1,8 @@
+import discord
+import pyairtable.formulas
+
 import mission
 import user
-
 from airtable_client import AirtableClient
 from discord_client import DiscordClient
 from mission import Mission
@@ -8,9 +10,6 @@ from mission_status import MissionStatus
 from question import Question
 from rank import Rank
 from user import User
-
-import discord
-import pyairtable.formulas
 
 
 class State:
@@ -151,9 +150,24 @@ class State:
             rank_description = rank_to_explain.description()
 
             await DiscordClient.with_typing_time_determined_by_number_of_words(
-                message=f"""`{rank_name}: {rank_description}`""",
+                message=f"""`{rank_name}`: *{rank_description}*""",
                 channel=user_channel,
             )
+
+        await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message="Complete training missions to progress through the ranks",
+            channel=user_channel,
+        )
+
+        await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message="Type `/train` to begin your first training mission",
+            channel=user_channel,
+        )
+
+        await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message=f"""Ascend through the ranks {discord_member.mention}, a special prize waits for you at the end!""",
+            channel=user_channel,
+        )
 
         await self.sync_discord_role(for_user=new_user)
 

@@ -1,16 +1,15 @@
 from typing import List
 
+import discord
+import pyairtable.formulas
+
 import mission
 import user
-
 from mission import Mission
 from mission_status import MissionStatus
 from rank import Rank
 from state import State
 from user import User
-
-import discord
-import pyairtable.formulas
 
 
 class CommandHandler:
@@ -162,8 +161,12 @@ class CommandHandler:
         await question_channel.send(response_to_user)
         return await interaction.followup.send(response)
 
+    # TODO prointerviewschool: set the name to something thats guaranteed
+    # unique. this current implementation will only allow a question to be
+    # reviewed once ever
     async def claim_command(self, interaction: discord.Interaction):
-        # TODO ziyadm: only allow in mission channel -> maybe decorator for commands that limit
+        # TODO ziyadm: only allow in mission channel -> maybe decorator for
+        # commands that limit
         question_discord_channel_id = str(interaction.channel.name.split("review-")[-1])
         mission_to_update = await self.get_mission(
             field=mission.Fields.discord_channel_id_field,
@@ -344,7 +347,7 @@ class CommandHandler:
 
         return synced_users
 
-    async def clean_up_state(self, interaction: discord.Interaction):
+    async def sync_db_and_discord(self, interaction: discord.Interaction):
         users_in_discord = await self.state.discord_client.members()
         users_in_db = await User.rows(
             formula=None, airtable_client=self.state.airtable_client
