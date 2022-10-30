@@ -63,6 +63,10 @@ TODO: idle state player goes offline
 TODO: when player goes online, send some sort of message or do something to get them back in the groove
 * remind them of what they were doing and where they were at
 
+TODO: show players an example training mission when they first join the server
+* in their path channel
+* pokemon style where it actually creates an example mission channel and narrates to you whats going on and what actions need to be taken (in pokemon it shows you how to catch a pokemon by putting you in an actual battle where you cant control anything)
+
 TODO: update time spent with suriels spren typing (when sending player instructions) to a realistic value
 
 TODO: refactor immutable updates logic into an [Immutable_dict] module
