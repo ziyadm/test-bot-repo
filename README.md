@@ -109,6 +109,6 @@ TODO: /run_away command
 
 TODO: log errors
 
-TODO: feedback / bug reporting mechanism
-
 TODO: deploy to aws
+
+TODO: feedback / bug reporting mechanism
