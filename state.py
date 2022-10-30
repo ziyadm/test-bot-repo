@@ -1,7 +1,6 @@
-import pyairtable.formulas
-
 import mission
 import user
+
 from airtable_client import AirtableClient
 from discord_client import DiscordClient
 from mission import Mission
@@ -9,6 +8,8 @@ from mission_status import MissionStatus
 from question import Question
 from rank import Rank
 from user import User
+
+import pyairtable.formulas
 
 
 class State:
@@ -87,12 +88,12 @@ class State:
     async def sync_discord_role(self, for_user: User):
         bot_user = await User.row(
             formula=pyairtable.formulas.match(
-                {user.Fields.discord_id: self.discord_client.client.user.id}
+                {user.Fields.discord_id_field: self.discord_client.client.user.id}
             ),
             airtable_client=self.airtable_client,
         )
 
-        if for_user.fields.rank > bot_user.rank:
+        if for_user.fields.rank > bot_user.fields.rank:
             return None
 
         await self.discord_client.set_role(
