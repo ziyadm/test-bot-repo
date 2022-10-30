@@ -102,3 +102,7 @@ TODO: replace instances of "Suriel" with the actual suriel username in discord
 
 TODO: update review channel names to be unique, the current implementation will use the same name every time a question is asked
 * <stage_name>-<question_id>-<player_name>
+
+TODO: /run_away command
+* costs 1 level to use
+* player doesnt have to do this question again
