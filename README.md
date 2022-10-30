@@ -25,6 +25,8 @@ TODO ziyadm: evolution
 
 TODO: have suriels spren explain how to do a mission at the start of every mission channel
 
+TODO: create a thread in the player's path channel for every mission they have done / are actively doing. update this thread whenever the status changes
+
 TODO: only allow commands to be run by the right set of users
 
 TODO: only allow commands to be run in channels that makes sense:
