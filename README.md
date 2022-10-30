@@ -106,3 +106,9 @@ TODO: update review channel names to be unique, the current implementation will 
 TODO: /run_away command
 * costs 1 level to use
 * player doesnt have to do this question again
+
+TODO: log errors
+
+TODO: feedback / bug reporting mechanism
+
+TODO: deploy to aws
