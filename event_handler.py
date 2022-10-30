@@ -1,7 +1,10 @@
-import discord
-
+from discord_client import DiscordClient
 from rank import Rank
 from state import State
+
+import asyncio
+
+import discord
 
 
 class EventHandler:
@@ -16,14 +19,6 @@ class EventHandler:
         print(f"Logged in as {self.state.discord_client.client.user}")
 
     async def on_member_join(self, member: discord.Member):
-        _, user_channel = await self.state.create_user(
-            discord_id=str(member.id),
-            discord_name=member.name,
-            rank=Rank(value=Rank.foundation),
-        )
-
-        # TODO prointerviewschool: make this send the full
-        # game instructions and about the roles
-        await user_channel.send(f"""Suriel senses your weakness {member.mention}""")
+        _new_user, _user_channel = await self.state.create_user(discord_member=member)
 
         return None

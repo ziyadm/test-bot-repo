@@ -12,6 +12,20 @@ class Rank:
     archlord = 10
     monarch = 11
 
+    all_values = [
+        foundation,
+        copper,
+        iron,
+        jade,
+        low_gold,
+        high_gold,
+        true_gold,
+        underlord,
+        overlord,
+        archlord,
+        monarch,
+    ]
+
     name = {
         foundation: "foundation",
         copper: "copper",
@@ -26,7 +40,7 @@ class Rank:
         monarch: "monarch",
     }
 
-    description = {
+    descriptions = {
         foundation: "New to the path",
         copper: "A first taste of the arts",
         iron: "Beginning to show strength",
@@ -56,7 +70,7 @@ class Rank:
     def of_string(cls, s: str):
         for (value, name) in cls.name.items():
             if s == name:
-                return cls(value=value)
+                return cls(value)
 
     def to_string_hum(self):
         return " ".join([word.capitalize() for word in str(self).split("-")])
@@ -67,3 +81,11 @@ class Rank:
             potential_match = cls(value)
             if s == potential_match.to_string_hum():
                 return potential_match
+
+    @classmethod
+    def all(cls):
+        for value in cls.all_values:
+            yield cls(value)
+
+    def description(self):
+        return self.descriptions[self.value]

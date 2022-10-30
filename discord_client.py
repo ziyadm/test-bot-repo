@@ -1,3 +1,4 @@
+import asyncio
 from typing import List
 
 import discord
@@ -32,6 +33,10 @@ class DiscordClient:
 
     async def __guild(self):
         return await self.client.fetch_guild(self.guild_id)
+
+    async def get_member(self, member_id: str):
+        guild = await self.__guild()
+        return await guild.fetch_member(member_id)
 
     async def members(self):
         guild = await self.__guild()
@@ -78,3 +83,16 @@ class DiscordClient:
 
     async def review_channel(self):
         return await self.client.fetch_channel(self.review_channel_id)
+
+    @staticmethod
+    async def with_typing_time_determined_by_number_of_words(
+        message: str, channel: discord.TextChannel
+    ):
+        number_of_words = len(message.split(" "))
+        seconds_to_type_one_word = 0.01
+
+        async with channel.typing():
+            await asyncio.sleep(number_of_words * seconds_to_type_one_word)
+
+        await channel.send(message)
+        return None
