@@ -39,7 +39,7 @@ class CommandHandler:
             )
         else:
             # review is new, we need to ping the reviews channel for this mission
-            review_channel = await self.state.discord_client.get_review_channel()
+            review_channel = await self.state.discord_client.review_channel()
             review_message = await review_channel.send(
                 f"Ready for review: {interaction.channel.mention}"
             )
