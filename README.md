@@ -2,6 +2,8 @@
 
 
 ## How to set up local environment
+create a [.env] file one level up from where this [README.md] file is and fill it with the required secrets
+
 ./setup.sh
 
 
