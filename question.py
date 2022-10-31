@@ -34,6 +34,11 @@ class Question:
         return cls(record_id=response.record_id, fields=Fields.of_dict(response.fields))
 
     @classmethod
+    async def row(cls, formula: Optional[str], airtable_client: AirtableClient):
+        response = await airtable_client.row(table_name=cls.table_name, formula=formula)
+        return cls.__of_airtable_response(response)
+
+    @classmethod
     async def rows(cls, formula: Optional[str], airtable_client: AirtableClient):
         responses = await airtable_client.rows(
             table_name=cls.table_name, formula=formula
