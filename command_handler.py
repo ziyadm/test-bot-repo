@@ -25,14 +25,35 @@ class CommandHandler:
         )
 
     async def handle_submission(self, interaction, mission_to_update, messages):
+        current_user = await User.row(
+            formula=pyairtable.formulas.match(
+                {
+                    user.Fields.discord_id_field: mission_to_update.fields.player_discord_id
+                }
+            ),
+            airtable_client=self.state.airtable_client,
+        )
+        user_path_channel = await self.state.discord_client.client.fetch_channel(
+            current_user.fields.discord_channel_id
+        )
+
+        reviewer_user = await self.state.discord_client.client.fetch_user(
+            mission_to_update.fields.reviewer_discord_id
+        )
+
+        player_user = await self.state.discord_client.client.fetch_user(
+            mission_to_update.fields.player_discord_id
+        )
+
+        await user_path_channel.send(
+            f"{player_user.mention}\n\nType `/train` to continue..."
+        )
+
         content_field = mission_to_update.get_content_field()
-        response = """Planning is half the battle! We've sent your plan to Monarch Suriel for approval. Check back in about 30 minutes to find out your next objective."""
+        response = f"""Planning is half the battle! We've sent your plan to Suriel for approval. Head back to {user_path_channel.mention} to continue training."""
 
         next_field = mission_to_update.fields.mission_status.next().get_field()
         if mission_to_update.fields.to_dict()[next_field]:
-            user = await self.state.discord_client.client.fetch_user(
-                mission_to_update.fields.reviewer_discord_id
-            )
             # review is not new: it is a revision and we need to update the original reviewer
             original_review_channel = (
                 await self.state.discord_client.client.fetch_channel(
@@ -40,7 +61,7 @@ class CommandHandler:
                 )
             )
             await original_review_channel.send(
-                f"{user.mention} the player has revised their work and resubmitted. Please review.\n\nContent: {messages[0].content}"
+                f"{reviewer_user.mention} the player has revised their work and resubmitted. Please review.\n\nContent: {messages[0].content}"
             )
         else:
             # review is new, we need to ping the reviews channel for this mission
