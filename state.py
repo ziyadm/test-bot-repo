@@ -78,8 +78,29 @@ class State:
             airtable_client=self.airtable_client,
         )
 
-        await mission_channel.send(
-            f"""Here's your mission: {mission_question.fields.leetcode_url}"""
+        await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message=f"""Here's your mission: {mission_question.fields.leetcode_url}""",
+            channel=mission_channel,
+        )
+
+        await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message="Missions consist of two stages:",
+            channel=mission_channel,
+        )
+
+        await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message=f"""`Design`: *Describe how you plan to solve the question. Make sure to write this **in english** without getting too close to the code!*""",
+            channel=mission_channel,
+        )
+
+        await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message=f"""`Code`: *Implement the solution your described in the* `Design` *stage in the programming language of your choice.*""",
+            channel=mission_channel,
+        )
+
+        await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message=f"""Type `/submit` to send your work on a stage to Suriel for review. Only your most recent message will be used in your submission.""",
+            channel=mission_channel,
         )
 
         return (new_mission, mission_channel)
