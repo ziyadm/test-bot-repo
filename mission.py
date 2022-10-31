@@ -259,7 +259,8 @@ class Mission:
             )
 
         # calculate what the level delta (what is the current level - previous level of the user)
-        level_delta = current_level - previous_level
+        # players can't lose levels, so de-evolutions shouldn't be a problem
+        level_delta = max(current_level - previous_level, 0)
         levels_until_evolution = ((int(current_level / 10) + 1) * 10) - current_level
 
         # fetch ranks and see if this user is evolving
