@@ -214,10 +214,17 @@ class CommandHandler:
         if not mission_to_update.in_review():
             return await interaction.followup.send("""Review already claimed!""")
 
-        question_review_channel = (
-            await self.state.discord_client.create_private_channel(
-                interaction.user.id, f"review-{mission_to_update.fields.question_id}"
-            )
+        user_to_update = await User.row(
+            formula=pyairtable.formulas.match(
+                {
+                    user.Fields.discord_id_field: mission_to_update.fields.player_discord_id
+                }
+            ),
+            airtable_client=self.state.airtable_client,
+        )
+        question_review_channel = await self.state.discord_client.create_private_channel(
+            interaction.user.id,
+            f"{mission_to_update.fields.mission_status.get_field()}-{mission_to_update.fields.question_id}-{user_to_update.fields.discord_name}",
         )
         content_field = mission_to_update.get_content_field()
 
