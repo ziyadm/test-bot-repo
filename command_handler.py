@@ -4,9 +4,11 @@ import discord
 import pyairtable.formulas
 
 import mission
+import question
 import user
 from mission import Mission
 from mission_status import MissionStatus
+from question import Question
 from rank import Rank
 from state import State
 from user import User
@@ -222,13 +224,25 @@ class CommandHandler:
             ),
             airtable_client=self.state.airtable_client,
         )
+
+        question_to_update = await Question.row(
+            formula=pyairtable.formulas.match(
+                {
+                    question.Fields.question_id_field: mission_to_update.fields.question_id
+                }
+            ),
+            airtable_client=self.state.airtable_client,
+        )
+
         question_review_channel = await self.state.discord_client.create_private_channel(
             interaction.user.id,
             f"{mission_to_update.fields.mission_status.get_field()}-{mission_to_update.fields.question_id}-{user_to_update.fields.discord_name}",
         )
         content_field = mission_to_update.get_content_field()
 
-        await question_review_channel.send(content_field)
+        await question_review_channel.send(
+            f"Question: {question_to_update.fields.leetcode_url}\n\nContent: {content_field}"
+        )
         response = f"Review claimed: {question_review_channel.mention}"
 
         await mission_to_update.update(
