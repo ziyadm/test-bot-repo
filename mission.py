@@ -1,10 +1,13 @@
 from typing import Dict, Optional
 
 import discord
+import pyairtable.formulas
 
 import airtable_client
+import user
 from airtable_client import AirtableClient
 from mission_status import MissionStatus
+from user import User
 
 
 class Fields:
@@ -21,6 +24,8 @@ class Fields:
     code_field = "code"
     code_review_field = "code_review"
     code_score_field = "code_score"
+    # TODO: figure out if we want a real datetime/time/date object for timestamps
+    last_updated_ts_field = "last_updated_ts"
 
     def __init__(
         self,
@@ -36,6 +41,7 @@ class Fields:
         code: Optional[str],
         code_review: Optional[str],
         code_score: Optional[float],
+        last_updated_ts: Optional[str],
     ):
         self.discord_channel_id = discord_channel_id
         self.review_discord_channel_id = review_discord_channel_id
@@ -49,6 +55,7 @@ class Fields:
         self.code = code
         self.code_review = code_review
         self.code_score = code_score
+        self.last_updated_ts = last_updated_ts
 
     def to_dict(self):
         def optional_to_string(optional: Optional[str]):
@@ -93,6 +100,7 @@ class Fields:
             code=fields.get(cls.code_field, None),
             code_review=fields.get(cls.code_review_field, None),
             code_score=fields.get(cls.code_score_field, None),
+            last_updated_ts=fields.get(cls.last_updated_ts_field, None),
         )
 
     def immutable_updates(self, updates):
@@ -102,6 +110,7 @@ class Fields:
                 updated[key] = float(value)
             else:
                 updated[key] = str(value)
+
         return self.of_dict(updated)
 
     def immutable_update(self, field, value):
@@ -110,6 +119,7 @@ class Fields:
 
 class Mission:
 
+    HOW_MANY_PREVIOUS_QUESTIONS_TO_SCORE = 5
     table_name = "missions"
 
     def __init__(self, record_id: str, fields: Fields):
@@ -183,6 +193,93 @@ class Mission:
             fields=fields.to_dict(),
         )
         return self.__of_airtable_response(response)
+
+    def calculate_level(self, scores):
+        aggregate_score = 0.0
+
+        for score in scores:
+            aggregate_score += score[0]
+            aggregate_score += score[1]
+
+        return aggregate_score
+
+    async def get_level_changes(self, airtable_client: AirtableClient):
+        # steps:
+        # - find previously completed missions
+        # - we combine scores of the previous HOW_MANY_PREVIOUS_QUESTIONS_TO_SCORE completed missions
+        #   to calculate a users level/rank
+        # - if the user hasn't completed enough missions, we just add all scores up to get their level
+        # - we calculate the score_delta (current level using newest mission - previous level not including
+        #   current mission
+        completed_missions = await self.rows(
+            formula=pyairtable.formulas.match(
+                {
+                    Fields.player_discord_id_field: self.fields.player_discord_id,
+                    Fields.mission_status_field: self.fields.mission_status.next().get_field(),
+                }
+            ),
+            airtable_client=airtable_client,
+        )
+        completed_missions.sort(key=lambda mission: mission.fields.last_updated_ts)
+
+        # filter to just the scores from missions
+        scores_from_completed_missions = list(
+            map(
+                lambda question: (
+                    question.fields.design_score,
+                    question.fields.code_score,
+                ),
+                completed_missions,
+            )
+        )
+        not_enough_scores = (
+            len(scores_from_completed_missions)
+            < Mission.HOW_MANY_PREVIOUS_QUESTIONS_TO_SCORE
+        )
+
+        # calculate the existing level for the user
+        previous_scores = (
+            scores_from_completed_missions[:-1]
+            if not_enough_scores
+            else scores_from_completed_missions[
+                -(Mission.HOW_MANY_PREVIOUS_QUESTIONS_TO_SCORE - 1) : -1
+            ]
+        )
+        previous_level = int(self.calculate_level(previous_scores))
+
+        current_scores = [scores_from_completed_missions[-1]]
+        current_level = None
+
+        # calculate the new level for the user
+        if not_enough_scores:
+            current_level = int(self.calculate_level(previous_scores + current_scores))
+        else:
+            current_level = int(
+                self.calculate_level(previous_scores[1:] + current_scores)
+            )
+
+        # calculate what the level delta (what is the current level - previous level of the user)
+        level_delta = current_level - previous_level
+        levels_until_evolution = ((int(current_level / 10) + 1) * 10) - current_level
+
+        # fetch ranks and see if this user is evolving
+        user_to_update = await User.row(
+            formula=pyairtable.formulas.match(
+                {user.Fields.discord_id_field: self.fields.player_discord_id}
+            ),
+            airtable_client=airtable_client,
+        )
+        previous_rank = user_to_update.fields.rank.get_rank_for_level(previous_level)
+        current_rank = user_to_update.fields.rank.get_rank_for_level(current_level)
+        evolving = True if previous_rank != current_rank else False
+
+        return (
+            current_level,
+            level_delta,
+            levels_until_evolution,
+            evolving,
+            current_rank,
+        )
 
     @staticmethod
     async def get_messages(interaction: discord.Interaction):

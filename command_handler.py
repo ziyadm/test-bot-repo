@@ -156,7 +156,46 @@ class CommandHandler:
         )
 
         await question_channel.send(response_to_user)
+        if mission_to_update.completing():
+            await self.handle_completing_question(mission_to_update, question_channel)
         return await interaction.followup.send(response)
+
+    async def handle_completing_question(
+        self, mission_to_update: mission.Mission, question_channel: discord.TextChannel
+    ):
+        (
+            new_level,
+            level_delta,
+            levels_until_evolution,
+            evolving,
+            current_rank,
+        ) = await mission_to_update.get_level_changes(self.state.airtable_client)
+
+        await question_channel.send(
+            f"Your work has been recognized by Suriel.\n\nYou gained {level_delta} levels!\n\n"
+        )
+
+        if evolving:
+            user_to_update = await User.row(
+                formula=pyairtable.formulas.match(
+                    {
+                        user.Fields.discord_id_field: mission_to_update.fields.player_discord_id
+                    }
+                ),
+                airtable_client=self.state.airtable_client,
+            )
+
+            await question_channel.send("Wait...what's happening?")
+            await question_channel.send("Suriel is slightly impressed...")
+            await question_channel.send("You are...EVOLVING!")
+            await self.state.set_rank(for_user=user_to_update, rank=current_rank)
+            await question_channel.send(
+                "Suriel sees your strength - you have advanced to the next rank."
+            )
+
+        await question_channel.send(
+            f"You are now a [{current_rank.capitalize()} lvl {new_level}].\n\nYou are now only {levels_until_evolution} levels from advancing to the next rank!"
+        )
 
     async def claim_command(self, interaction: discord.Interaction):
         question_discord_channel_id = str(interaction.channel.name.split("review-")[-1])

@@ -63,6 +63,10 @@ class Rank:
     def __str__(self):
         return self.name[self.value]
 
+    def get_rank_for_level(self, level):
+        rank_bucket = int(level / 10) + 1
+        return self.name[rank_bucket]
+
     def __gt__(self, other):
         return self.value > other.value
 
