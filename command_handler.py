@@ -30,6 +30,9 @@ class CommandHandler:
 
         next_field = mission_to_update.fields.mission_status.next().get_field()
         if mission_to_update.fields.to_dict()[next_field]:
+            user = await self.state.discord_client.client.fetch_user(
+                mission_to_update.fields.reviewer_discord_id
+            )
             # review is not new: it is a revision and we need to update the original reviewer
             original_review_channel = (
                 await self.state.discord_client.client.fetch_channel(
@@ -37,13 +40,13 @@ class CommandHandler:
                 )
             )
             await original_review_channel.send(
-                f"Followup for review: {messages[0].content}"
+                f"{user.mention} the player has revised their work and resubmitted. Please review.\n\nContent: {messages[0].content}"
             )
         else:
             # review is new, we need to ping the reviews channel for this mission
             review_channel = await self.state.discord_client.review_channel()
             review_message = await review_channel.send(
-                f"Ready for review: {interaction.channel.mention}"
+                f"@everyone Ready for review: {interaction.channel.mention}"
             )
             _ = await review_message.create_thread(
                 name=f"review-{interaction.channel.mention}"
@@ -102,7 +105,13 @@ class CommandHandler:
             mission_to_update.fields.discord_channel_id
         )
 
-        await question_channel.send(f"Feedback: {review_value}")
+        user = await self.state.discord_client.client.fetch_user(
+            mission_to_update.fields.player_discord_id
+        )
+
+        await question_channel.send(
+            f"{user.mention} your work has been reviewed by Suriel\n\nSuriel's feedback: {review_value}"
+        )
         return await interaction.followup.send(response)
 
     async def lgtm_command(self, interaction: discord.Interaction, score: float):
