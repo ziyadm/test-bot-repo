@@ -26,8 +26,8 @@ clean: __pycache__ poetry.lock
 
 
 format:
-	black .
 	isort .
+	black .
 
 
 ###### run apps ######
@@ -41,7 +41,12 @@ discord_client: build main.py
 
 
 feature:
-	git checkout -b $(shell bash -c 'read branch_name')
+	git checkout main
+	git pull
+
+	$(read -p "branch name: " branch_name)
+
+	git checkout -b ${branch_name}
 	git push --set-upstream origin ${branch_name}
 
 
