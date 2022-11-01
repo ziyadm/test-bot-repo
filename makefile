@@ -3,6 +3,9 @@ there_is_no_default_target:
 	@exit 1
 
 
+.ONESHELL:
+
+
 ###### project setup and building ######
 
 
