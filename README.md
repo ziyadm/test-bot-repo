@@ -1,26 +1,18 @@
 # setup
 create a file `.env` one level up from where this `README.md` file is and fill it with the required secrets
-```
-$ make setup
-```
+`make setup`
 
 
 # build
-```
-$ make build
-```
+`make build`
 
 
 # starting work on a new feature
-```
-$ make feature
-```
+`make feature`
 
 
 # committing changes
-```
-$ make push
-```
+`make push`
 
 
 # links
