@@ -3,16 +3,16 @@ there_is_no_default_target:
 	@exit 1
 
 
-flake_line_too_long_error_code = E501
-flake_line_break_before_binary_operator_error_code = W503
+###### project setup and building ######
 
 
 setup: ../.env
 	python3 -m pip install poetry
 	python3 -m pip install black
-	python3 -m pip install flake8
 	python3 -m pip install isort
-	ln ../.env ./.env
+	if [[ ! -f ".env" ]]; then \
+	  ln ../.env ./.env; \
+	fi
 
 
 build: pyproject.toml
@@ -28,11 +28,23 @@ clean:
 format:
 	black .
 	isort .
-	flake8 \
-	  --max-line-length=88 \
-	  --ignore=${flake_line_too_long_error_code},${flake_line_break_before_binary_operator_error_code} \
-	  $(pwd)
+
+
+###### run apps ######
 
 
 discord_client: build main.py
 	python3 -m poetry run python3 main.py
+
+
+###### git helpers ######
+
+
+branch:
+	git checkout -b $(shell bash -c 'read branch_name')
+	git push --set-upstream origin ${branch_name}
+
+
+push: format
+	git commit -am "_"
+	git push
