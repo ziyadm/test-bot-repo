@@ -3,9 +3,6 @@ there_is_no_default_target:
 	@exit 1
 
 
-.ONESHELL:
-
-
 ###### project setup and building ######
 
 
@@ -44,12 +41,12 @@ discord_client: build main.py
 
 
 feature:
-	@read -p "feature name (eg make-bot-do-thing): " feature_name
-
-	git checkout main
-	git pull
-
-	git checkout -b ${feature_name}
+	@read -p "feature name (eg make-bot-do-thing): " feature_name; \
+	\
+	git checkout main; \
+	git pull; \
+	\
+	git checkout -b ${feature_name}; \
 	git push --set-upstream origin ${feature_name}
 
 
