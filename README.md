@@ -6,13 +6,15 @@ make setup
 ```
 
 
-## build
+## run the discord client
 ```
-make build
+make discord_client
 ```
 
+this automatically installs python dependencies
 
-## starting work on a new feature
+
+## start work on a new feature
 ```
 make feature
 ```
@@ -22,6 +24,8 @@ make feature
 ```
 make push
 ```
+
+this automatically formats the code, then commits and pushes
 
 
 ## links
