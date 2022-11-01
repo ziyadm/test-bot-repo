@@ -41,10 +41,10 @@ discord_client: build main.py
 
 
 feature:
+	@read -p "feature name (eg make-bot-do-thing): " feature_name
+
 	git checkout main
 	git pull
-
-	@read -p "feature name (eg make-bot-do-thing): " feature_name
 
 	git checkout -b ${feature_name}
 	git push --set-upstream origin ${feature_name}
