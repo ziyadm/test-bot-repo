@@ -46,8 +46,8 @@ feature:
 	git checkout main; \
 	git pull; \
 	\
-	git checkout -b ${feature_name}; \
-	git push --set-upstream origin ${feature_name}
+	git checkout -b $${feature_name}; \
+	git push --set-upstream origin $${feature_name}
 
 
 push: format
