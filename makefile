@@ -44,10 +44,10 @@ feature:
 	git checkout main
 	git pull
 
-	$(read -p "branch name: " branch_name)
+	@read -p "feature name (eg make-bot-do-thing): " feature_name
 
-	git checkout -b ${branch_name}
-	git push --set-upstream origin ${branch_name}
+	git checkout -b ${feature_name}
+	git push --set-upstream origin ${feature_name}
 
 
 push: format
