@@ -20,7 +20,7 @@ build: pyproject.toml
 	python3 -m poetry install
 
 
-clean:
+clean: __pycache__ poetry.lock
 	rm -rf __pycache__
 	rm poetry.lock
 
@@ -40,11 +40,12 @@ discord_client: build main.py
 ###### git helpers ######
 
 
-branch:
+feature:
 	git checkout -b $(shell bash -c 'read branch_name')
 	git push --set-upstream origin ${branch_name}
 
 
 push: format
+	git add .
 	git commit -am "_"
 	git push
