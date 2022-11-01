@@ -5,19 +5,13 @@
 make setup
 ```
 
+
 ## run the discord client
 ```
 make discord_client
 ```
 
 this automatically installs python dependencies
-
-
-## build
-you shouldnt really need to do this on its own very often, but you can run
-```
-make build
-```
 
 
 ## start work on a new feature
