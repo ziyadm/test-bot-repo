@@ -74,6 +74,7 @@ class State:
                 code=None,
                 code_review=None,
                 code_score=None,
+                created_ts=None,
                 last_updated_ts=None,
             ),
             airtable_client=self.airtable_client,
