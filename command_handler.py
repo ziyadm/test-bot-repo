@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 import discord
@@ -24,6 +25,63 @@ class CommandHandler:
             airtable_client=self.state.airtable_client,
         )
 
+    async def update_summary_thread(self, mission_to_update, **kwargs):
+        user_to_update = await User.row(
+            formula=pyairtable.formulas.match(
+                {
+                    user.Fields.discord_id_field: mission_to_update.fields.player_discord_id
+                }
+            ),
+            airtable_client=self.state.airtable_client,
+        )
+        user_path_channel = await self.state.discord_client.client.fetch_channel(
+            user_to_update.fields.discord_channel_id
+        )
+        thread = list(
+            filter(
+                lambda thread: thread.name
+                == f"summary-{mission_to_update.fields.question_id}",
+                user_path_channel.threads,
+            )
+        )[0]
+        current_time = datetime.now()
+        mission_created_time = datetime.strptime(
+            mission_to_update.fields.created_ts, "%Y-%m-%dT%H:%M:%S.%fZ"
+        )
+        time_taken_to_complete_stage = current_time - mission_created_time
+
+        level_delta = kwargs.get("level_delta", None)
+        levels_until_evolution = kwargs.get("levels_until_evolution", None)
+        new_level = kwargs.get("new_level", None)
+        evolving = kwargs.get("evolving", None)
+        review_value = kwargs.get("review_value", None)
+        score = kwargs.get("score", None)
+
+        def get_completed_message():
+            return f"""
+Stage cleared.\n
+Total time for stage: `{time_taken_to_complete_stage}`\n
+Levels gained: `{level_delta}`\n
+Current level: `{new_level}`\n
+Evolved?: `{evolving}`\n
+Levels until evolution: `{levels_until_evolution}`\n
+        """
+
+        def get_in_progress_message():
+            return f"""
+Suriel approved your `{mission_to_update.fields.mission_status.previous()}`.\n
+Total time: `{time_taken_to_complete_stage}`\n
+Suriel's feedback: `{review_value}`\n
+Score: `{score}`
+        """
+
+        message = (
+            get_completed_message()
+            if mission_to_update.completing()
+            else get_in_progress_message()
+        )
+        await thread.send(message)
+
     async def handle_submission(self, interaction, mission_to_update, messages):
         current_user = await User.row(
             formula=pyairtable.formulas.match(
@@ -37,10 +95,6 @@ class CommandHandler:
             current_user.fields.discord_channel_id
         )
 
-        reviewer_user = await self.state.discord_client.client.fetch_user(
-            mission_to_update.fields.reviewer_discord_id
-        )
-
         player_user = await self.state.discord_client.client.fetch_user(
             mission_to_update.fields.player_discord_id
         )
@@ -52,9 +106,13 @@ class CommandHandler:
         content_field = mission_to_update.get_content_field()
         response = f"""Planning is half the battle! We've sent your plan to Suriel for approval. Head back to {user_path_channel.mention} to continue training."""
 
+        # if we have code or design fields with values, then this is not a new review
         next_field = mission_to_update.fields.mission_status.next().get_field()
         if mission_to_update.fields.to_dict()[next_field]:
             # review is not new: it is a revision and we need to update the original reviewer
+            reviewer_user = await self.state.discord_client.client.fetch_user(
+                mission_to_update.fields.reviewer_discord_id
+            )
             original_review_channel = (
                 await self.state.discord_client.client.fetch_channel(
                     mission_to_update.fields.review_discord_channel_id
@@ -205,9 +263,17 @@ class CommandHandler:
             f"{base_response_to_user} \n Feedback: {review_value} \n Score: {score}"
         )
 
+        # message user
         await question_channel.send(response_to_user)
+
         if mission_to_update.completing():
             await self.handle_completing_question(mission_to_update, question_channel)
+        else:
+            # update thread
+            await self.update_summary_thread(
+                mission_to_update, review_value=review_value, score=score
+            )
+
         return await interaction.followup.send(response)
 
     async def handle_completing_question(
@@ -245,6 +311,15 @@ class CommandHandler:
 
         await question_channel.send(
             f"You are now a [{current_rank.capitalize()} lvl {new_level}].\n\nYou are now only {levels_until_evolution} levels from advancing to the next rank!"
+        )
+
+        # update thread
+        await self.update_summary_thread(
+            mission_to_update,
+            evolving=evolving,
+            level_delta=level_delta,
+            levels_until_evolution=levels_until_evolution,
+            new_level=new_level,
         )
 
     async def claim_command(self, interaction: discord.Interaction):

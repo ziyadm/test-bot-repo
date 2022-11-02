@@ -25,6 +25,7 @@ class Fields:
     code_review_field = "code_review"
     code_score_field = "code_score"
     # TODO: figure out if we want a real datetime/time/date object for timestamps
+    created_ts_field = "created_ts"
     last_updated_ts_field = "last_updated_ts"
 
     def __init__(
@@ -41,6 +42,7 @@ class Fields:
         code: Optional[str],
         code_review: Optional[str],
         code_score: Optional[float],
+        created_ts: Optional[str],
         last_updated_ts: Optional[str],
     ):
         self.discord_channel_id = discord_channel_id
@@ -55,6 +57,7 @@ class Fields:
         self.code = code
         self.code_review = code_review
         self.code_score = code_score
+        self.created_ts = created_ts
         self.last_updated_ts = last_updated_ts
 
     def to_dict(self):
@@ -100,6 +103,7 @@ class Fields:
             code=fields.get(cls.code_field, None),
             code_review=fields.get(cls.code_review_field, None),
             code_score=fields.get(cls.code_score_field, None),
+            created_ts=fields.get(cls.created_ts_field, None),
             last_updated_ts=fields.get(cls.last_updated_ts_field, None),
         )
 
