@@ -32,9 +32,9 @@ guild = discord.Object(id=discord_guild_id)
 @discord_client.command_tree.command(
     name="train", description="Enter the training realm", guild=guild
 )
-async def register_new_command(interaction: discord.Interaction):
+async def register_train_command(interaction: discord.Interaction):
     await interaction.response.defer()
-    return await command_handler.new_command(interaction)
+    return await command_handler.train_command(interaction)
 
 
 @discord_client.command_tree.command(

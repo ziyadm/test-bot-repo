@@ -85,13 +85,31 @@ class CommandHandler:
 
         return response
 
-    async def new_command(self, interaction: discord.Interaction):
-        _, mission_channel = await self.state.create_mission(
+    async def train_command(self, interaction: discord.Interaction):
+        mission_to_update, mission_channel = await self.state.create_mission(
             player_discord_id=str(interaction.user.id)
         )
 
-        return await interaction.followup.send(
+        mission_question = await Question.row(
+            formula=pyairtable.formulas.match(
+                {
+                    question.Fields.question_id_field: mission_to_update.fields.question_id
+                }
+            ),
+            airtable_client=self.state.airtable_client,
+        )
+
+        mission_message = await interaction.followup.send(
             f"""Monarch Suriel has invited you to {mission_channel.mention}"""
+        )
+        mission_message.guild = self.state.discord_client.guild_id
+
+        # create the summary thread
+        discord_user = await self.state.discord_client.client.fetch_user(
+            str(interaction.user.id)
+        )
+        _ = await mission_message.create_thread(
+            name=f"summary-{mission_question.fields.question_id}"
         )
 
     async def review_command(self, interaction: discord.Interaction):
@@ -305,7 +323,9 @@ class CommandHandler:
 
         messages = await Mission.get_messages(interaction)
         if len(messages) == 0:
-            return await interaction.followup.send("You need to instruct your minions!")
+            return await interaction.followup.send(
+                "Send your work as a message before running `/submit`"
+            )
 
         response = await self.handle_submission(
             interaction, mission_to_update, messages

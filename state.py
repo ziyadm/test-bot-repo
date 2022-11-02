@@ -79,8 +79,9 @@ class State:
             airtable_client=self.airtable_client,
         )
 
-        await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"""Here's your mission: {mission_question.fields.leetcode_url}""",
+        discord_user = await self.discord_client.client.fetch_user(player_discord_id)
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message=f"""{discord_user.mention} started training mission: {mission_question.fields.leetcode_url}""",
             channel=mission_channel,
         )
 
