@@ -95,5 +95,4 @@ class DiscordClient:
             async with channel.typing():
                 await asyncio.sleep(number_of_words * seconds_to_type_one_word)
 
-        await channel.send(message)
-        return None
+        return await channel.send(message)
