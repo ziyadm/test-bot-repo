@@ -60,10 +60,10 @@ async function question_ids_on_page(questions_page) {
         }})
 }
 
-const seconds_between_requests_to_avoid_getting_rate_limited = 3;
+const seconds_between_requests_to_avoid_getting_rate_limited = 5;
 const number_of_questions_pages = parseInt($('.grid').find('[role="navigation"]').find('[aria-label="next"]').prev().text());
 
-const question_ids = await _.range(number_of_questions_pages, number_of_questions_pages + 1).reduce(async function(question_ids_promise, page_number) {
+const question_ids = await _.range(1, number_of_questions_pages + 1).reduce(async function(question_ids_promise, page_number) {
     const question_ids = await question_ids_promise;
     const questions_page = new Questions_page(page_number);
     const question_ids_on_this_page = await question_ids_on_page(questions_page);
