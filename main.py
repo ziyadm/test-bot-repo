@@ -30,6 +30,14 @@ guild = discord.Object(id=discord_guild_id)
 
 
 @discord_client.command_tree.command(
+    name="time", description="How much time remains?", guild=guild
+)
+async def register_time_command(interaction: discord.Interaction):
+    await interaction.response.defer()
+    return await command_handler.time_command(interaction)
+
+
+@discord_client.command_tree.command(
     name="train", description="Enter the training realm", guild=guild
 )
 async def register_train_command(interaction: discord.Interaction):
