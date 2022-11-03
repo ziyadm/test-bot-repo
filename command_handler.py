@@ -143,6 +143,20 @@ Score: `{score}`
 
         return response
 
+    async def time_command(self, interaction: discord.Interaction):
+        mission_to_update = await self.get_mission(
+            field=mission.Fields.discord_channel_id_field,
+            value=str(interaction.channel.id),
+        )
+        current_time = datetime.now()
+        mission_created_time = datetime.strptime(
+            mission_to_update.fields.created_ts, "%Y-%m-%dT%H:%M:%S.%fZ"
+        )
+        time_taken_to_complete_stage = current_time - mission_created_time
+        minutes_taken = time_taken_to_complete_stage.total_seconds() / 60
+        minutes_remaining = max(60 - minutes_taken, 0)
+        await interaction.followup.send(f"{minutes_remaining} minutes left.")
+
     async def train_command(self, interaction: discord.Interaction):
         mission_to_update, mission_channel = await self.state.create_mission(
             player_discord_id=str(interaction.user.id)
