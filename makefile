@@ -56,5 +56,5 @@ feature:
 
 push: format
 	git add .
-	git commit -am "_"
+	git commit -am "_" --allow-empty
 	git push
