@@ -41,6 +41,12 @@ class AirtableClient:
     async def write_row(self, table_name: str, fields: Dict[str, str]):
         return Response(self.__table(table_name).create(fields))
 
+    async def write_rows(self, table_name: str, all_fields: List[Dict[str, str]]):
+        return [
+            Response(response)
+            for response in self.__table(table_name).batch_create(all_fields)
+        ]
+
     async def update_row(self, table_name: str, record_id: str, fields: Dict[str, str]):
         return Response(self.__table(table_name).update(record_id, fields))
 

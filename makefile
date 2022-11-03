@@ -37,6 +37,10 @@ discord_client: build main.py
 	python3 -m poetry run python3 main.py
 
 
+upload_leetcode_questions_to_airtable: build upload_leetcode_questions_to_airtable.py
+	python3 -m poetry run python3 upload_leetcode_questions_to_airtable.py
+
+
 ###### git helpers ######
 
 
