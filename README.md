@@ -6,9 +6,9 @@ make setup
 ```
 
 
-## run the discord client
+## run the discord bot
 ```
-make discord_client
+make discord_bot
 ```
 
 this automatically installs python dependencies

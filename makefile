@@ -33,8 +33,8 @@ format:
 ###### run apps ######
 
 
-discord_client: build main.py
-	python3 -m poetry run python3 main.py
+discord_bot: build discord_bot.py
+	python3 -m poetry run python3 discord_bot.py
 
 
 upload_leetcode_questions_to_airtable: build upload_leetcode_questions_to_airtable.py
