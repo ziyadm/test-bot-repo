@@ -1,7 +1,7 @@
 import os
 
 import discord
-from dotenv import load_dotenv
+import dotenv
 
 from airtable_client import AirtableClient
 from command_handler import CommandHandler
@@ -9,7 +9,7 @@ from discord_client import DiscordClient
 from event_handler import EventHandler
 from state import State
 
-load_dotenv()
+dotenv.load_dotenv()
 airtable_api_key = os.environ["airtable_api_key"]
 airtable_database_id = os.environ["airtable_database_id"]
 discord_guild_id = int(os.environ["discord_guild_id"])
