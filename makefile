@@ -13,14 +13,6 @@ setup: ../.env
 	  ln ../.env ./.env; \
 	fi
 
-env:
-	echo "airtable_api_key=${airtable_api_key}" > .env
-	echo "airtable_database_id=${airtable_database_id}" >> .env
-	echo "discord_guild_id=${discord_guild_id}" >> .env
-	echo "discord_secret_token=${discord_secret_token}" >> .env
-	echo "discord_review_channel_id=${discord_review_channel_id}" >> .env
-	sudo apt install python3-pip
-
 build: pyproject.toml
 	python3 -m poetry lock --no-update
 	python3 -m poetry install
