@@ -1,4 +1,4 @@
 #!/bin/bash
 
 cd /home/ec2-user/app
-sudo make discord_no_build
+sudo nohup make discord_bot &
