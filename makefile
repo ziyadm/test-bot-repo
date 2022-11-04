@@ -5,6 +5,9 @@ there_is_no_default_target:
 
 ###### project setup and building ######
 
+setup_deploy:
+	python3 -m pip install poetry
+
 setup: ../.env
 	python3 -m pip install poetry
 	python3 -m pip install black
