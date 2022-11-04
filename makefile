@@ -61,4 +61,4 @@ push: format
 
 
 release: push
-	echo gh pr create --base main --title '"$(shell git branch --show-current)"' --body '"_"'
+	gh pr create --base main --title '"$(shell git branch --show-current)"' --body '"_"'
