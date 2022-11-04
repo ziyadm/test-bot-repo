@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cd ..
+make env
+make setup_for_deployment
+make build
