@@ -103,7 +103,6 @@ Score: `{score}`
             f"{player_user.mention}\n\nType `/train` to continue..."
         )
 
-        content_field = mission_to_update.get_content_field()
         response = f"""Planning is half the battle! We've sent your plan to Suriel for approval. Head back to {user_path_channel.mention} to continue training."""
 
         # if we have code or design fields with values, then this is not a new review
@@ -380,10 +379,10 @@ Score: `{score}`
             interaction.user.id,
             f"{mission_to_update.fields.mission_status.get_field()}-{mission_to_update.fields.question_id}-{user_to_update.fields.discord_name}",
         )
-        content_field = mission_to_update.get_content_field()
+        content_value = mission_to_update.get_content_value()
 
         await question_review_channel.send(
-            f"Question: {question_to_update.fields.leetcode_url}\n\nContent: {content_field}"
+            f"Question: {question_to_update.fields.leetcode_url}\n\nContent: {content_value}"
         )
         response = f"Review claimed: {question_review_channel.mention}"
 
