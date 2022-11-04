@@ -9,9 +9,9 @@ files:
 hooks:
   AfterInstall:
    - location: scripts/install
-     timeout: 60
+     timeout: 120
      runas: root
   ApplicationStart:
    - location: scripts/start
-     timeout: 60
+     timeout: 120
      runas: root
