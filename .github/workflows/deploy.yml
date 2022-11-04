@@ -20,16 +20,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - run: 
-      - run: make env
-      - run: make setup_deploy
-      - run: make build
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 4
-    if: github.ref == 'refs/heads/main'
+    # if: github.ref == 'refs/heads/main'
     steps:
      # Step 1
       - name: Configure AWS credentials

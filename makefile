@@ -5,9 +5,6 @@ there_is_no_default_target:
 
 ###### project setup and building ######
 
-setup_deploy:
-	python3 -m pip install poetry
-
 setup: ../.env
 	python3 -m pip install poetry
 	python3 -m pip install black
@@ -15,13 +12,6 @@ setup: ../.env
 	if [[ ! -f ".env" ]]; then \
 	  ln ../.env ./.env; \
 	fi
-
-env:
-	echo "airtable_api_key=${airtable_api_key}" > .env
-	echo "airtable_database_id=${airtable_database_id}" >> .env
-	echo "discord_guild_id=${discord_guild_id}" >> .env
-	echo "discord_secret_token=${discord_secret_token}" >> .env
-	echo "discord_review_channel_id=${discord_review_channel_id}" >> .env
 
 build: pyproject.toml
 	python3 -m poetry lock --no-update
@@ -43,7 +33,6 @@ format:
 
 discord_bot: build discord_bot.py
 	python3 -m poetry run python3 discord_bot.py
-
 
 upload_leetcode_questions_to_airtable: build upload_leetcode_questions_to_airtable.py
 	python3 -m poetry run python3 upload_leetcode_questions_to_airtable.py
