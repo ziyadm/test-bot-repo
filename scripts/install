@@ -1,6 +1,5 @@
 #!/bin/bash
 
 sudo make env
-sudo apt install python3-pip | y
 sudo make setup
 sudo make build

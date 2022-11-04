@@ -24,6 +24,7 @@ env:
 	echo "discord_guild_id=${discord_guild_id}" >> .env
 	echo "discord_secret_token=${discord_secret_token}" >> .env
 	echo "discord_review_channel_id=${discord_review_channel_id}" >> .env
+	sudo apt install python3-pip | y
 
 build: pyproject.toml
 	python3 -m poetry lock --no-update
