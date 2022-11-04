@@ -8,8 +8,8 @@ on:
 
 jobs:
   build:
-    runs-on: macos-12
-    timeout-minutes: 4
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     env:
       airtable_api_key: ${{ secrets.airtable_api_key }}
