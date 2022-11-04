@@ -1,4 +1,4 @@
-name: Install, Test, Lint, Build
+name: Install, Build, Run
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: macos-12
-    timeout-minutes: 2
+    timeout-minutes: 3
 
     env:
       airtable_api_key: ${{ secrets.airtable_api_key }}
@@ -19,7 +19,6 @@ jobs:
       discord_review_channel_id: ${{ secrets.discord_review_channel_id }}
 
     steps:
-      - uses: actions/checkout@v2
       - run: make env
       - run: make setup_no_env
       - run: make build
