@@ -2,7 +2,7 @@ name: Install, Test, Lint, Build
 
 on:
   push:
-    branches: [ test ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
