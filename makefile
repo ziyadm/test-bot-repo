@@ -14,7 +14,6 @@ setup: ../.env
 	  ln ../.env ./.env; \
 	fi
 
-
 env:
 	echo "airtable_api_key=${airtable_api_key}" > .env
 	echo "airtable_database_id=${airtable_database_id}" >> .env
