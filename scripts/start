@@ -1,4 +1,3 @@
 #!/bin/bash
 
-cd ..
-make discord_bot
+sudo make discord_bot
