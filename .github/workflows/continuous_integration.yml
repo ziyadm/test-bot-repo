@@ -12,15 +12,15 @@ jobs:
     timeout-minutes: 2
 
     steps:
-      env:
-        airtable_api_key: ${{ secrets.airtable_api_key }}
-        airtable_database_id: ${{ secrets.airtable_database_id }}
-        discord_guild_id: ${{ secrets.discord_guild_id }}
-        discord_secret_token: ${{ secrets.discord_secret_token }}
-        discord_review_channel_id: ${{ secrets.discord_review_channel_id }}
-
+      - name: 'Build and run the app'
       - uses: actions/checkout@v2
       - run: make env
+        env:
+          airtable_api_key: ${{ secrets.airtable_api_key }}
+          airtable_database_id: ${{ secrets.airtable_database_id }}
+          discord_guild_id: ${{ secrets.discord_guild_id }}
+          discord_secret_token: ${{ secrets.discord_secret_token }}
+          discord_review_channel_id: ${{ secrets.discord_review_channel_id }}
       - run: make setup
       - run: make build
       - run: make discord_bot
