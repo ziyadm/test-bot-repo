@@ -6,6 +6,7 @@ there_is_no_default_target:
 ###### project setup and building ######
 
 setup_for_deployment: 
+	python3 -m pip install --upgrade requests
 	python3 -m pip install poetry
 
 setup: ../.env
