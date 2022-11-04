@@ -1,4 +1,4 @@
-name: Install, Build, Run
+name: Install, Test, Lint, Build
 
 on:
   push:
@@ -19,6 +19,7 @@ jobs:
       discord_review_channel_id: ${{ secrets.discord_review_channel_id }}
 
     steps:
+      - uses: actions/checkout@v3
       - run: make env
       - run: make setup_no_env
       - run: make build
