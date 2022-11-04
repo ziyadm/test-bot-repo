@@ -4,3 +4,4 @@ cd /home/ec2-user/app
 sudo make env
 sudo make setup
 sudo make build
+cp ../.env .

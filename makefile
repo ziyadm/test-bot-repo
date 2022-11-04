@@ -5,11 +5,6 @@ there_is_no_default_target:
 
 ###### project setup and building ######
 
-setup_deploy:
-	python3 -m pip install poetry
-	python3 -m pip install --upgrade requests
-	python3 -m poetry install
-
 setup: ../.env
 	python3 -m pip install poetry
 	python3 -m pip install black
@@ -47,6 +42,8 @@ format:
 discord_bot: build discord_bot.py
 	python3 -m poetry run python3 discord_bot.py
 
+discord_no_build: discord_bot.py
+	python3 -m poetry run python3 discord_bot.py
 
 upload_leetcode_questions_to_airtable: build upload_leetcode_questions_to_airtable.py
 	python3 -m poetry run python3 upload_leetcode_questions_to_airtable.py
