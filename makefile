@@ -5,11 +5,8 @@ there_is_no_default_target:
 
 ###### project setup and building ######
 
-setup_no_env: 
+setup_for_deployment: 
 	python3 -m pip install poetry
-	python3 -m pip install black
-	python3 -m pip install isort
-	python3 -m pip install --upgrade requests
 
 setup: ../.env
 	python3 -m pip install poetry
