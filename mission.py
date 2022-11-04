@@ -178,11 +178,11 @@ class Mission:
             else Fields.code_review_field
         )
 
-    def get_content_field(self):
+    def get_content(self):
         design_stage = self.fields.mission_status.has_value(
             MissionStatus.design_review
         ) or self.fields.mission_status.has_value(MissionStatus.design)
-        return Fields.design_field if design_stage else Fields.code_field
+        return self.fields.design if design_stage else self.fields.code
 
     async def get_review_values(self, interaction: discord.Interaction):
         review_field = self.get_review_field()
