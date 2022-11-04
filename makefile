@@ -9,7 +9,7 @@ setup_no_env:
 	python3 -m pip install poetry
 	python3 -m pip install black
 	python3 -m pip install isort
-	python3 -m pip install requests
+	python3 -m pip install --upgrade requests
 
 setup: ../.env
 	python3 -m pip install poetry
