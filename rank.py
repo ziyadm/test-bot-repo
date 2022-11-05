@@ -57,11 +57,14 @@ class Rank:
     def __init__(self, value: int):
         self.value = value
 
+    def to_string(self):
+        return self.name[self.value]
+
+    def __eq__(self, other):
+        return self.value == other.value
+
     def has_value(self, value: int):
         return self.value == value
-
-    def __str__(self):
-        return self.name[self.value]
 
     def get_rank_for_level(self, level):
         rank_bucket = int(level / 10) + 1

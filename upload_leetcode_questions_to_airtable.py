@@ -58,8 +58,8 @@ async def main():
         if description != "":
             questions_to_add.append(
                 question.Fields(
-                    question_id,
-                    description,
+                    question_id=question_id,
+                    description=description,
                     tags=question_data["tags"],
                     leetcode_url=f"""https://www.leetcode.com/problems/{question_id}""",
                 )
@@ -68,7 +68,7 @@ async def main():
     print("uploading questions to airtable")
 
     questions = await Question.create_many(
-        all_fields=questions_to_add, airtable_client=airtable_client
+        all_fields=questions_to_add[:10], airtable_client=airtable_client
     )
 
     print("uploaded questions to airtable")

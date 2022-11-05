@@ -17,14 +17,17 @@ class MissionStatus:
     def __init__(self, value: int):
         self.value = value
 
+    def __eq__(self, other):
+        return self.value == other.value
+
     def has_value(self, value: int):
         return self.value == value
 
-    def get_field(self):
-        return self.__str__()
-
-    def __str__(self):
+    def to_string(self):
         return self.name[self.value]
+
+    def get_field(self):
+        return self.to_string()
 
     @classmethod
     def of_string(cls, s: str):

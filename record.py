@@ -3,15 +3,16 @@ import json
 from typing import Dict, List, Set, Tuple
 
 
+class Fields:
+    pass
+
+
 class Record:
     def __init__(self, **provided_fields):
         for field in self.__annotations__.keys():
             if field not in provided_fields:
                 raise AttributeError(f"""missing field {field}""")
 
-            # TODO: theres probably a better way to handle this, but doing this
-            # for now as a quick fix
-            setattr(self.__class__, f"""{field}_field""", field)
             setattr(self, field, provided_fields[field])
 
     def __eq__(self, other):
@@ -25,6 +26,9 @@ class Record:
         data = {}
 
         def maybe_nested_value(value):
+            if hasattr(value, "to_string"):
+                return value.to_string()
+
             if not hasattr(value, "to_dict"):
                 return value
 
@@ -53,6 +57,9 @@ class Record:
         data = {}
 
         def parse_maybe_nested_value(value, expected_type):
+            if hasattr(expected_type, "of_string"):
+                return expected_type.of_string(value)
+
             if not hasattr(expected_type, "of_dict"):
                 return expected_type(value)
 
@@ -107,6 +114,14 @@ class Record:
 
         return updated
 
+    # TODO: i think we need to use a metaclass to avoid having to do this, but this seems fine for now
+    @classmethod
+    def field(cls):
+        fields = Fields()
+        for field in cls.__annotations__.keys():
+            setattr(fields, field, field)
+        return fields
+
 
 class Test_str_record(Record):
     str_field: str
@@ -159,6 +174,36 @@ class Test_nested_record(Record):
 class Test_record_with_multiple_fields(Record):
     str_field: str
     int_field: int
+
+
+class Test_variant:
+    variant_a = 1
+    variant_b = 2
+
+    all_values = [
+        variant_a,
+        variant_b,
+    ]
+    name = {variant_a: "variant_a", variant_b: "variant_b"}
+
+    def __init__(self, value: int):
+        self.value = value
+
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def to_string(self):
+        return self.name[self.value]
+
+    @classmethod
+    def of_string(cls, s: str):
+        for (value, name) in cls.name.items():
+            if s == name:
+                return cls(value)
+
+
+class Test_record_with_custom_serialization(Record):
+    variant_field: Test_variant
 
 
 class Test:
@@ -287,6 +332,15 @@ class Test:
         )
 
     @classmethod
+    def roundtrip_record_with_custom_serialization(cls):
+        cls.run_roundtrip(
+            Test_record_with_custom_serialization,
+            Test_record_with_custom_serialization(
+                variant_field=Test_variant(Test_variant.variant_a),
+            ),
+        )
+
+    @classmethod
     def run_all_roundtrip(cls):
         cls.roundtrip_str()
         cls.roundtrip_int()
@@ -300,6 +354,7 @@ class Test:
         cls.roundtrip_dict()
         cls.roundtrip_nested_dict()
         cls.roundtrip_nested()
+        cls.roundtrip_record_with_custom_serialization()
 
     @classmethod
     def run_update(cls, *, original, updates, expected):
@@ -314,7 +369,7 @@ class Test:
     def update_one_field(cls):
         cls.run_update(
             original=Test_int_record(int_field=0),
-            updates={Test_int_record.int_field_field: 5},
+            updates={Test_int_record.field().int_field: 5},
             expected=Test_int_record(int_field=5),
         )
 
@@ -325,8 +380,8 @@ class Test:
                 str_field="str-field", int_field=0
             ),
             updates={
-                Test_record_with_multiple_fields.str_field_field: "new-str-field",
-                Test_record_with_multiple_fields.int_field_field: 5,
+                Test_record_with_multiple_fields.field().str_field: "new-str-field",
+                Test_record_with_multiple_fields.field().int_field: 5,
             },
             expected=Test_record_with_multiple_fields(
                 str_field="new-str-field", int_field=5

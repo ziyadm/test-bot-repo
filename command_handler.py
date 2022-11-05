@@ -29,7 +29,7 @@ class CommandHandler:
         user_to_update = await User.row(
             formula=pyairtable.formulas.match(
                 {
-                    user.Fields.discord_id_field: mission_to_update.fields.player_discord_id
+                    user.Fields.field().discord_id: mission_to_update.fields.player_discord_id
                 }
             ),
             airtable_client=self.state.airtable_client,
@@ -86,7 +86,7 @@ Score: `{score}`
         current_user = await User.row(
             formula=pyairtable.formulas.match(
                 {
-                    user.Fields.discord_id_field: mission_to_update.fields.player_discord_id
+                    user.Fields.field().discord_id: mission_to_update.fields.player_discord_id
                 }
             ),
             airtable_client=self.state.airtable_client,
@@ -133,9 +133,9 @@ Score: `{score}`
             )
 
         await mission_to_update.update(
-            fields=mission_to_update.fields.immutable_updates(
+            fields=mission_to_update.fields.update(
                 {
-                    mission.Fields.mission_status_field: mission_to_update.fields.mission_status.next(),
+                    mission.Fields.field().mission_status: mission_to_update.fields.mission_status.next(),
                     content_field: messages[0].content,
                 }
             ),
@@ -146,7 +146,7 @@ Score: `{score}`
 
     async def time_command(self, interaction: discord.Interaction):
         mission_to_update = await self.get_mission(
-            field=mission.Fields.discord_channel_id_field,
+            field=mission.Fields.field().discord_channel_id,
             value=str(interaction.channel.id),
         )
         current_time = datetime.datetime.now().astimezone(datetime.timezone.utc)
@@ -171,7 +171,7 @@ Score: `{score}`
         mission_question = await Question.row(
             formula=pyairtable.formulas.match(
                 {
-                    question.Fields.question_id_field: mission_to_update.fields.question_id
+                    question.Fields.field().question_id: mission_to_update.fields.question_id
                 }
             ),
             airtable_client=self.state.airtable_client,
@@ -192,7 +192,7 @@ Score: `{score}`
 
     async def review_command(self, interaction: discord.Interaction):
         mission_to_update = await self.get_mission(
-            field=mission.Fields.review_discord_channel_id_field,
+            field=mission.Fields.field().review_discord_channel_id,
             value=str(interaction.channel_id),
         )
 
@@ -203,11 +203,11 @@ Score: `{score}`
             interaction
         )
 
-        state_field = mission.Fields.mission_status_field
+        state_field = mission.Fields.field().mission_status
         state_value = mission_to_update.fields.mission_status.previous()
 
         await mission_to_update.update(
-            fields=mission_to_update.fields.immutable_updates(
+            fields=mission_to_update.fields.update(
                 {
                     review_field: review_value,
                     state_field: state_value,
@@ -233,7 +233,7 @@ Score: `{score}`
 
     async def lgtm_command(self, interaction: discord.Interaction, score: float):
         mission_to_update = await self.get_mission(
-            field=mission.Fields.review_discord_channel_id_field,
+            field=mission.Fields.field().review_discord_channel_id,
             value=str(interaction.channel_id),
         )
 
@@ -244,17 +244,17 @@ Score: `{score}`
             interaction
         )
 
-        state_field = mission.Fields.mission_status_field
+        state_field = mission.Fields.field().mission_status
         state_value = mission_to_update.fields.mission_status.next()
 
         score_field = (
-            mission.Fields.code_score_field
+            mission.Fields.field().code_score
             if mission_to_update.completing()
-            else mission.Fields.design_score_field
+            else mission.Fields.field().design_score
         )
 
         await mission_to_update.update(
-            fields=mission_to_update.fields.immutable_updates(
+            fields=mission_to_update.fields.update(
                 {
                     review_field: review_value,
                     state_field: state_value,
@@ -315,7 +315,7 @@ Score: `{score}`
             user_to_update = await User.row(
                 formula=pyairtable.formulas.match(
                     {
-                        user.Fields.discord_id_field: mission_to_update.fields.player_discord_id
+                        user.Fields.field().discord_id: mission_to_update.fields.player_discord_id
                     }
                 ),
                 airtable_client=self.state.airtable_client,
@@ -345,13 +345,13 @@ Score: `{score}`
     async def claim_command(self, interaction: discord.Interaction):
         question_discord_channel_id = str(interaction.channel.name.split("review-")[-1])
         mission_to_update = await self.get_mission(
-            field=mission.Fields.discord_channel_id_field,
+            field=mission.Fields.field().discord_channel_id,
             value=question_discord_channel_id,
         )
 
         mission_to_update = await Mission.row(
             formula=pyairtable.formulas.match(
-                {mission.Fields.discord_channel_id_field: question_discord_channel_id}
+                {mission.Fields.field().discord_channel_id: question_discord_channel_id}
             ),
             airtable_client=self.state.airtable_client,
         )
@@ -362,7 +362,7 @@ Score: `{score}`
         user_to_update = await User.row(
             formula=pyairtable.formulas.match(
                 {
-                    user.Fields.discord_id_field: mission_to_update.fields.player_discord_id
+                    user.Fields.field().discord_id: mission_to_update.fields.player_discord_id
                 }
             ),
             airtable_client=self.state.airtable_client,
@@ -371,14 +371,14 @@ Score: `{score}`
         question_to_update = await Question.row(
             formula=pyairtable.formulas.match(
                 {
-                    question.Fields.question_id_field: mission_to_update.fields.question_id
+                    question.Fields.field().question_id: mission_to_update.fields.question_id
                 }
             ),
             airtable_client=self.state.airtable_client,
         )
 
         question_review_channel = await self.state.discord_client.create_private_channel(
-            interaction.user.id,
+            str(interaction.user.id),
             f"{mission_to_update.fields.mission_status.get_field()}-{mission_to_update.fields.question_id}-{user_to_update.fields.discord_name}",
         )
         content_value = mission_to_update.get_content_value()
@@ -389,12 +389,14 @@ Score: `{score}`
         response = f"Review claimed: {question_review_channel.mention}"
 
         await mission_to_update.update(
-            fields=mission_to_update.fields.immutable_updates(
+            fields=mission_to_update.fields.updates(
                 {
-                    mission.Fields.review_discord_channel_id_field: str(
+                    mission.Fields.field().review_discord_channel_id: str(
                         question_review_channel.id
                     ),
-                    mission.Fields.reviewer_discord_id_field: interaction.user.id,
+                    mission.Fields.field().reviewer_discord_id: str(
+                        interaction.user.id
+                    ),
                 }
             ),
             airtable_client=self.state.airtable_client,
@@ -404,7 +406,7 @@ Score: `{score}`
 
     async def submit_command(self, interaction: discord.Interaction):
         mission_to_update = await self.get_mission(
-            field=mission.Fields.discord_channel_id_field,
+            field=mission.Fields.field().discord_channel_id,
             value=str(interaction.channel.id),
         )
 
@@ -433,7 +435,7 @@ Score: `{score}`
     ):
         user_to_update = await User.row(
             formula=pyairtable.formulas.match(
-                {user.Fields.discord_name_field: user_discord_name}
+                {user.Fields.field().discord_name: user_discord_name}
             ),
             airtable_client=self.state.airtable_client,
         )

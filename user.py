@@ -3,48 +3,14 @@ from typing import Dict, Optional
 import airtable_client
 from airtable_client import AirtableClient
 from rank import Rank
+from record import Record
 
 
-class Fields:
-
-    discord_id_field = "discord_id"
-    discord_name_field = "discord_name"
-    discord_channel_id_field = "discord_channel_id"
-    rank_field = "rank"
-
-    def __init__(
-        self, discord_id: str, discord_name: str, discord_channel_id: str, rank: Rank
-    ):
-        self.discord_id = discord_id
-        self.discord_name = discord_name
-        self.discord_channel_id = discord_channel_id
-        self.rank = rank
-
-    def to_dict(self):
-        return {
-            self.discord_id_field: self.discord_id,
-            self.discord_name_field: self.discord_name,
-            self.discord_channel_id_field: self.discord_channel_id,
-            self.rank_field: str(self.rank),
-        }
-
-    @classmethod
-    def of_dict(cls, fields: Dict[str, str]):
-        return cls(
-            discord_id=fields[cls.discord_id_field],
-            discord_name=fields[cls.discord_name_field],
-            discord_channel_id=fields[cls.discord_channel_id_field],
-            rank=Rank.of_string(fields[cls.rank_field]),
-        )
-
-    def immutable_updates(self, updates):
-        updated = self.to_dict()
-        for key, value in updates.items():
-            updated[key] = str(value)
-        return self.of_dict(updated)
-
-    def immutable_update(self, field, value):
-        return self.immutable_updates({field: value})
+class Fields(Record):
+    discord_id: str
+    discord_name: str
+    discord_channel_id: str
+    rank: Rank
 
 
 class User:
@@ -57,12 +23,15 @@ class User:
 
     @classmethod
     def __of_airtable_response(cls, response: airtable_client.Response):
-        return cls(record_id=response.record_id, fields=Fields.of_dict(response.fields))
+        return cls(
+            record_id=response.record_id,
+            fields=Fields.of_json_serialized_dict(response.fields),
+        )
 
     @classmethod
     async def create(cls, fields: Fields, airtable_client: AirtableClient):
         response = await airtable_client.write_row(
-            table_name=cls.table_name, fields=fields.to_dict()
+            table_name=cls.table_name, fields=fields.to_json_serialized_dict()
         )
         return cls.__of_airtable_response(response)
 
@@ -90,9 +59,40 @@ class User:
         response = await airtable_client.update_row(
             table_name=self.table_name,
             record_id=self.record_id,
-            fields=self.fields.immutable_update(
-                field=Fields.rank_field, value=rank
-            ).to_dict(),
+            fields=self.fields.update(
+                {Fields.field().rank: rank}
+            ).to_json_serialized_dict(),
         )
 
         return self.__of_airtable_response(response)
+
+
+class Test:
+    @classmethod
+    def run_roundtrip(cls, test_fields):
+        assert (
+            Fields.of_json_serialized_dict(test_fields.to_json_serialized_dict())
+            == test_fields
+        )
+
+    @classmethod
+    def roundtrip_fields(cls):
+        cls.run_roundtrip(
+            Fields(
+                discord_id="123123124124",
+                discord_name="test-discord-name",
+                discord_channel_id="1231241",
+                rank=Rank(Rank.copper),
+            )
+        )
+
+    @classmethod
+    def run_all_roundtrip(cls):
+        cls.roundtrip_fields()
+
+    @classmethod
+    def run_all(cls):
+        cls.run_all_roundtrip()
+
+
+Test.run_all()
