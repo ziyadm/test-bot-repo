@@ -11,7 +11,7 @@ class EventHandler:
         await self.state.discord_client.command_tree.sync(
             guild=discord.Object(id=self.state.discord_client.guild_id)
         )
-        print(f"Logged in as {self.state.discord_client.client.user}")
+        print(f"Logged in as {self.state.discord_client.bot_id()}")
 
     async def on_member_join(self, member: discord.Member):
         _new_user, _user_channel = await self.state.create_user(discord_member=member)

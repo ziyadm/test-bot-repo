@@ -80,7 +80,7 @@ class State:
             airtable_client=self.airtable_client,
         )
 
-        discord_user = await self.discord_client.client.fetch_user(player_discord_id)
+        discord_user = await self.discord_client.member(player_discord_id)
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message=f"""Welcome to your training mission {discord_user.mention}!""",
             channel=mission_channel,
@@ -126,7 +126,7 @@ class State:
     async def sync_discord_role(self, for_user: User):
         bot_user = await User.row(
             formula=pyairtable.formulas.match(
-                {user.Fields.discord_id_field: self.discord_client.client.user.id}
+                {user.Fields.discord_id_field: self.discord_client.bot_id()}
             ),
             airtable_client=self.airtable_client,
         )
