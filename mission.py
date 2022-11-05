@@ -184,7 +184,7 @@ class Mission:
         ) or self.fields.mission_status.has_value(MissionStatus.design)
         return Fields.design_field if design_stage else Fields.code_field
 
-    def get_content(self):
+    def get_content_value(self):
         design_stage = self.fields.mission_status.has_value(
             MissionStatus.design_review
         ) or self.fields.mission_status.has_value(MissionStatus.design)
