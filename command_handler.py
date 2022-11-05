@@ -14,6 +14,7 @@ from rank import Rank
 from stage import Stage
 from state import State
 from user import User
+from utc_time import UtcTime
 
 
 class CommandHandler:
@@ -45,11 +46,12 @@ class CommandHandler:
                 user_path_channel.threads,
             )
         )[0]
-        current_time = datetime.datetime.now().astimezone(datetime.timezone.utc)
-        mission_created_time = datetime.datetime.strptime(
-            mission_to_update.fields.created_ts, "%Y-%m-%dT%H:%M:%S.%f%z"
+        # TODO: im pretty sure we want the updated missions time, not the copy
+        # of the mission before we wrote the updates to the db. dont have time
+        # to verify / fix this right now
+        time_taken_to_complete_stage = mission_to_update.time_in_stage(
+            now=UtcTime.now()
         )
-        time_taken_to_complete_stage = current_time - mission_created_time
 
         level_delta = kwargs.get("level_delta", None)
         levels_until_evolution = kwargs.get("levels_until_evolution", None)
@@ -149,23 +151,19 @@ Score: `{score}`
         return response
 
     async def time_command(self, interaction: discord.Interaction):
-        mission_to_update = await self.get_mission(
+        for_mission = await self.get_mission(
             field=mission.Fields.discord_channel_id_field,
             value=str(interaction.channel.id),
         )
-        current_time = datetime.datetime.now().astimezone(datetime.timezone.utc)
-        mission_created_time = datetime.datetime.strptime(
-            mission_to_update.fields.created_ts, "%Y-%m-%dT%H:%M:%S.%f%z"
-        )
+        # TODO: this time should depend on what stage theyre in, not just be 60
+        # minutes
         time_remaining = max(
-            datetime.timedelta(minutes=60) - (current_time - mission_created_time),
+            datetime.timedelta(minutes=60)
+            - for_mission.time_in_stage(now=UtcTime.now()),
             datetime.timedelta(seconds=0),
         )
-        formatted_time_remaining = datetime.timedelta(
-            seconds=round(time_remaining.total_seconds(), 0)
-        )
 
-        await interaction.followup.send(f"""{formatted_time_remaining} left.""")
+        await interaction.followup.send(f"""{time_remaining} left.""")
 
     async def train_command(self, interaction: discord.Interaction):
         mission_to_update, mission_channel = await self.state.create_mission(
@@ -635,7 +633,7 @@ Score: `{score}`
             ),
             airtable_client=airtable_client,
         )
-        completed_missions.sort(key=lambda mission: mission.fields.last_updated_ts)
+        completed_missions.sort(key=lambda mission: mission.fields.entered_stage_time)
 
         # filter to just the scores from missions
         scores_from_completed_missions = list(

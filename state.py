@@ -10,6 +10,7 @@ from question import Question
 from rank import Rank
 from stage import Stage
 from user import User
+from utc_time import UtcTime
 
 
 class State:
@@ -60,6 +61,8 @@ class State:
             channel_name=f"""{player.fields.discord_name}-{question_id}""",
         )
 
+        now = UtcTime.now()
+
         new_mission = await Mission.create(
             fields=mission.Fields(
                 discord_channel_id=str(mission_channel.id),
@@ -74,8 +77,8 @@ class State:
                 code=None,
                 code_review=None,
                 code_score=None,
-                created_ts=None,
-                last_updated_ts=None,
+                start_time=now,
+                entered_stage_time=now,
             ),
             airtable_client=self.airtable_client,
         )
