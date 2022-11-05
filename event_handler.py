@@ -15,5 +15,3 @@ class EventHandler:
 
     async def on_member_join(self, member: discord.Member):
         _new_user, _user_channel = await self.state.create_user(discord_member=member)
-
-        return None
