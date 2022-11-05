@@ -48,10 +48,9 @@ class DiscordClient:
         return await guild.fetch_channels()
 
     async def channel(self, channel_id: str):
-        guild = await self.__guild()
-        return await guild.fetch_channel(channel_id)
+        return await self.client.fetch_channel(channel_id)
 
-    async def bot_id(self):
+    def bot_id(self):
         return self.client.user.id
 
     async def create_private_channel(self, member_id: str, channel_name: str):

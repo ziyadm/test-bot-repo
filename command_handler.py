@@ -7,6 +7,7 @@ import pyairtable.formulas
 import mission
 import question
 import user
+from airtable_client import AirtableClient
 from mission import Mission
 from mission_status import MissionStatus
 from question import Question
@@ -77,7 +78,7 @@ Score: `{score}`
 
         message = (
             get_completed_message()
-            if mission_to_update.completing()
+            if CommandHandler.completing(mission_to_update)
             else get_in_progress_message()
         )
         await thread.send(message)
@@ -105,7 +106,12 @@ Score: `{score}`
 
         response = f"""Planning is half the battle! We've sent your plan to Suriel for approval. Head back to {user_path_channel.mention} to continue training."""
 
-        content_field = mission_to_update.get_content_field()
+        design_stage = mission_to_update.fields.mission_status.has_value(
+            MissionStatus.design_review
+        ) or mission_to_update.fields.mission_status.has_value(MissionStatus.design)
+        content_field = (
+            mission.Fields.design_field if design_stage else mission.Fields.code_field
+        )
 
         # if we have code or design fields with values, then this is not a new review
         next_field = mission_to_update.fields.mission_status.next().get_field()
@@ -192,11 +198,11 @@ Score: `{score}`
             value=str(interaction.channel_id),
         )
 
-        if not mission_to_update.in_review():
+        if not CommandHandler.in_review(mission_to_update):
             return await interaction.followup.send("""Review already completed!""")
 
-        review_field, review_value = await mission_to_update.get_review_values(
-            interaction
+        review_field, review_value = await CommandHandler.get_review_value(
+            mission_to_update, interaction
         )
 
         state_field = mission.Fields.mission_status_field
@@ -233,11 +239,11 @@ Score: `{score}`
             value=str(interaction.channel_id),
         )
 
-        if not mission_to_update.in_review():
+        if not CommandHandler.in_review(mission_to_update):
             return await interaction.followup.send("""LGTM already provided!""")
 
-        review_field, review_value = await mission_to_update.get_review_values(
-            interaction
+        review_field, review_value = await CommandHandler.get_review_value(
+            mission_to_update, interaction
         )
 
         state_field = mission.Fields.mission_status_field
@@ -245,7 +251,7 @@ Score: `{score}`
 
         score_field = (
             mission.Fields.code_score_field
-            if mission_to_update.completing()
+            if CommandHandler.completing(mission_to_update)
             else mission.Fields.design_score_field
         )
 
@@ -262,7 +268,7 @@ Score: `{score}`
 
         response = (
             "Approved question."
-            if mission_to_update.completing()
+            if CommandHandler.completing(mission_to_update)
             else "Approved design."
         )
 
@@ -272,7 +278,7 @@ Score: `{score}`
 
         base_response_to_user = (
             "Suriel approved of your work! Suriel left you the following to help you along your path"
-            if mission_to_update.completing()
+            if CommandHandler.completing(mission_to_update)
             else "Suriel approved your design. Continue along to coding."
         )
         response_to_user = (
@@ -282,7 +288,7 @@ Score: `{score}`
         # message user
         await question_channel.send(response_to_user)
 
-        if mission_to_update.completing():
+        if CommandHandler.completing(mission_to_update):
             await self.handle_completing_question(mission_to_update, question_channel)
         else:
             # update thread
@@ -301,7 +307,9 @@ Score: `{score}`
             levels_until_evolution,
             evolving,
             current_rank,
-        ) = await mission_to_update.get_level_changes(self.state.airtable_client)
+        ) = await CommandHandler.get_level_changes(
+            self.state.airtable_client, mission_to_update
+        )
 
         await question_channel.send(
             f"Your work has been recognized by Suriel.\n\nYou gained {level_delta} levels!\n\n"
@@ -352,7 +360,7 @@ Score: `{score}`
             airtable_client=self.state.airtable_client,
         )
 
-        if not mission_to_update.in_review():
+        if not CommandHandler.in_review(mission_to_update):
             return await interaction.followup.send("""Review already claimed!""")
 
         user_to_update = await User.row(
@@ -377,7 +385,14 @@ Score: `{score}`
             interaction.user.id,
             f"{mission_to_update.fields.mission_status.get_field()}-{mission_to_update.fields.question_id}-{user_to_update.fields.discord_name}",
         )
-        content_value = mission_to_update.get_content_value()
+        design_stage = mission_to_update.fields.mission_status.has_value(
+            MissionStatus.design_review
+        ) or mission_to_update.fields.mission_status.has_value(MissionStatus.design)
+        content_value = (
+            mission_to_update.fields.design
+            if design_stage
+            else mission_to_update.fields.code
+        )
 
         await question_review_channel.send(
             f"Question: {question_to_update.fields.leetcode_url}\n\nContent: {content_value}"
@@ -412,7 +427,11 @@ Score: `{score}`
                 """You've completed your objective, wait for Monarch Suriel's instructions!"""
             )
 
-        messages = await Mission.get_messages(interaction)
+        messages = [
+            message
+            async for message in interaction.channel.history()
+            if message.type == discord.MessageType.default
+        ]
         if len(messages) == 0:
             return await interaction.followup.send(
                 "Send your work as a message before running `/submit`"
@@ -515,11 +534,11 @@ Score: `{score}`
 
         user_ids_in_db = [user_in_db.fields.discord_id for user_in_db in users_in_db]
 
-        if bot_discord_id not in user_ids_in_db:
+        if bot_id not in user_ids_in_db:
             _, bot_user = await self.state.create_user(
                 discord_member=bot_discord_member
             )
-            user_ids_in_db = [bot_discord_id] + user_ids_in_db
+            user_ids_in_db = [bot_id] + user_ids_in_db
 
         synced_users = []
         for user_to_sync in users_in_discord:
@@ -585,3 +604,132 @@ Score: `{score}`
             await interaction.channel.send(f"""Synced discord users: {synced_users}""")
 
         return await interaction.followup.send("""Finished""")
+
+    @staticmethod
+    def completing(mission_to_update: mission.Mission):
+        return mission_to_update.fields.mission_status.next().has_value(
+            MissionStatus.completed
+        )
+
+    @staticmethod
+    def in_review(mission_to_update: mission.Mission):
+        return mission_to_update.fields.mission_status.has_value(
+            MissionStatus.design_review
+        ) or mission_to_update.fields.mission_status.has_value(
+            MissionStatus.code_review
+        )
+
+    @staticmethod
+    async def get_level_changes(
+        airtable_client: AirtableClient, mission_to_update: mission.Mission
+    ):
+        # steps:
+        # - find previously completed missions
+        # - we combine scores of the previous HOW_MANY_PREVIOUS_QUESTIONS_TO_SCORE completed missions
+        #   to calculate a users level/rank
+        # - if the user hasn't completed enough missions, we just add all scores up to get their level
+        # - we calculate the score_delta (current level using newest mission - previous level not including
+        #   current mission
+        completed_missions = await mission_to_update.rows(
+            formula=pyairtable.formulas.match(
+                {
+                    mission.Fields.player_discord_id_field: mission_to_update.fields.player_discord_id,
+                    mission.Fields.mission_status_field: mission_to_update.fields.mission_status.next().get_field(),
+                }
+            ),
+            airtable_client=airtable_client,
+        )
+        completed_missions.sort(key=lambda mission: mission.fields.last_updated_ts)
+
+        # filter to just the scores from missions
+        scores_from_completed_missions = list(
+            map(
+                lambda question: (
+                    question.fields.design_score,
+                    question.fields.code_score,
+                ),
+                completed_missions,
+            )
+        )
+        not_enough_scores = (
+            len(scores_from_completed_missions)
+            < Mission.HOW_MANY_PREVIOUS_QUESTIONS_TO_SCORE
+        )
+
+        # calculate the existing level for the user
+        previous_scores = (
+            scores_from_completed_missions[:-1]
+            if not_enough_scores
+            else scores_from_completed_missions[
+                -(Mission.HOW_MANY_PREVIOUS_QUESTIONS_TO_SCORE - 1) : -1
+            ]
+        )
+        previous_level = int(CommandHandler.calculate_level(previous_scores))
+
+        current_scores = [scores_from_completed_missions[-1]]
+        current_level = None
+
+        # calculate the new level for the user
+        if not_enough_scores:
+            current_level = int(
+                CommandHandler.calculate_level(previous_scores + current_scores)
+            )
+        else:
+            current_level = int(
+                CommandHandler.calculate_level(previous_scores[1:] + current_scores)
+            )
+
+        # calculate what the level delta (what is the current level - previous level of the user)
+        # players can't lose levels, so de-evolutions shouldn't be a problem
+        level_delta = max(current_level - previous_level, 0)
+        levels_until_evolution = ((int(current_level / 10) + 1) * 10) - current_level
+
+        # fetch ranks and see if this user is evolving
+        user_to_update = await User.row(
+            formula=pyairtable.formulas.match(
+                {
+                    user.Fields.discord_id_field: mission_to_update.fields.player_discord_id
+                }
+            ),
+            airtable_client=airtable_client,
+        )
+        previous_rank = user_to_update.fields.rank.get_rank_for_level(previous_level)
+        current_rank = user_to_update.fields.rank.get_rank_for_level(current_level)
+        evolving = True if previous_rank != current_rank else False
+
+        return (
+            current_level,
+            level_delta,
+            levels_until_evolution,
+            evolving,
+            current_rank,
+        )
+
+    @staticmethod
+    def calculate_level(scores):
+        aggregate_score = 0.0
+
+        for score in scores:
+            aggregate_score += score[0]
+            aggregate_score += score[1]
+
+        return aggregate_score
+
+    @staticmethod
+    async def get_review_value(
+        mission_to_update: mission.Mission, interaction: discord.Interaction
+    ):
+        review_field = (
+            mission.Fields.design_review_field
+            if mission_to_update.fields.mission_status.has_value(
+                MissionStatus.design_review
+            )
+            else mission.Fields.code_review_field
+        )
+        messages = [
+            message
+            async for message in interaction.channel.history()
+            if message.type == discord.MessageType.default
+        ]
+        review_value = messages[0].content
+        return review_field, review_value
