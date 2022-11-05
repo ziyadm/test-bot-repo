@@ -8,6 +8,7 @@ import user
 from airtable_client import AirtableClient
 from stage import Stage
 from user import User
+from utc_time import UtcTime
 
 
 class Fields:
@@ -24,9 +25,8 @@ class Fields:
     code_field = "code"
     code_review_field = "code_review"
     code_score_field = "code_score"
-    # TODO: figure out if we want a real datetime/time/date object for timestamps
-    created_ts_field = "created_ts"
-    last_updated_ts_field = "last_updated_ts"
+    start_time_field = "start_time"
+    entered_stage_time_field = "entered_stage_time"
 
     def __init__(
         self,
@@ -42,8 +42,8 @@ class Fields:
         code: Optional[str],
         code_review: Optional[str],
         code_score: Optional[float],
-        created_ts: Optional[str],
-        last_updated_ts: Optional[str],
+        start_time: UtcTime,
+        entered_stage_time: UtcTime,
     ):
         self.discord_channel_id = discord_channel_id
         self.review_discord_channel_id = review_discord_channel_id
@@ -57,8 +57,8 @@ class Fields:
         self.code = code
         self.code_review = code_review
         self.code_score = code_score
-        self.created_ts = created_ts
-        self.last_updated_ts = last_updated_ts
+        self.start_time = start_time
+        self.entered_stage_time = entered_stage_time
 
     def to_dict(self):
         def optional_to_string(optional: Optional[str]):
@@ -84,6 +84,8 @@ class Fields:
             self.code_field: optional_to_string(self.code),
             self.code_review_field: optional_to_string(self.code_review),
             self.code_score_field: optional_to_float(self.code_score),
+            self.start_time_field: str(self.start_time),
+            self.entered_stage_time_field: str(self.entered_stage_time),
         }
 
     @classmethod
@@ -103,8 +105,10 @@ class Fields:
             code=fields.get(cls.code_field, None),
             code_review=fields.get(cls.code_review_field, None),
             code_score=fields.get(cls.code_score_field, None),
-            created_ts=fields.get(cls.created_ts_field, None),
-            last_updated_ts=fields.get(cls.last_updated_ts_field, None),
+            start_time=UtcTime.of_string(fields.get(cls.start_time_field)),
+            entered_stage_time=UtcTime.of_string(
+                fields.get(cls.entered_stage_time_field)
+            ),
         )
 
     def immutable_updates(self, updates):
@@ -170,3 +174,9 @@ class Mission:
             fields=fields.to_dict(),
         )
         return self.__of_airtable_response(response)
+
+    def time_elapsed(self, now: UtcTime):
+        return now.diff_to_nearest_second(self.fields.start_time)
+
+    def time_in_stage(self, now: UtcTime):
+        return now.diff_to_nearest_second(self.fields.entered_stage_time)
