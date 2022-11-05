@@ -34,7 +34,7 @@ class DiscordClient:
     async def __guild(self):
         return await self.client.fetch_guild(self.guild_id)
 
-    async def get_member(self, member_id: str):
+    async def member(self, member_id: str):
         guild = await self.__guild()
         return await guild.fetch_member(member_id)
 
@@ -46,6 +46,13 @@ class DiscordClient:
     async def channels(self):
         guild = await self.__guild()
         return await guild.fetch_channels()
+
+    async def channel(self, channel_id: str):
+        guild = await self.__guild()
+        return await guild.fetch_channel(channel_id)
+
+    async def bot_id(self):
+        return self.client.user.id
 
     async def create_private_channel(self, member_id: str, channel_name: str):
         guild = await self.__guild()

@@ -34,7 +34,7 @@ class CommandHandler:
             ),
             airtable_client=self.state.airtable_client,
         )
-        user_path_channel = await self.state.discord_client.client.fetch_channel(
+        user_path_channel = await self.state.discord_client.channel(
             user_to_update.fields.discord_channel_id
         )
         thread = list(
@@ -91,11 +91,11 @@ Score: `{score}`
             ),
             airtable_client=self.state.airtable_client,
         )
-        user_path_channel = await self.state.discord_client.client.fetch_channel(
+        user_path_channel = await self.state.discord_client.channel(
             current_user.fields.discord_channel_id
         )
 
-        player_user = await self.state.discord_client.client.fetch_user(
+        player_user = await self.state.discord_client.member(
             mission_to_update.fields.player_discord_id
         )
 
@@ -111,13 +111,11 @@ Score: `{score}`
         next_field = mission_to_update.fields.mission_status.next().get_field()
         if mission_to_update.fields.to_dict()[next_field]:
             # review is not new: it is a revision and we need to update the original reviewer
-            reviewer_user = await self.state.discord_client.client.fetch_user(
+            reviewer_user = await self.state.discord_client.member(
                 mission_to_update.fields.reviewer_discord_id
             )
-            original_review_channel = (
-                await self.state.discord_client.client.fetch_channel(
-                    mission_to_update.fields.review_discord_channel_id
-                )
+            original_review_channel = await self.state.discord_client.channel(
+                mission_to_update.fields.review_discord_channel_id
             )
             await original_review_channel.send(
                 f"{reviewer_user.mention} the player has revised their work and resubmitted. Please review.\n\nContent: {messages[0].content}"
@@ -183,9 +181,7 @@ Score: `{score}`
         mission_message.guild = self.state.discord_client.guild_id
 
         # create the summary thread
-        discord_user = await self.state.discord_client.client.fetch_user(
-            str(interaction.user.id)
-        )
+        discord_user = await self.state.discord_client.member(str(interaction.user.id))
         _ = await mission_message.create_thread(
             name=f"summary-{mission_question.fields.question_id}"
         )
@@ -218,11 +214,11 @@ Score: `{score}`
 
         response = "Sent review followups."
 
-        question_channel = await self.state.discord_client.client.fetch_channel(
+        question_channel = await self.state.discord_client.channel(
             mission_to_update.fields.discord_channel_id
         )
 
-        user = await self.state.discord_client.client.fetch_user(
+        user = await self.state.discord_client.member(
             mission_to_update.fields.player_discord_id
         )
 
@@ -270,7 +266,7 @@ Score: `{score}`
             else "Approved design."
         )
 
-        question_channel = await self.state.discord_client.client.fetch_channel(
+        question_channel = await self.state.discord_client.channel(
             mission_to_update.fields.discord_channel_id
         )
 
@@ -514,10 +510,8 @@ Score: `{score}`
     async def sync_discord_users_to_db(
         self, users_in_discord: List[discord.Member], users_in_db: List[User]
     ):
-        bot_discord_id = str(self.state.discord_client.client.user.id)
-        bot_discord_member = await self.state.discord_client.get_member(
-            member_id=bot_discord_id
-        )
+        bot_id = str(self.state.discord_client.bot_id())
+        bot_discord_member = await self.state.discord_client.member(member_id=bot_id)
 
         user_ids_in_db = [user_in_db.fields.discord_id for user_in_db in users_in_db]
 
