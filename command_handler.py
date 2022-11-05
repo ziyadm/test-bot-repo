@@ -105,6 +105,8 @@ Score: `{score}`
 
         response = f"""Planning is half the battle! We've sent your plan to Suriel for approval. Head back to {user_path_channel.mention} to continue training."""
 
+        content_field = mission_to_update.get_content_field()
+
         # if we have code or design fields with values, then this is not a new review
         next_field = mission_to_update.fields.mission_status.next().get_field()
         if mission_to_update.fields.to_dict()[next_field]:
