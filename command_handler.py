@@ -9,9 +9,9 @@ import question
 import user
 from airtable_client import AirtableClient
 from mission import Mission
-from mission_status import MissionStatus
 from question import Question
 from rank import Rank
+from stage import Stage
 from state import State
 from user import User
 
@@ -70,7 +70,7 @@ Levels until evolution: `{levels_until_evolution}`\n
 
         def get_in_progress_message():
             return f"""
-Suriel approved your `{mission_to_update.fields.mission_status.previous()}`.\n
+Suriel approved your `{mission_to_update.fields.stage.previous()}`.\n
 Total time: `{time_taken_to_complete_stage}`\n
 Suriel's feedback: `{review_value}`\n
 Score: `{score}`
@@ -106,15 +106,15 @@ Score: `{score}`
 
         response = f"""Planning is half the battle! We've sent your plan to Suriel for approval. Head back to {user_path_channel.mention} to continue training."""
 
-        design_stage = mission_to_update.fields.mission_status.has_value(
-            MissionStatus.design_review
-        ) or mission_to_update.fields.mission_status.has_value(MissionStatus.design)
+        design_stage = mission_to_update.fields.stage.has_value(
+            Stage.design_review
+        ) or mission_to_update.fields.stage.has_value(Stage.design)
         content_field = (
             mission.Fields.design_field if design_stage else mission.Fields.code_field
         )
 
         # if we have code or design fields with values, then this is not a new review
-        next_field = mission_to_update.fields.mission_status.next().get_field()
+        next_field = mission_to_update.fields.stage.next().get_field()
         if mission_to_update.fields.to_dict()[next_field]:
             # review is not new: it is a revision and we need to update the original reviewer
             reviewer_user = await self.state.discord_client.member(
@@ -139,7 +139,7 @@ Score: `{score}`
         await mission_to_update.update(
             fields=mission_to_update.fields.immutable_updates(
                 {
-                    mission.Fields.mission_status_field: mission_to_update.fields.mission_status.next(),
+                    mission.Fields.stage_field: mission_to_update.fields.stage.next(),
                     content_field: messages[0].content,
                 }
             ),
@@ -205,8 +205,8 @@ Score: `{score}`
             mission_to_update, interaction
         )
 
-        state_field = mission.Fields.mission_status_field
-        state_value = mission_to_update.fields.mission_status.previous()
+        state_field = mission.Fields.stage_field
+        state_value = mission_to_update.fields.stage.previous()
 
         await mission_to_update.update(
             fields=mission_to_update.fields.immutable_updates(
@@ -246,8 +246,8 @@ Score: `{score}`
             mission_to_update, interaction
         )
 
-        state_field = mission.Fields.mission_status_field
-        state_value = mission_to_update.fields.mission_status.next()
+        state_field = mission.Fields.stage_field
+        state_value = mission_to_update.fields.stage.next()
 
         score_field = (
             mission.Fields.code_score_field
@@ -383,11 +383,11 @@ Score: `{score}`
 
         question_review_channel = await self.state.discord_client.create_private_channel(
             interaction.user.id,
-            f"{mission_to_update.fields.mission_status.get_field()}-{mission_to_update.fields.question_id}-{user_to_update.fields.discord_name}",
+            f"{mission_to_update.fields.stage.get_field()}-{mission_to_update.fields.question_id}-{user_to_update.fields.discord_name}",
         )
-        design_stage = mission_to_update.fields.mission_status.has_value(
-            MissionStatus.design_review
-        ) or mission_to_update.fields.mission_status.has_value(MissionStatus.design)
+        design_stage = mission_to_update.fields.stage.has_value(
+            Stage.design_review
+        ) or mission_to_update.fields.stage.has_value(Stage.design)
         content_value = (
             mission_to_update.fields.design
             if design_stage
@@ -420,8 +420,8 @@ Score: `{score}`
         )
 
         if not (
-            mission_to_update.fields.mission_status.has_value(MissionStatus.design)
-            or mission_to_update.fields.mission_status.has_value(MissionStatus.code)
+            mission_to_update.fields.stage.has_value(Stage.design)
+            or mission_to_update.fields.stage.has_value(Stage.code)
         ):
             return await interaction.followup.send(
                 """You've completed your objective, wait for Monarch Suriel's instructions!"""
@@ -607,17 +607,13 @@ Score: `{score}`
 
     @staticmethod
     def completing(mission_to_update: mission.Mission):
-        return mission_to_update.fields.mission_status.next().has_value(
-            MissionStatus.completed
-        )
+        return mission_to_update.fields.stage.next().has_value(Stage.completed)
 
     @staticmethod
     def in_review(mission_to_update: mission.Mission):
-        return mission_to_update.fields.mission_status.has_value(
-            MissionStatus.design_review
-        ) or mission_to_update.fields.mission_status.has_value(
-            MissionStatus.code_review
-        )
+        return mission_to_update.fields.stage.has_value(
+            Stage.design_review
+        ) or mission_to_update.fields.stage.has_value(Stage.code_review)
 
     @staticmethod
     async def get_level_changes(
@@ -634,7 +630,7 @@ Score: `{score}`
             formula=pyairtable.formulas.match(
                 {
                     mission.Fields.player_discord_id_field: mission_to_update.fields.player_discord_id,
-                    mission.Fields.mission_status_field: mission_to_update.fields.mission_status.next().get_field(),
+                    mission.Fields.stage_field: mission_to_update.fields.stage.next().get_field(),
                 }
             ),
             airtable_client=airtable_client,
@@ -721,9 +717,7 @@ Score: `{score}`
     ):
         review_field = (
             mission.Fields.design_review_field
-            if mission_to_update.fields.mission_status.has_value(
-                MissionStatus.design_review
-            )
+            if mission_to_update.fields.stage.has_value(Stage.design_review)
             else mission.Fields.code_review_field
         )
         messages = [

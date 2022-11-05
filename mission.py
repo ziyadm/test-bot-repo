@@ -6,7 +6,7 @@ import pyairtable.formulas
 import airtable_client
 import user
 from airtable_client import AirtableClient
-from mission_status import MissionStatus
+from stage import Stage
 from user import User
 
 
@@ -17,7 +17,7 @@ class Fields:
     player_discord_id_field = "player_discord_id"
     reviewer_discord_id_field = "reviewer_discord_id"
     question_id_field = "question_id"
-    mission_status_field = "mission_status"
+    stage_field = "stage"
     design_field = "design"
     design_review_field = "design_review"
     design_score_field = "design_score"
@@ -35,7 +35,7 @@ class Fields:
         player_discord_id: str,
         reviewer_discord_id: Optional[str],
         question_id: str,
-        mission_status: MissionStatus,
+        stage: Stage,
         design: Optional[str],
         design_review: Optional[str],
         design_score: Optional[float],
@@ -50,7 +50,7 @@ class Fields:
         self.player_discord_id = player_discord_id
         self.reviewer_discord_id = reviewer_discord_id
         self.question_id = question_id
-        self.mission_status = mission_status
+        self.stage = stage
         self.design = design
         self.design_review = design_review
         self.design_score = design_score
@@ -77,7 +77,7 @@ class Fields:
                 self.reviewer_discord_id
             ),
             self.question_id_field: self.question_id,
-            self.mission_status_field: str(self.mission_status),
+            self.stage_field: str(self.stage),
             self.design_field: optional_to_string(self.design),
             self.design_review_field: optional_to_string(self.design_review),
             self.design_score_field: optional_to_float(self.design_score),
@@ -96,7 +96,7 @@ class Fields:
             player_discord_id=fields[cls.player_discord_id_field],
             reviewer_discord_id=fields.get(cls.reviewer_discord_id_field, None),
             question_id=fields[cls.question_id_field],
-            mission_status=MissionStatus.of_string(fields[cls.mission_status_field]),
+            stage=Stage.of_string(fields[cls.stage_field]),
             design=fields.get(cls.design_field, None),
             design_review=fields.get(cls.design_review_field, None),
             design_score=fields.get(cls.design_score_field, None),
