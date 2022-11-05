@@ -1,3 +1,4 @@
+import copy
 import json
 from typing import Dict, List, Set, Tuple
 
@@ -8,6 +9,9 @@ class Record:
             if field not in provided_fields:
                 raise AttributeError(f"""missing field {field}""")
 
+            # TODO: theres probably a better way to handle this, but doing this
+            # for now as a quick fix
+            setattr(self.__class__, f"""{field}_field""", field)
             setattr(self, field, provided_fields[field])
 
     def __eq__(self, other):
@@ -95,6 +99,14 @@ class Record:
             {key: json.loads(value) for (key, value) in json_serialized_dict.items()}
         )
 
+    def update(self, updates):
+        updated = copy.deepcopy(self)
+
+        for field, value in updates.items():
+            setattr(updated, field, value)
+
+        return updated
+
 
 class Test_str_record(Record):
     str_field: str
@@ -142,6 +154,11 @@ class Test_nested_dict_record(Record):
 
 class Test_nested_record(Record):
     nested_record: Test_int_record
+
+
+class Test_record_with_multiple_fields(Record):
+    str_field: str
+    int_field: int
 
 
 class Test:
@@ -285,8 +302,47 @@ class Test:
         cls.roundtrip_nested()
 
     @classmethod
+    def run_update(cls, *, original, updates, expected):
+        assert original.update(updates) == expected
+
+    @classmethod
+    def update_no_fields(cls):
+        original = Test_int_record(int_field=0)
+        cls.run_update(original=original, updates={}, expected=original)
+
+    @classmethod
+    def update_one_field(cls):
+        cls.run_update(
+            original=Test_int_record(int_field=0),
+            updates={Test_int_record.int_field_field: 5},
+            expected=Test_int_record(int_field=5),
+        )
+
+    @classmethod
+    def update_many_fields(cls):
+        cls.run_update(
+            original=Test_record_with_multiple_fields(
+                str_field="str-field", int_field=0
+            ),
+            updates={
+                Test_record_with_multiple_fields.str_field_field: "new-str-field",
+                Test_record_with_multiple_fields.int_field_field: 5,
+            },
+            expected=Test_record_with_multiple_fields(
+                str_field="new-str-field", int_field=5
+            ),
+        )
+
+    @classmethod
+    def run_all_update(cls):
+        cls.update_no_fields()
+        cls.update_one_field()
+        cls.update_many_fields()
+
+    @classmethod
     def run_all(cls):
         cls.run_all_roundtrip()
+        cls.run_all_update()
 
 
 Test.run_all()
