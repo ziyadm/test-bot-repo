@@ -1,4 +1,4 @@
-class MissionStatus:
+class Stage:
 
     design = 1
     design_review = 2
@@ -36,10 +36,10 @@ class MissionStatus:
         if self.has_value(self.completed):
             return None
         else:
-            return MissionStatus(value=self.value + 1)
+            return Stage(value=self.value + 1)
 
     def previous(self):
         if self.has_value(self.design):
             return None
         else:
-            return MissionStatus(value=self.value - 1)
+            return Stage(value=self.value - 1)

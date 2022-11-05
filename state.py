@@ -6,9 +6,9 @@ import user
 from airtable_client import AirtableClient
 from discord_client import DiscordClient
 from mission import Mission
-from mission_status import MissionStatus
 from question import Question
 from rank import Rank
+from stage import Stage
 from user import User
 
 
@@ -67,7 +67,7 @@ class State:
                 player_discord_id=player_discord_id,
                 reviewer_discord_id=None,
                 question_id=question_id,
-                mission_status=MissionStatus(value=MissionStatus.design),
+                stage=Stage(value=Stage.design),
                 design=None,
                 design_review=None,
                 design_score=None,
