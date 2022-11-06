@@ -14,7 +14,12 @@ setup: ../.env
 	  ln ../.env ./.env; \
 	fi
 
-test: test_*.py
+format:
+	isort .
+	black --line-length 100 .
+	flake8 --max-line-length=200 --ignore=E203 .
+
+test: format test_*.py
 	python3 test_*.py
 
 build: test pyproject.toml
@@ -24,11 +29,6 @@ build: test pyproject.toml
 clean: __pycache__ poetry.lock
 	rm -rf __pycache__
 	rm poetry.lock
-
-format:
-	isort .
-	black --line-length 100 .
-	flake8 --max-line-length=200 --ignore=E203 .
 
 
 ###### run apps ######
