@@ -31,14 +31,12 @@ player_command_handler = PlayerCommandHandler(state=state)
 command_handler = CommandHandler(state)
 event_handler = EventHandler(state)
 
-guild = discord.Object(id=discord_guild_id)
-
 
 def register_slash_command(slash_command_to_register: SlashCommand):
     return discord_client.command_tree.command(
         name=slash_command_to_register.name(),
         description=slash_command_to_register.description(),
-        guild=guild,
+        guild=discord.Object(id=discord_guild_id),
     )
 
 
@@ -67,18 +65,21 @@ async def register_time_command(interaction: discord.Interaction):
 # === Reviewer commands === #
 # ========================= #
 @register_slash_command(SlashCommand(SlashCommand.claim))
+@discord.app_commands.default_permissions(administrator=True)
 async def register_claim_command(interaction: discord.Interaction):
     await interaction.response.defer()
     return await command_handler.claim_command(interaction)
 
 
 @register_slash_command(SlashCommand(SlashCommand.reject))
+@discord.app_commands.default_permissions(administrator=True)
 async def register_review_command(interaction: discord.Interaction):
     await interaction.response.defer()
     return await command_handler.review_command(interaction)
 
 
 @register_slash_command(SlashCommand(SlashCommand.approve))
+@discord.app_commands.default_permissions(administrator=True)
 async def register_lgtm_command(interaction: discord.Interaction, score: float):
     await interaction.response.defer()
     return await command_handler.lgtm_command(interaction, score)
@@ -90,6 +91,7 @@ async def register_lgtm_command(interaction: discord.Interaction, score: float):
 
 
 @register_slash_command(SlashCommand(SlashCommand.set_rank))
+@discord.app_commands.default_permissions(administrator=True)
 async def register_set_rank_command(
     interaction: discord.Interaction, user_discord_name: str, rank: str
 ):
@@ -100,6 +102,7 @@ async def register_set_rank_command(
 
 
 @register_slash_command(SlashCommand(SlashCommand.wipe_state))
+@discord.app_commands.default_permissions(administrator=True)
 async def register_wipe_state_command(
     interaction: discord.Interaction,
     users: bool = True,

@@ -27,8 +27,8 @@ class SlashCommand:
         claim: "claim",
         reject: "reject",
         approve: "approve",
-        set_rank: "set-rank",
-        wipe_state: "wipe-state",
+        set_rank: "set_rank",
+        wipe_state: "wipe_state",
     }
 
     descriptions = {
@@ -38,7 +38,7 @@ class SlashCommand:
         claim: "Claim review of a mission",
         reject: "Reject a player's submission",
         approve: "Approve a player's submission",
-        set_rank: "Set a uesr's rank",
+        set_rank: "Set a user's rank",
         wipe_state: "Wipe the entire discord and db state",
     }
 
@@ -64,6 +64,3 @@ class SlashCommand:
 
     def description(self):
         return self.descriptions[self.value]
-
-    def admin_only(self):
-        return self.value in set([self.set_rank])
