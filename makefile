@@ -5,6 +5,7 @@ there_is_no_default_target:
 
 ###### project setup and building ######
 
+
 setup: ../.env
 	python3 -m pip install poetry
 	python3 -m pip install black
@@ -13,15 +14,16 @@ setup: ../.env
 	  ln ../.env ./.env; \
 	fi
 
-build: pyproject.toml
+test: test_*.py
+	python3 test_*.py
+
+build: test pyproject.toml
 	python3 -m poetry lock --no-update
 	python3 -m poetry install
-
 
 clean: __pycache__ poetry.lock
 	rm -rf __pycache__
 	rm poetry.lock
-
 
 format:
 	isort .
@@ -50,12 +52,10 @@ feature:
 	git checkout -b $${feature_name}; \
 	git push --set-upstream origin $${feature_name}
 
-
 push: format
 	git add .
 	git commit -am "_" --allow-empty
 	git push
-
 
 release: push
 	gh pr create --base main --title "$(shell git branch --show-current)" --body "_"
