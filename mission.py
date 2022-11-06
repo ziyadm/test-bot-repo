@@ -1,3 +1,4 @@
+import datetime
 from typing import Dict, Optional
 
 import discord
@@ -175,8 +176,13 @@ class Mission:
         )
         return self.__of_airtable_response(response)
 
-    def time_elapsed(self, now: UtcTime):
+    def time_elapsed(self, now: UtcTime) -> datetime.timedelta:
         return now.diff_to_nearest_second(self.fields.start_time)
 
-    def time_in_stage(self, now: UtcTime):
+    def time_in_stage(self, now: UtcTime) -> datetime.timedelta:
         return now.diff_to_nearest_second(self.fields.entered_stage_time)
+
+    def in_progress(self) -> bool:
+        return self.fields.stage.has_value(Stage.design) or self.fields.stage.has_value(
+            Stage.code
+        )
