@@ -64,7 +64,6 @@ class User:
         )
         return cls.__of_airtable_response(response)
 
-    # TODO: test
     @classmethod
     async def row(cls, formula: Optional[str], airtable_client: AirtableClient):
         response = await airtable_client.row(table_name=cls.table_name, formula=formula)
