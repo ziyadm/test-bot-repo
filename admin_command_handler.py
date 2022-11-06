@@ -53,7 +53,7 @@ class AdminCommandHandler:
             for thread_to_delete in threads_to_delete:
                 _ = await thread_to_delete.delete()
             threads_deleted = len(threads_to_delete)
-            _ = await all_reviews_channel.send(f"""deleted all threads""")
+            _ = await all_reviews_channel.send(f"""deleted {threads_deleted} threads""")
 
         if all_reviews_channel_messages:
             _ = await all_reviews_channel.purge(limit=None)
