@@ -7,6 +7,7 @@ import mission
 import user
 from airtable_client import AirtableClient
 from discord_client import DiscordClient
+from messenger import Messenger
 from mission import Mission
 from question import Question
 from rank import Rank
@@ -19,6 +20,7 @@ class State:
     def __init__(self, airtable_client: AirtableClient, discord_client: DiscordClient):
         self.airtable_client = airtable_client
         self.discord_client = discord_client
+        self.messenger = Messenger(discord_client=discord_client)
 
     async def first_unasked_question(self, for_user: User):
         existing_missions = await Mission.rows(
@@ -153,60 +155,27 @@ class State:
     async def create_user(self, discord_member: discord.Member):
         discord_id = str(discord_member.id)
         discord_name = discord_member.name
-        user_channel = await self.discord_client.create_private_channel(
+        path_channel = await self.discord_client.create_private_channel(
             discord_id, channel_name=f"""{discord_name}-path"""
         )
 
-        discord_channel_id = str(user_channel.id)
-        rank = self.get_rank(discord_member)
-
         new_user = await User.create(
-            fields=user.Fields(discord_id, discord_name, discord_channel_id, rank),
+            fields=user.Fields(
+                discord_id,
+                discord_name,
+                discord_channel_id=str(path_channel.id),
+                rank=self.get_rank(discord_member),
+            ),
             airtable_client=self.airtable_client,
         )
 
-        await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"""Suriel senses your weakness {discord_member.mention}""",
-            channel=user_channel,
+        _ = await self.sync_discord_role(for_user=new_user)
+
+        _ = await self.messenger.welcome_new_discord_member(
+            discord_member=discord_member, path_channel=path_channel
         )
 
-        await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="Suriel invites you to follow The Way",
-            channel=user_channel,
-        )
-
-        await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="While following your Path along The Way, you will be challenged to rise through the ranks:",
-            channel=user_channel,
-        )
-
-        for rank_to_explain in Rank.all():
-            rank_name = Rank.to_string_hum(rank_to_explain)
-            rank_description = rank_to_explain.description()
-
-            await DiscordClient.with_typing_time_determined_by_number_of_words(
-                message=f"""`{rank_name}`: *{rank_description}*""",
-                channel=user_channel,
-            )
-
-        await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="Complete training missions to progress through the ranks",
-            channel=user_channel,
-        )
-
-        await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="Type `/train` to begin your first training mission",
-            channel=user_channel,
-        )
-
-        await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"""Ascend through the ranks {discord_member.mention}, a special prize waits for you at the end!""",
-            channel=user_channel,
-        )
-
-        await self.sync_discord_role(for_user=new_user)
-
-        return (new_user, user_channel)
+        return (new_user, path_channel)
 
     async def set_rank(self, for_user: User, rank: Rank):
         updated_user = await for_user.set_rank(rank, airtable_client=self.airtable_client)
