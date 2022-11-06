@@ -184,3 +184,14 @@ class Mission:
 
     def summary_thread_name(self):
         return f"""summary-{self.fields.question_id}"""
+
+    def player_submission(self, stage: Stage) -> str:
+        if not stage.players_turn():
+            raise Exception(
+                "attempted to get player submission for stage {stage} which isnt they players turn. this should already be filtered out, is this a bug?"
+            )
+
+        if stage.has_value(Stage.design):
+            return self.fields.design
+        else:
+            return self.fields.code
