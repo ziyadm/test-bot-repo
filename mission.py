@@ -182,7 +182,5 @@ class Mission:
     def time_in_stage(self, now: UtcTime) -> datetime.timedelta:
         return now.diff_to_nearest_second(self.fields.entered_stage_time)
 
-    def in_progress(self) -> bool:
-        return self.fields.stage.has_value(Stage.design) or self.fields.stage.has_value(
-            Stage.code
-        )
+    def summary_thread_name(self):
+        return f"""summary-{self.fields.question_id}"""
