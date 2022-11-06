@@ -3,6 +3,7 @@ import os
 import discord
 import dotenv
 
+from admin_command_handler import AdminCommandHandler
 from airtable_client import AirtableClient
 from command_handler import CommandHandler
 from discord_client import DiscordClient
@@ -25,6 +26,7 @@ discord_client = DiscordClient(
     all_reviews_channel_id=discord_all_reviews_channel_id,
 )
 state = State(airtable_client, discord_client)
+admin_command_handler = AdminCommandHandler(state=state)
 command_handler = CommandHandler(state)
 event_handler = EventHandler(state)
 
@@ -32,7 +34,7 @@ guild = discord.Object(id=discord_guild_id)
 
 
 @discord_client.command_tree.command(
-    name="time", description="How much time remains?", guild=guild
+    name="time", description="[PLAYER] How much time remains?", guild=guild
 )
 async def register_time_command(interaction: discord.Interaction):
     await interaction.response.defer()
@@ -40,7 +42,7 @@ async def register_time_command(interaction: discord.Interaction):
 
 
 @discord_client.command_tree.command(
-    name="train", description="Enter the training realm", guild=guild
+    name="train", description="[PLAYER] Enter the training realm", guild=guild
 )
 async def register_train_command(interaction: discord.Interaction):
     await interaction.response.defer()
@@ -48,7 +50,7 @@ async def register_train_command(interaction: discord.Interaction):
 
 
 @discord_client.command_tree.command(
-    name="claim", description="Claim review of a mission", guild=guild
+    name="claim", description="[REVIEWER] Claim review of a mission", guild=guild
 )
 async def register_claim_command(interaction: discord.Interaction):
     await interaction.response.defer()
@@ -56,7 +58,7 @@ async def register_claim_command(interaction: discord.Interaction):
 
 
 @discord_client.command_tree.command(
-    name="review", description="Submit review of a mission", guild=guild
+    name="review", description="[PLAYER] Submit review of a mission", guild=guild
 )
 async def register_review_command(interaction: discord.Interaction):
     await interaction.response.defer()
@@ -64,7 +66,7 @@ async def register_review_command(interaction: discord.Interaction):
 
 
 @discord_client.command_tree.command(
-    name="lgtm", description="Approve a mission", guild=guild
+    name="lgtm", description="[REVIEWER] Approve a mission", guild=guild
 )
 async def register_lgtm_command(interaction: discord.Interaction, score: float):
     await interaction.response.defer()
@@ -73,7 +75,7 @@ async def register_lgtm_command(interaction: discord.Interaction, score: float):
 
 @discord_client.command_tree.command(
     name="submit",
-    description="Attempt to complete the current stage of a mission",
+    description="[PLAYER] Attempt to complete the current stage of a mission",
     guild=guild,
 )
 async def register_submit_command(interaction: discord.Interaction):
@@ -82,7 +84,7 @@ async def register_submit_command(interaction: discord.Interaction):
 
 
 @discord_client.command_tree.command(
-    name="set_rank", description="""Set a user's rank""", guild=guild
+    name="set_rank", description="[ADMIN] Set a user's rank", guild=guild
 )
 async def register_set_rank_command(
     interaction: discord.Interaction, user_discord_name: str, rank: str
@@ -94,11 +96,35 @@ async def register_set_rank_command(
 
 
 @discord_client.command_tree.command(
-    name="sync_db_and_discord", description="""Sync the db and discord""", guild=guild
+    name="sync_db_and_discord",
+    description="[ADMIN] Sync the db and discord",
+    guild=guild,
 )
 async def register_sync_db_and_discord_command(interaction: discord.Interaction):
     await interaction.response.defer()
     return await command_handler.sync_db_and_discord(interaction)
+
+
+@discord_client.command_tree.command(
+    name="wipe_state", description="[ADMIN] Wipe everything from the state", guild=guild
+)
+async def register_wipe_state_command(
+    interaction: discord.Interaction,
+    users: bool = True,
+    missions: bool = True,
+    channels: bool = True,
+    threads: bool = True,
+    all_reviews_channel_messages: bool = True,
+):
+    await interaction.response.defer()
+    return await admin_command_handler.wipe_state(
+        interaction=interaction,
+        users=users,
+        missions=missions,
+        channels=channels,
+        threads=threads,
+        all_reviews_channel_messages=all_reviews_channel_messages,
+    )
 
 
 @discord_client.client.event
