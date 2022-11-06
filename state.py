@@ -1,3 +1,5 @@
+from typing import FrozenSet, List
+
 import discord
 import pyairtable.formulas
 
@@ -218,3 +220,35 @@ class State:
         )
         await self.sync_discord_role(for_user=updated_user)
         return updated_user
+
+    async def delete_all_users(self) -> List[User]:
+        users_to_delete = await User.rows(
+            formula=None, airtable_client=self.airtable_client
+        )
+        _ = await User.delete_rows(
+            users_to_delete, airtable_client=self.airtable_client
+        )
+        return users_to_delete
+
+    async def delete_all_missions(self) -> List[Mission]:
+        missions_to_delete = await Mission.rows(
+            formula=None, airtable_client=self.airtable_client
+        )
+        _ = await Mission.delete_rows(
+            missions_to_delete, airtable_client=self.airtable_client
+        )
+        return missions_to_delete
+
+    async def delete_all_channels(
+        self, except_for: FrozenSet[discord.TextChannel]
+    ) -> List[discord.TextChannel]:
+        channels_to_delete = await self.discord_client.channels()
+        except_for = frozenset([channel.id for channel in except_for])
+        channels_to_delete = [
+            channel_to_delete
+            for channel_to_delete in channels_to_delete
+            if channel_to_delete.id not in except_for
+        ]
+        for channel_to_delete in channels_to_delete:
+            _ = await channel_to_delete.delete()
+        return channels_to_delete
