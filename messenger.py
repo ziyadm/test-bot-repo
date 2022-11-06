@@ -58,5 +58,25 @@ class Messenger:
                 f"""{player.fields.discord_name} has revised and resubmitted their work. {reviewer_discord_member.mention} please review."""
             )
             _ = await mission_review_channel.send("New submission:")
-            player_submission = updated_mission.player_submission(stage=stage_submitted)
+
+            player_submission = None
+            if stage.has_value(Stage.design):
+                player_submission = updated_mission.fields.design
+            else:
+                player_submission = updated_mission.fields.code
             _ = await mission_review_channel.send(f"""```{player_submission}```""")
+        else:
+            all_reviews_channel = await self.__discord_client.all_reviews_channel()
+            review_message = await all_reviews_channel.send(
+                f"""{player.fields.discord_name} has submitted {stage_submitted} for {updated_mission.fields.question_id}"""
+            )
+            review_thread = await review_message.create_thread(
+                name="-".join(
+                    [
+                        str(stage_submitted),
+                        updated_mission.fields.player_discord_id,
+                        updated_mission.fields.question_id,
+                    ]
+                )
+            )
+            _ = await review_thread.send(f"""@everyone race to claim it!!""")

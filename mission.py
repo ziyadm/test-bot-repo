@@ -182,9 +182,6 @@ class Mission:
     def time_in_stage(self, now: UtcTime) -> datetime.timedelta:
         return now.diff_to_nearest_second(self.fields.entered_stage_time)
 
-    def summary_thread_name(self):
-        return f"""summary-{self.fields.question_id}"""
-
     def player_submission(self, stage: Stage) -> str:
         if not stage.players_turn():
             raise Exception(
