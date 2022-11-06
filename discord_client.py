@@ -43,12 +43,20 @@ class DiscordClient:
         members = [member async for member in guild.fetch_members(limit=None)]
         return members
 
+    async def channel(self, channel_id: str) -> discord.TextChannel:
+        return await self.client.fetch_channel(channel_id)
+
     async def channels(self):
         guild = await self.__guild()
         return await guild.fetch_channels()
 
-    async def channel(self, channel_id: str):
-        return await self.client.fetch_channel(channel_id)
+    async def messages(self, channel_id) -> List[discord.Message]:
+        channel = await self.channel(channel_id)
+        return [
+            message
+            async for message in channel.history()
+            if message.type == discord.MessageType.default
+        ]
 
     def bot_id(self):
         return self.client.user.id

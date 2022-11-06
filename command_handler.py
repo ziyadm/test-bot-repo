@@ -412,24 +412,21 @@ Score: `{score}`
         return await interaction.followup.send(response)
 
     async def submit_command(self, interaction: discord.Interaction):
+        mission_discord_channel_id = str(interaction.channel.id)
         mission_to_update = await self.get_mission(
             field=mission.Fields.discord_channel_id_field,
-            value=str(interaction.channel.id),
+            value=mission_discord_channel_id,
         )
 
-        if not (
-            mission_to_update.fields.stage.has_value(Stage.design)
-            or mission_to_update.fields.stage.has_value(Stage.code)
-        ):
-            return await interaction.followup.send(
+        if not (mission_to_update.in_progress()):
+            await interaction.followup.send(
                 """You've completed your objective, wait for Monarch Suriel's instructions!"""
             )
+            return None
 
-        messages = [
-            message
-            async for message in interaction.channel.history()
-            if message.type == discord.MessageType.default
-        ]
+        messages = await self.state.discord_client.messages(
+            channel_id=mission_discord_channel_id
+        )
         if len(messages) == 0:
             return await interaction.followup.send(
                 "Send your work as a message before running `/submit`"
