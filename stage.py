@@ -43,3 +43,6 @@ class Stage:
             return None
         else:
             return Stage(value=self.value - 1)
+
+    def players_turn(self) -> bool:
+        return self.has_value(self.design) or self.has_value(self.code)

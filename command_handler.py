@@ -8,6 +8,7 @@ import mission
 import question
 import user
 from airtable_client import AirtableClient
+from messenger import Messenger
 from mission import Mission
 from question import Question
 from rank import Rank
@@ -19,6 +20,7 @@ from utc_time import UtcTime
 
 class CommandHandler:
     def __init__(self, state: State):
+        self.messenger = Messenger(discord_client=state.discord_client)
         self.state = state
 
     async def get_mission(self, field: mission.Fields, value: str):
@@ -418,25 +420,69 @@ Score: `{score}`
             value=mission_discord_channel_id,
         )
 
-        if not (mission_to_update.in_progress()):
+        if not (mission_to_update.fields.stage.players_turn()):
             await interaction.followup.send(
                 """You've completed your objective, wait for Monarch Suriel's instructions!"""
             )
             return None
 
-        messages = await self.state.discord_client.messages(
+        mission_channel_messages = await self.state.discord_client.messages(
             channel_id=mission_discord_channel_id
         )
-        if len(messages) == 0:
+        if len(mission_channel_messages) == 0:
             return await interaction.followup.send(
                 "Send your work as a message before running `/submit`"
             )
 
-        response = await self.handle_submission(
-            interaction, mission_to_update, messages
+        player = await User.row(
+            formula=pyairtable.formulas.match(
+                {
+                    user.Fields.discord_id_field: mission_to_update.fields.player_discord_id
+                }
+            ),
+            airtable_client=self.state.airtable_client,
         )
 
-        return await interaction.followup.send(response)
+        now = UtcTime.now()
+
+        mission_updates = {
+            mission.Fields.stage_field: mission_to_update.fields.stage.next(),
+            mission.Fields.entered_stage_time_field: now,
+        }
+
+        stage_submitted = mission_to_update.fields.stage
+
+        if stage_submitted.has_value(Stage.design):
+            mission_updates[mission.Fields.design_field] = mission_channel_messages[
+                0
+            ].content
+        elif stage_submitted.has_value(Stage.code):
+            mission_updates[mission.Fields.code_field] = mission_channel_messages[
+                0
+            ].content
+        else:
+            raise Exception(
+                f"""player attempted to submit a mission in review or completed (stage: {stage_submitted}), but we already filtered for this. is this a bug?"""
+            )
+
+        updated_mission = await mission_to_update.update(
+            fields=mission_to_update.fields.immutable_updates(mission_updates),
+            airtable_client=self.state.airtable_client,
+        )
+
+        _ = await self.messenger.player_submitted_stage(
+            player,
+            updated_mission,
+            stage_submitted,
+            time_taken=mission_to_update.time_in_stage(now),
+        )
+
+        _ = await self.handle_submission(
+            interaction, mission_to_update, messages=mission_channel_messages
+        )
+
+        # TODO: revert all state changes if theres any exceptions
+        _ = await interaction.followup.send("Finished")
 
     async def set_rank(
         self, interaction: discord.Interaction, user_discord_name: str, rank: str
