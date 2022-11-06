@@ -65,12 +65,13 @@ async def main():
 
     print("uploading questions to airtable")
 
-    questions = await Question.create_many(
-        all_fields=questions_to_add, airtable_client=airtable_client
+    questions_uploaded = await Question.create_many(
+        all_fields=questions_to_add[:10], airtable_client=airtable_client
     )
 
-    print("uploaded questions to airtable")
-    print(questions)
+    questions_uploaded = len(questions_uploaded)
+
+    print(f"""uploaded {questions_uploaded} questions to airtable""")
 
 
 asyncio.run(main())

@@ -103,9 +103,7 @@ class DiscordClient:
             if len(old_roles) > 0:
                 await member.remove_roles(*old_roles)
 
-        await member.edit(nick=f"""[{role_name}] {member.name}""")
-
-        return None
+        _ = await member.edit(nick=f"""[{role_name}] {member.name}""")
 
     async def all_reviews_channel(self) -> discord.TextChannel:
         return await self.channel(channel_id=self.all_reviews_channel_id)
@@ -121,4 +119,4 @@ class DiscordClient:
             async with channel.typing():
                 await asyncio.sleep(number_of_words * seconds_to_type_one_word)
 
-        return await channel.send(message)
+        _ = await channel.send(message)

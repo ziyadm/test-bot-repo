@@ -22,10 +22,10 @@ class PlayerCommandHandler:
             airtable_client=self.__state.airtable_client,
         )
 
+        path_channel = await self.__state.discord_client.channel(
+            channel_id=player.fields.discord_channel_id
+        )
         if str(interaction.channel.id) != player.fields.discord_channel_id:
-            path_channel = self.__state.discord_client.channel(
-                channel_id=player.fields.discord_channel_id
-            )
             _ = await self.__state.messenger.command_cannot_be_run_here(
                 where_to_follow_up=interaction.followup,
                 expected_location=path_channel,
@@ -33,20 +33,28 @@ class PlayerCommandHandler:
             )
             return None
 
-        mission_to_update, mission_channel = await self.__state.create_mission(
+        training_mission_and_channel = await self.__state.create_mission(
             player_discord_id=player_discord_id
         )
+        if training_mission_and_channel is None:
+            guild_owner = await self.__state.discord_client.guild_owner()
+            _ = await self.__state.discord_client.with_typing_time_determined_by_number_of_words(
+                message="Congrats!! You've done every training mission we offer!",
+                channel=path_channel,
+            )
+            _ = await self.__state.discord_client.with_typing_time_determined_by_number_of_words(
+                message=f"""Your time to meet {guild_owner.mention} has finally come...""",
+                channel=path_channel,
+            )
+        else:
+            mission_to_update, mission_channel = training_mission_and_channel
+            mission_message = await path_channel.send(
+                f"""Your training mission awaits you...head to {mission_channel.mention} to begin!"""
+            )
+            _ = await mission_message.create_thread(
+                name=f"summary-{mission_to_update.fields.question_id}"
+            )
 
-        path_channel = await self.__state.discord_client.channel(
-            channel_id=player.fields.discord_channel_id
-        )
-
-        mission_message = await path_channel.send(
-            f"""Your training mission awaits you...head to {mission_channel.mention} to begin!"""
-        )
-        _ = await mission_message.create_thread(
-            name=f"summary-{mission_to_update.fields.question_id}"
-        )
         _ = await interaction.followup.send("Finished")
 
     async def submit_command(self, interaction: discord.Interaction):
