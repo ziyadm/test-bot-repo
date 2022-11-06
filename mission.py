@@ -1,14 +1,9 @@
 import datetime
 from typing import Dict, Optional
 
-import discord
-import pyairtable.formulas
-
 import airtable_client
-import user
 from airtable_client import AirtableClient
 from stage import Stage
-from user import User
 from utc_time import UtcTime
 
 

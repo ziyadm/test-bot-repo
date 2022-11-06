@@ -1,10 +1,6 @@
-from typing import Callable
-
 import discord
 
-from mission import Mission
 from state import State
-from user import User
 
 
 class AdminCommandHandler:

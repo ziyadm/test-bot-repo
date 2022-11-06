@@ -1,7 +1,5 @@
 import datetime
 
-import discord
-
 from discord_client import DiscordClient
 from mission import Mission
 from stage import Stage
@@ -76,4 +74,4 @@ class Messenger:
                     ]
                 )
             )
-            _ = await review_thread.send(f"""@everyone race to claim it!!""")
+            _ = await review_thread.send("""@everyone race to claim it!!""")
