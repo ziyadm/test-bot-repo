@@ -31,21 +31,18 @@ class Messenger:
                 "cant send messages for player submitting stage {stage_submitted} as its not their turn. this should already have been filtered out, is this a bug?"
             )
 
-        if stage_submitted.has_value(Stage.design):
-            _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
-                message=f"""Only {time_taken}...not bad!""",
-                channel=mission_channel,
-            )
-            _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
-                message="I've sent your plan to Suriel for approval.",
-                channel=mission_channel,
-            )
-            _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
-                message=f"""Head back to {player_path_channel.mention} to continue training.""",
-                channel=mission_channel,
-            )
-        elif stage_submitted.has_value(Stage.code):
-            raise NotImplementedError("TODO: handle submitting code")
+        _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
+            message=f"""Only {time_taken}...not bad!""",
+            channel=mission_channel,
+        )
+        _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
+            message=f"I've sent your {stage_submitted} to Suriel for approval.",
+            channel=mission_channel,
+        )
+        _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
+            message=f"""Head back to {player_path_channel.mention} to continue training.""",
+            channel=mission_channel,
+        )
 
         if updated_mission.fields.review_discord_channel_id is not None:
             mission_review_channel = await self.__discord_client.channel(

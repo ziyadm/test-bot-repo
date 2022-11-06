@@ -196,6 +196,8 @@ Score: `{score}`
                     review_field: review_value,
                     state_field: state_value,
                     score_field: score,
+                    mission.Fields.review_discord_channel_id_field: "",
+                    mission.Fields.reviewer_discord_id_field: "",
                 }
             ),
             airtable_client=self.state.airtable_client,

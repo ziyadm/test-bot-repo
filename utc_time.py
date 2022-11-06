@@ -11,6 +11,9 @@ class UtcTime:
     def __eq__(self, other):
         return self.value == other.value
 
+    def __lt__(self, other):
+        return self.value < other.value
+
     def __str__(self):
         return self.value.strftime(self.format)
 
@@ -123,6 +126,15 @@ class Test:
         )
 
     @classmethod
+    def run_comparisons(cls):
+        earlier = cls.arbitrary_date_in_timezone(timezone=datetime.timezone.utc)
+        later = UtcTime(
+            earlier.value + datetime.timedelta(seconds=35, milliseconds=700)
+        )
+
+        assert earlier < later
+
+    @classmethod
     def run_all_diff_to_nearest_second(cls):
         cls.diff_to_nearest_second_same_time()
         cls.diff_to_nearest_second_rounds()
@@ -132,6 +144,7 @@ class Test:
         cls.run_all_of_string()
         cls.run_all_roundtrip()
         cls.run_all_diff_to_nearest_second()
+        cls.run_comparisons()
 
 
 Test.run_all()
