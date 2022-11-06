@@ -87,71 +87,6 @@ Score: `{score}`
         )
         await thread.send(message)
 
-    async def handle_submission(self, interaction, mission_to_update, messages):
-        current_user = await User.row(
-            formula=pyairtable.formulas.match(
-                {
-                    user.Fields.discord_id_field: mission_to_update.fields.player_discord_id
-                }
-            ),
-            airtable_client=self.state.airtable_client,
-        )
-        user_path_channel = await self.state.discord_client.channel(
-            current_user.fields.discord_channel_id
-        )
-
-        player_user = await self.state.discord_client.member(
-            mission_to_update.fields.player_discord_id
-        )
-
-        await user_path_channel.send(
-            f"{player_user.mention}\n\nType `/train` to continue..."
-        )
-
-        response = f"""Planning is half the battle! We've sent your plan to Suriel for approval. Head back to {user_path_channel.mention} to continue training."""
-
-        design_stage = mission_to_update.fields.stage.has_value(
-            Stage.design_review
-        ) or mission_to_update.fields.stage.has_value(Stage.design)
-        content_field = (
-            mission.Fields.design_field if design_stage else mission.Fields.code_field
-        )
-
-        # if we have code or design fields with values, then this is not a new review
-        next_field = mission_to_update.fields.stage.next().get_field()
-        if mission_to_update.fields.to_dict()[next_field]:
-            # review is not new: it is a revision and we need to update the original reviewer
-            reviewer_user = await self.state.discord_client.member(
-                mission_to_update.fields.reviewer_discord_id
-            )
-            original_review_channel = await self.state.discord_client.channel(
-                mission_to_update.fields.review_discord_channel_id
-            )
-            await original_review_channel.send(
-                f"{reviewer_user.mention} the player has revised their work and resubmitted. Please review.\n\nContent: {messages[0].content}"
-            )
-        else:
-            # review is new, we need to ping the reviews channel for this mission
-            review_channel = await self.state.discord_client.review_channel()
-            review_message = await review_channel.send(
-                f"@everyone Ready for review: {interaction.channel.mention}"
-            )
-            _ = await review_message.create_thread(
-                name=f"review-{interaction.channel.mention}"
-            )
-
-        await mission_to_update.update(
-            fields=mission_to_update.fields.immutable_updates(
-                {
-                    mission.Fields.stage_field: mission_to_update.fields.stage.next(),
-                    content_field: messages[0].content,
-                }
-            ),
-            airtable_client=self.state.airtable_client,
-        )
-
-        return response
-
     async def time_command(self, interaction: discord.Interaction):
         for_mission = await self.get_mission(
             field=mission.Fields.discord_channel_id_field,
@@ -477,10 +412,6 @@ Score: `{score}`
             time_taken=mission_to_update.time_in_stage(now),
         )
 
-        _ = await self.handle_submission(
-            interaction, mission_to_update, messages=mission_channel_messages
-        )
-
         # TODO: revert all state changes if theres any exceptions
         _ = await interaction.followup.send("Finished")
 
@@ -554,7 +485,7 @@ Score: `{score}`
         active_channels = set(
             active_user_channels
             + active_mission_channels
-            + [self.state.discord_client.review_channel_id]
+            + [self.state.discord_client.all_reviews_channel_id]
         )
 
         channels = await self.state.discord_client.channels()

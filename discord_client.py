@@ -16,7 +16,7 @@ class DiscordClient:
 
     admin_permissions = discord.Permissions.all
 
-    def __init__(self, guild_id: int, secret_token: str, review_channel_id: str):
+    def __init__(self, guild_id: int, secret_token: str, all_reviews_channel_id: str):
         self.client = discord.Client(
             intents=discord.Intents(
                 messages=True,
@@ -29,7 +29,7 @@ class DiscordClient:
         self.guild_id = guild_id
         self.command_tree = discord.app_commands.CommandTree(self.client)
         self.secret_token = secret_token
-        self.review_channel_id = review_channel_id
+        self.all_reviews_channel_id = all_reviews_channel_id
 
     async def __guild(self):
         return await self.client.fetch_guild(self.guild_id)
@@ -95,8 +95,8 @@ class DiscordClient:
 
         return None
 
-    async def review_channel(self):
-        return await self.client.fetch_channel(self.review_channel_id)
+    async def all_reviews_channel(self) -> discord.TextChannel:
+        return await self.channel(channel_id=self.all_reviews_channel_id)
 
     @staticmethod
     async def with_typing_time_determined_by_number_of_words(
