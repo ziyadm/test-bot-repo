@@ -7,7 +7,6 @@ import mission
 import question
 import user
 from airtable_client import AirtableClient
-from messenger import Messenger
 from mission import Mission
 from question import Question
 from rank import Rank
@@ -19,7 +18,6 @@ from utc_time import UtcTime
 
 class CommandHandler:
     def __init__(self, state: State):
-        self.messenger = Messenger(discord_client=state.discord_client)
         self.state = state
 
     async def update_summary_thread(self, mission_to_update, **kwargs):

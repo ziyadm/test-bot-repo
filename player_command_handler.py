@@ -3,7 +3,6 @@ import pyairtable
 
 import mission
 import user
-from messenger import Messenger
 from mission import Mission
 from stage import Stage
 from state import State
@@ -13,7 +12,6 @@ from utc_time import UtcTime
 
 class PlayerCommandHandler:
     def __init__(self, *, state: State):
-        self.messenger = Messenger(discord_client=state.discord_client)
         self.__state = state
 
     async def train_command(self, interaction: discord.Interaction):
@@ -84,7 +82,7 @@ class PlayerCommandHandler:
             airtable_client=self.__state.airtable_client,
         )
 
-        _ = await self.messenger.player_submitted_stage(
+        _ = await self.__state.messenger.player_submitted_stage(
             player,
             updated_mission,
             stage_submitted,
