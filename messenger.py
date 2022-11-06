@@ -60,7 +60,7 @@ class Messenger:
             _ = await mission_review_channel.send("New submission:")
 
             player_submission = None
-            if stage.has_value(Stage.design):
+            if stage_submitted.has_value(Stage.design):
                 player_submission = updated_mission.fields.design
             else:
                 player_submission = updated_mission.fields.code
@@ -74,7 +74,7 @@ class Messenger:
                 name="-".join(
                     [
                         str(stage_submitted),
-                        updated_mission.fields.player_discord_id,
+                        updated_mission.fields.discord_channel_id,
                         updated_mission.fields.question_id,
                     ]
                 )

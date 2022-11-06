@@ -282,7 +282,7 @@ Score: `{score}`
         )
 
     async def claim_command(self, interaction: discord.Interaction):
-        question_discord_channel_id = str(interaction.channel.name.split("review-")[-1])
+        question_discord_channel_id = str(interaction.channel.name.split("-")[1])
         mission_to_update = await self.get_mission(
             field=mission.Fields.discord_channel_id_field,
             value=question_discord_channel_id,
