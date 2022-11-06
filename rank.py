@@ -67,6 +67,9 @@ class Rank:
         rank_bucket = int(level / 10) + 1
         return self.name[rank_bucket]
 
+    def __ge__(self, other):
+        return self.value >= other.value
+
     def __gt__(self, other):
         return self.value > other.value
 

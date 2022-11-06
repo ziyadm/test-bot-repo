@@ -46,7 +46,7 @@ class AdminCommandHandler:
 
         users_in_discord = await self.__state.discord_client.members()
         for user_to_sync in users_in_discord:
-            if not user_to_sync.bot:
+            if user_to_sync.id != bot_discord_member.id:
                 _ = await all_reviews_channel.send(f"""syncing user {user_to_sync.name} to db""")
                 new_user, _user_channel = await self.__state.create_user(
                     discord_member=user_to_sync

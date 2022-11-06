@@ -97,7 +97,7 @@ class State:
             airtable_client=self.airtable_client,
         )
 
-        if for_user.fields.rank > bot_user.fields.rank:
+        if for_user.fields.rank >= bot_user.fields.rank:
             return None
 
         await self.discord_client.set_role(
