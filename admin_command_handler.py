@@ -19,6 +19,14 @@ class AdminCommandHandler:
     ):
         all_reviews_channel = await self.__state.discord_client.all_reviews_channel()
 
+        if interaction.channel.id != all_reviews_channel.id:
+            _ = await self.__state.messenger.command_is_only_allowed_in_channel(
+                where_to_follow_up=interaction.followup,
+                expected_channel_id=str(all_reviews_channel.id),
+                suggested_command=None,
+            )
+            return None
+
         if users:
             _ = await all_reviews_channel.send("deleting all users")
             users_deleted = await self.__state.delete_all_users()

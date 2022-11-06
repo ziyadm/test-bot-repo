@@ -88,8 +88,6 @@ async def register_lgtm_command(interaction: discord.Interaction, score: float):
 # ====================== #
 # === Admin commands === #
 # ====================== #
-
-
 @register_slash_command(SlashCommand(SlashCommand.set_rank))
 @discord.app_commands.default_permissions(administrator=True)
 async def register_set_rank_command(

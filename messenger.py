@@ -1,4 +1,5 @@
 import datetime
+from typing import Optional
 
 import discord
 
@@ -6,6 +7,7 @@ from discord_client import DiscordClient
 from mission import Mission
 from question import Question
 from rank import Rank
+from slash_command import SlashCommand
 from stage import Stage
 from user import User
 
@@ -13,6 +15,25 @@ from user import User
 class Messenger:
     def __init__(self, *, discord_client: DiscordClient):
         self.__discord_client = discord_client
+
+    async def command_is_only_allowed_in_channel(
+        self,
+        where_to_follow_up: discord.Webhook,
+        expected_channel_id: Optional[str],
+        suggested_command: Optional[SlashCommand],
+    ):
+        if expected_channel_id is None:
+            _ = await where_to_follow_up.send(("This command can't be used in this channel!"))
+        else:
+            expected_channel = await self.__discord_client.channel(channel_id=expected_channel_id)
+            _ = await where_to_follow_up.send(
+                (f"""This command can only be used in {expected_channel.mention}!""")
+            )
+        if suggested_command:
+            suggested_command = await self.__discord_client.slash_command(suggested_command)
+            _ = await where_to_follow_up.send(
+                f"""Did you mean to try {suggested_command.mention}?"""
+            )
 
     async def player_started_training_mission(
         self, player: User, training_mission: Mission, mission_question: Question

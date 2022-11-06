@@ -3,6 +3,8 @@ from typing import List
 
 import discord
 
+from slash_command import SlashCommand
+
 
 class DiscordClient:
 
@@ -60,6 +62,18 @@ class DiscordClient:
 
     async def bot_member(self) -> discord.Member:
         return await self.member(member_id=str(self.client.user.id))
+
+    async def guild_owner(self):
+        guild = await self.__guild()
+        return await self.member(member_id=guild.owner_id)
+
+    async def slash_command(self, slash_command: SlashCommand) -> discord.app_commands.AppCommand:
+        all_commands = await self.command_tree.fetch_commands(
+            guild=discord.Object(id=self.guild_id)
+        )
+        for command in all_commands:
+            if command.name == slash_command.name():
+                return command
 
     async def create_private_channel(self, member_id: str, channel_name: str):
         guild = await self.__guild()

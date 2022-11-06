@@ -18,16 +18,16 @@ from utc_time import UtcTime
 
 class CommandHandler:
     def __init__(self, state: State):
-        self.state = state
+        self.__state = state
 
     async def update_summary_thread(self, mission_to_update, **kwargs):
         user_to_update = await User.row(
             formula=pyairtable.formulas.match(
                 {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
             ),
-            airtable_client=self.state.airtable_client,
+            airtable_client=self.__state.airtable_client,
         )
-        user_path_channel = await self.state.discord_client.channel(
+        user_path_channel = await self.__state.discord_client.channel(
             user_to_update.fields.discord_channel_id
         )
         thread = list(
@@ -74,28 +74,36 @@ Score: `{score}`
         await thread.send(message)
 
     async def time_command(self, interaction: discord.Interaction):
-        for_mission = await Mission.row(
-            formula=pyairtable.formulas.match(
-                {mission.Fields.discord_channel_id_field: str(interaction.channel.id)}
-            ),
-            airtable_client=self.state.airtable_client,
-        )
+        try:
+            for_mission = await Mission.row(
+                formula=pyairtable.formulas.match(
+                    {mission.Fields.discord_channel_id_field: str(interaction.channel.id)}
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
+        except Exception:
+            _ = await self.__state.messenger.command_is_only_allowed_in_channel(
+                where_to_follow_up=interaction.followup,
+                expected_channel_id=None,
+                suggested_command=None,
+            )
+            return None
+        else:
+            # TODO: this time should depend on what stage theyre in, not just be 60
+            # minutes
+            time_remaining = max(
+                datetime.timedelta(minutes=60) - for_mission.time_in_stage(now=UtcTime.now()),
+                datetime.timedelta(seconds=0),
+            )
 
-        # TODO: this time should depend on what stage theyre in, not just be 60
-        # minutes
-        time_remaining = max(
-            datetime.timedelta(minutes=60) - for_mission.time_in_stage(now=UtcTime.now()),
-            datetime.timedelta(seconds=0),
-        )
-
-        await interaction.followup.send(f"""{time_remaining} left.""")
+            _ = await interaction.followup.send(f"""{time_remaining} left.""")
 
     async def review_command(self, interaction: discord.Interaction):
         mission_to_update = await Mission.row(
             formula=pyairtable.formulas.match(
                 {mission.Fields.review_discord_channel_id_field: str(interaction.channel.id)}
             ),
-            airtable_client=self.state.airtable_client,
+            airtable_client=self.__state.airtable_client,
         )
 
         if not CommandHandler.in_review(mission_to_update):
@@ -115,16 +123,16 @@ Score: `{score}`
                     state_field: state_value,
                 }
             ),
-            airtable_client=self.state.airtable_client,
+            airtable_client=self.__state.airtable_client,
         )
 
         response = "Sent review followups."
 
-        question_channel = await self.state.discord_client.channel(
+        question_channel = await self.__state.discord_client.channel(
             mission_to_update.fields.discord_channel_id
         )
 
-        user = await self.state.discord_client.member(mission_to_update.fields.player_discord_id)
+        user = await self.__state.discord_client.member(mission_to_update.fields.player_discord_id)
 
         await question_channel.send(
             f"{user.mention} your work has been reviewed by Suriel\n\nSuriel's feedback: {review_value}"
@@ -136,7 +144,7 @@ Score: `{score}`
             formula=pyairtable.formulas.match(
                 {mission.Fields.review_discord_channel_id_field: str(interaction.channel.id)}
             ),
-            airtable_client=self.state.airtable_client,
+            airtable_client=self.__state.airtable_client,
         )
 
         if not CommandHandler.in_review(mission_to_update):
@@ -165,7 +173,7 @@ Score: `{score}`
                     mission.Fields.reviewer_discord_id_field: "",
                 }
             ),
-            airtable_client=self.state.airtable_client,
+            airtable_client=self.__state.airtable_client,
         )
 
         response = (
@@ -174,7 +182,7 @@ Score: `{score}`
             else "Approved design."
         )
 
-        question_channel = await self.state.discord_client.channel(
+        question_channel = await self.__state.discord_client.channel(
             mission_to_update.fields.discord_channel_id
         )
 
@@ -207,7 +215,7 @@ Score: `{score}`
             levels_until_evolution,
             evolving,
             current_rank,
-        ) = await CommandHandler.get_level_changes(self.state.airtable_client, mission_to_update)
+        ) = await CommandHandler.get_level_changes(self.__state.airtable_client, mission_to_update)
 
         await question_channel.send(
             f"Your work has been recognized by Suriel.\n\nYou gained {level_delta} levels!\n\n"
@@ -218,13 +226,13 @@ Score: `{score}`
                 formula=pyairtable.formulas.match(
                     {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
                 ),
-                airtable_client=self.state.airtable_client,
+                airtable_client=self.__state.airtable_client,
             )
 
             await question_channel.send("Wait...what's happening?")
             await question_channel.send("Suriel is slightly impressed...")
             await question_channel.send("You are...EVOLVING!")
-            await self.state.set_rank(for_user=user_to_update, rank=current_rank)
+            await self.__state.set_rank(for_user=user_to_update, rank=current_rank)
             await question_channel.send(
                 "Suriel sees your strength - you have advanced to the next rank."
             )
@@ -248,7 +256,7 @@ Score: `{score}`
             formula=pyairtable.formulas.match(
                 {mission.Fields.discord_channel_id_field: question_discord_channel_id}
             ),
-            airtable_client=self.state.airtable_client,
+            airtable_client=self.__state.airtable_client,
         )
 
         if not CommandHandler.in_review(mission_to_update):
@@ -258,17 +266,17 @@ Score: `{score}`
             formula=pyairtable.formulas.match(
                 {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
             ),
-            airtable_client=self.state.airtable_client,
+            airtable_client=self.__state.airtable_client,
         )
 
         question_to_update = await Question.row(
             formula=pyairtable.formulas.match(
                 {question.Fields.question_id_field: mission_to_update.fields.question_id}
             ),
-            airtable_client=self.state.airtable_client,
+            airtable_client=self.__state.airtable_client,
         )
 
-        question_review_channel = await self.state.discord_client.create_private_channel(
+        question_review_channel = await self.__state.discord_client.create_private_channel(
             interaction.user.id,
             f"{mission_to_update.fields.stage.get_field()}-{mission_to_update.fields.question_id}-{user_to_update.fields.discord_name}",
         )
@@ -291,7 +299,7 @@ Score: `{score}`
                     mission.Fields.reviewer_discord_id_field: interaction.user.id,
                 }
             ),
-            airtable_client=self.state.airtable_client,
+            airtable_client=self.__state.airtable_client,
         )
 
         return await interaction.followup.send(response)
@@ -299,10 +307,10 @@ Score: `{score}`
     async def set_rank(self, interaction: discord.Interaction, user_discord_name: str, rank: str):
         user_to_update = await User.row(
             formula=pyairtable.formulas.match({user.Fields.discord_name_field: user_discord_name}),
-            airtable_client=self.state.airtable_client,
+            airtable_client=self.__state.airtable_client,
         )
 
-        await self.state.set_rank(for_user=user_to_update, rank=Rank.of_string(rank))
+        await self.__state.set_rank(for_user=user_to_update, rank=Rank.of_string(rank))
 
         return await interaction.followup.send(f"""Updated {user_discord_name}'s rank to {rank}""")
 
