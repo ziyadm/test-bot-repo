@@ -103,19 +103,10 @@ Score: `{score}`
         await interaction.followup.send(f"""{time_remaining} left.""")
 
     async def train_command(self, interaction: discord.Interaction):
+        # create the mission
         mission_to_update, mission_channel = await self.state.create_mission(
             player_discord_id=str(interaction.user.id)
         )
-
-        mission_question = await Question.row(
-            formula=pyairtable.formulas.match(
-                {
-                    question.Fields.question_id_field: mission_to_update.fields.question_id
-                }
-            ),
-            airtable_client=self.state.airtable_client,
-        )
-
         mission_message = await interaction.followup.send(
             f"""Monarch Suriel has invited you to {mission_channel.mention}"""
         )
@@ -124,7 +115,7 @@ Score: `{score}`
         # create the summary thread
         discord_user = await self.state.discord_client.member(str(interaction.user.id))
         _ = await mission_message.create_thread(
-            name=f"summary-{mission_question.fields.question_id}"
+            name=f"summary-{mission_to_update.fields.question_id}"
         )
 
     async def review_command(self, interaction: discord.Interaction):
