@@ -60,7 +60,7 @@ class State:
 
         now = UtcTime.now()
 
-        new_mission = await Mission.create(
+        training_mission = await Mission.create(
             fields=mission.Fields(
                 discord_channel_id=str(mission_channel.id),
                 review_discord_channel_id=None,
@@ -80,48 +80,13 @@ class State:
             airtable_client=self.airtable_client,
         )
 
-        discord_user = await self.discord_client.member(player_discord_id)
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"""Welcome to your training mission {discord_user.mention}!""",
-            channel=mission_channel,
+        _ = await self.messenger.player_started_training_mission(
+            player=player,
+            training_mission=training_mission,
+            mission_question=mission_question,
         )
 
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="Your mission instructions follow, read them carefully:",
-            channel=mission_channel,
-        )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"""```{mission_question.fields.description}```""",
-            channel=mission_channel,
-        )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"""Good luck, {discord_user.mention}, you'll need it...""",
-            channel=mission_channel,
-        )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="Missions consist of two stages:",
-            channel=mission_channel,
-        )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="""`Design`: *Describe how you plan to solve the question. Make sure to write this **in english** without getting too close to the code!*""",
-            channel=mission_channel,
-        )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="""`Code`: *Implement the solution your described in the* `Design` *stage in the programming language of your choice.*""",
-            channel=mission_channel,
-        )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="""Type `/submit` to send your work on a stage to Suriel for review. Only your most recent message will be used in your submission.""",
-            channel=mission_channel,
-        )
-
-        return (new_mission, mission_channel)
+        return (training_mission, mission_channel)
 
     async def sync_discord_role(self, for_user: User):
         bot_discord_member = await self.discord_client.bot_member()

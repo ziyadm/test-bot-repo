@@ -4,6 +4,7 @@ import discord
 
 from discord_client import DiscordClient
 from mission import Mission
+from question import Question
 from rank import Rank
 from stage import Stage
 from user import User
@@ -12,6 +13,54 @@ from user import User
 class Messenger:
     def __init__(self, *, discord_client: DiscordClient):
         self.__discord_client = discord_client
+
+    async def player_started_training_mission(
+        self, player: User, training_mission: Mission, mission_question: Question
+    ):
+        discord_member = await self.__discord_client.member(member_id=player.fields.discord_id)
+        mission_channel = await self.__discord_client.channel(
+            channel_id=training_mission.fields.discord_channel_id
+        )
+
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message=f"""Welcome to your training mission {discord_member.mention}!""",
+            channel=mission_channel,
+        )
+
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message="Your mission instructions follow, read them carefully:",
+            channel=mission_channel,
+        )
+
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message=f"""```{mission_question.fields.description}```""",
+            channel=mission_channel,
+        )
+
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message=f"""Good luck, {discord_member.mention}, you'll need it...""",
+            channel=mission_channel,
+        )
+
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message="Missions consist of two stages:",
+            channel=mission_channel,
+        )
+
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message="""`Design`: *Describe how you plan to solve the question. Make sure to write this **in english** without getting too close to the code!*""",
+            channel=mission_channel,
+        )
+
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message="""`Code`: *Implement the solution your described in the* `Design` *stage in the programming language of your choice.*""",
+            channel=mission_channel,
+        )
+
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message="""Type `/submit` to send your work on a stage to Suriel for review. Only your most recent message will be used in your submission.""",
+            channel=mission_channel,
+        )
 
     async def welcome_new_discord_member(
         self, *, discord_member: discord.Member, path_channel: discord.TextChannel
