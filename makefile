@@ -57,5 +57,5 @@ push: format
 	git commit -am "_" --allow-empty
 	git push
 
-release: push
+release: build push
 	gh pr create --base main --title "$(shell git branch --show-current)" --body "_"

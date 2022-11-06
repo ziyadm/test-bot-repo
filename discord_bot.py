@@ -17,7 +17,6 @@ airtable_database_id = os.environ["airtable_database_id"]
 discord_guild_id = int(os.environ["discord_guild_id"])
 discord_secret_token = os.environ["discord_secret_token"]
 
-# TODO: update env variable name to match
 discord_all_reviews_channel_id = os.environ["discord_all_reviews_channel_id"]
 
 airtable_client = AirtableClient(api_key=airtable_api_key, base_id=airtable_database_id)
