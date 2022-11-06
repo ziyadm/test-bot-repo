@@ -58,8 +58,8 @@ class DiscordClient:
             if message.type == discord.MessageType.default
         ]
 
-    def bot_id(self):
-        return self.client.user.id
+    async def bot_member(self) -> discord.Member:
+        return await self.member(member_id=str(self.client.user.id))
 
     async def create_private_channel(self, member_id: str, channel_name: str):
         guild = await self.__guild()

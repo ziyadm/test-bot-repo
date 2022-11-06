@@ -96,16 +96,6 @@ async def register_set_rank_command(
 
 
 @discord_client.command_tree.command(
-    name="sync_db_and_discord",
-    description="[ADMIN] Sync the db and discord",
-    guild=guild,
-)
-async def register_sync_db_and_discord_command(interaction: discord.Interaction):
-    await interaction.response.defer()
-    return await command_handler.sync_db_and_discord(interaction)
-
-
-@discord_client.command_tree.command(
     name="wipe_state", description="[ADMIN] Wipe everything from the state", guild=guild
 )
 async def register_wipe_state_command(
