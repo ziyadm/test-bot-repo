@@ -23,9 +23,12 @@ class PlayerCommandHandler:
         )
 
         if str(interaction.channel.id) != player.fields.discord_channel_id:
-            _ = await self.__state.messenger.command_is_only_allowed_in_channel(
+            path_channel = self.__state.discord_client.channel(
+                channel_id=player.fields.discord_channel_id
+            )
+            _ = await self.__state.messenger.command_cannot_be_run_here(
                 where_to_follow_up=interaction.followup,
-                expected_channel_id=player.fields.discord_channel_id,
+                expected_location=path_channel,
                 suggested_command=SlashCommand(SlashCommand.submit),
             )
             return None
@@ -56,9 +59,9 @@ class PlayerCommandHandler:
                 airtable_client=self.__state.airtable_client,
             )
         except Exception:
-            _ = await self.__state.messenger.command_is_only_allowed_in_channel(
+            _ = await self.__state.messenger.command_cannot_be_run_here(
                 where_to_follow_up=interaction.followup,
-                expected_channel_id=None,
+                expected_location=None,
                 suggested_command=SlashCommand(SlashCommand.train),
             )
             return None

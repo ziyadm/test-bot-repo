@@ -82,9 +82,9 @@ Score: `{score}`
                 airtable_client=self.__state.airtable_client,
             )
         except Exception:
-            _ = await self.__state.messenger.command_is_only_allowed_in_channel(
+            _ = await self.__state.messenger.command_cannot_be_run_here(
                 where_to_follow_up=interaction.followup,
-                expected_channel_id=None,
+                expected_location=None,
                 suggested_command=None,
             )
             return None
@@ -99,112 +99,132 @@ Score: `{score}`
             _ = await interaction.followup.send(f"""{time_remaining} left.""")
 
     async def review_command(self, interaction: discord.Interaction):
-        mission_to_update = await Mission.row(
-            formula=pyairtable.formulas.match(
-                {mission.Fields.review_discord_channel_id_field: str(interaction.channel.id)}
-            ),
-            airtable_client=self.__state.airtable_client,
-        )
-
-        if not CommandHandler.in_review(mission_to_update):
-            return await interaction.followup.send("""Review already completed!""")
-
-        review_field, review_value = await CommandHandler.get_review_value(
-            mission_to_update, interaction
-        )
-
-        state_field = mission.Fields.stage_field
-        state_value = mission_to_update.fields.stage.previous()
-
-        await mission_to_update.update(
-            fields=mission_to_update.fields.immutable_updates(
-                {
-                    review_field: review_value,
-                    state_field: state_value,
-                }
-            ),
-            airtable_client=self.__state.airtable_client,
-        )
-
-        response = "Sent review followups."
-
-        question_channel = await self.__state.discord_client.channel(
-            mission_to_update.fields.discord_channel_id
-        )
-
-        user = await self.__state.discord_client.member(mission_to_update.fields.player_discord_id)
-
-        await question_channel.send(
-            f"{user.mention} your work has been reviewed by Suriel\n\nSuriel's feedback: {review_value}"
-        )
-        return await interaction.followup.send(response)
-
-    async def lgtm_command(self, interaction: discord.Interaction, score: float):
-        mission_to_update = await Mission.row(
-            formula=pyairtable.formulas.match(
-                {mission.Fields.review_discord_channel_id_field: str(interaction.channel.id)}
-            ),
-            airtable_client=self.__state.airtable_client,
-        )
-
-        if not CommandHandler.in_review(mission_to_update):
-            return await interaction.followup.send("""LGTM already provided!""")
-
-        review_field, review_value = await CommandHandler.get_review_value(
-            mission_to_update, interaction
-        )
-
-        state_field = mission.Fields.stage_field
-        state_value = mission_to_update.fields.stage.next()
-
-        score_field = (
-            mission.Fields.code_score_field
-            if CommandHandler.completing(mission_to_update)
-            else mission.Fields.design_score_field
-        )
-
-        await mission_to_update.update(
-            fields=mission_to_update.fields.immutable_updates(
-                {
-                    review_field: review_value,
-                    state_field: state_value,
-                    score_field: score,
-                    mission.Fields.review_discord_channel_id_field: "",
-                    mission.Fields.reviewer_discord_id_field: "",
-                }
-            ),
-            airtable_client=self.__state.airtable_client,
-        )
-
-        response = (
-            "Approved question."
-            if CommandHandler.completing(mission_to_update)
-            else "Approved design."
-        )
-
-        question_channel = await self.__state.discord_client.channel(
-            mission_to_update.fields.discord_channel_id
-        )
-
-        base_response_to_user = (
-            "Suriel approved of your work! Suriel left you the following to help you along your path"
-            if CommandHandler.completing(mission_to_update)
-            else "Suriel approved your design. Continue along to coding."
-        )
-        response_to_user = f"{base_response_to_user} \n Feedback: {review_value} \n Score: {score}"
-
-        # message user
-        await question_channel.send(response_to_user)
-
-        if CommandHandler.completing(mission_to_update):
-            await self.handle_completing_question(mission_to_update, question_channel)
+        try:
+            mission_to_update = await Mission.row(
+                formula=pyairtable.formulas.match(
+                    {mission.Fields.review_discord_channel_id_field: str(interaction.channel.id)}
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
+        except Exception:
+            _ = await self.__state.messenger.command_cannot_be_run_here(
+                where_to_follow_up=interaction.followup,
+                expected_location=None,
+                suggested_command=None,
+            )
+            return None
         else:
-            # update thread
-            await self.update_summary_thread(
-                mission_to_update, review_value=review_value, score=score
+            if not CommandHandler.in_review(mission_to_update):
+                return await interaction.followup.send("""Review already completed!""")
+
+            review_field, review_value = await CommandHandler.get_review_value(
+                mission_to_update, interaction
             )
 
-        return await interaction.followup.send(response)
+            state_field = mission.Fields.stage_field
+            state_value = mission_to_update.fields.stage.previous()
+
+            await mission_to_update.update(
+                fields=mission_to_update.fields.immutable_updates(
+                    {
+                        review_field: review_value,
+                        state_field: state_value,
+                    }
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
+
+            response = "Sent review followups."
+
+            question_channel = await self.__state.discord_client.channel(
+                mission_to_update.fields.discord_channel_id
+            )
+
+            user = await self.__state.discord_client.member(
+                mission_to_update.fields.player_discord_id
+            )
+
+            _ = await question_channel.send(
+                f"{user.mention} your work has been reviewed by Suriel\n\nSuriel's feedback: {review_value}"
+            )
+            _ = await interaction.followup.send(response)
+
+    async def lgtm_command(self, interaction: discord.Interaction, score: float):
+        try:
+            mission_to_update = await Mission.row(
+                formula=pyairtable.formulas.match(
+                    {mission.Fields.review_discord_channel_id_field: str(interaction.channel.id)}
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
+        except Exception:
+            _ = await self.__state.messenger.command_cannot_be_run_here(
+                where_to_follow_up=interaction.followup,
+                expected_location=None,
+                suggested_command=None,
+            )
+            return None
+        else:
+            if not CommandHandler.in_review(mission_to_update):
+                return await interaction.followup.send("""LGTM already provided!""")
+
+            review_field, review_value = await CommandHandler.get_review_value(
+                mission_to_update, interaction
+            )
+
+            state_field = mission.Fields.stage_field
+            state_value = mission_to_update.fields.stage.next()
+
+            score_field = (
+                mission.Fields.code_score_field
+                if CommandHandler.completing(mission_to_update)
+                else mission.Fields.design_score_field
+            )
+
+            await mission_to_update.update(
+                fields=mission_to_update.fields.immutable_updates(
+                    {
+                        review_field: review_value,
+                        state_field: state_value,
+                        score_field: score,
+                        mission.Fields.review_discord_channel_id_field: "",
+                        mission.Fields.reviewer_discord_id_field: "",
+                    }
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
+
+            response = (
+                "Approved question."
+                if CommandHandler.completing(mission_to_update)
+                else "Approved design."
+            )
+
+            question_channel = await self.__state.discord_client.channel(
+                mission_to_update.fields.discord_channel_id
+            )
+
+            base_response_to_user = (
+                "Suriel approved of your work! Suriel left you the following to help you along your path"
+                if CommandHandler.completing(mission_to_update)
+                else "Suriel approved your design. Continue along to coding."
+            )
+            response_to_user = (
+                f"{base_response_to_user} \n Feedback: {review_value} \n Score: {score}"
+            )
+
+            # message user
+            await question_channel.send(response_to_user)
+
+            if CommandHandler.completing(mission_to_update):
+                await self.handle_completing_question(mission_to_update, question_channel)
+            else:
+                # update thread
+                await self.update_summary_thread(
+                    mission_to_update, review_value=review_value, score=score
+                )
+
+            return await interaction.followup.send(response)
 
     async def handle_completing_question(
         self, mission_to_update: mission.Mission, question_channel: discord.TextChannel
@@ -251,58 +271,69 @@ Score: `{score}`
         )
 
     async def claim_command(self, interaction: discord.Interaction):
-        question_discord_channel_id = str(interaction.channel.name.split("-")[1])
-        mission_to_update = await Mission.row(
-            formula=pyairtable.formulas.match(
-                {mission.Fields.discord_channel_id_field: question_discord_channel_id}
-            ),
-            airtable_client=self.__state.airtable_client,
-        )
+        try:
+            # TODO: store thread id in mission row so we can look up by it
+            question_discord_channel_id = str(interaction.channel.name.split("-")[1])
+            mission_to_update = await Mission.row(
+                formula=pyairtable.formulas.match(
+                    {mission.Fields.discord_channel_id_field: question_discord_channel_id}
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
+        except Exception:
+            _ = await self.__state.messenger.command_cannot_be_run_here(
+                where_to_follow_up=interaction.followup,
+                expected_location=None,
+                suggested_command=None,
+            )
+            return None
+        else:
+            if not CommandHandler.in_review(mission_to_update):
+                return await interaction.followup.send("""Review already claimed!""")
 
-        if not CommandHandler.in_review(mission_to_update):
-            return await interaction.followup.send("""Review already claimed!""")
+            user_to_update = await User.row(
+                formula=pyairtable.formulas.match(
+                    {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
 
-        user_to_update = await User.row(
-            formula=pyairtable.formulas.match(
-                {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
-            ),
-            airtable_client=self.__state.airtable_client,
-        )
+            question_to_update = await Question.row(
+                formula=pyairtable.formulas.match(
+                    {question.Fields.question_id_field: mission_to_update.fields.question_id}
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
 
-        question_to_update = await Question.row(
-            formula=pyairtable.formulas.match(
-                {question.Fields.question_id_field: mission_to_update.fields.question_id}
-            ),
-            airtable_client=self.__state.airtable_client,
-        )
+            question_review_channel = await self.__state.discord_client.create_private_channel(
+                interaction.user.id,
+                f"{mission_to_update.fields.stage.get_field()}-{mission_to_update.fields.question_id}-{user_to_update.fields.discord_name}",
+            )
+            design_stage = mission_to_update.fields.stage.has_value(
+                Stage.design_review
+            ) or mission_to_update.fields.stage.has_value(Stage.design)
+            content_value = (
+                mission_to_update.fields.design if design_stage else mission_to_update.fields.code
+            )
 
-        question_review_channel = await self.__state.discord_client.create_private_channel(
-            interaction.user.id,
-            f"{mission_to_update.fields.stage.get_field()}-{mission_to_update.fields.question_id}-{user_to_update.fields.discord_name}",
-        )
-        design_stage = mission_to_update.fields.stage.has_value(
-            Stage.design_review
-        ) or mission_to_update.fields.stage.has_value(Stage.design)
-        content_value = (
-            mission_to_update.fields.design if design_stage else mission_to_update.fields.code
-        )
+            await question_review_channel.send(
+                f"Question: {question_to_update.fields.leetcode_url}\n\nContent: {content_value}"
+            )
+            response = f"Review claimed: {question_review_channel.mention}"
 
-        await question_review_channel.send(
-            f"Question: {question_to_update.fields.leetcode_url}\n\nContent: {content_value}"
-        )
-        response = f"Review claimed: {question_review_channel.mention}"
+            await mission_to_update.update(
+                fields=mission_to_update.fields.immutable_updates(
+                    {
+                        mission.Fields.review_discord_channel_id_field: str(
+                            question_review_channel.id
+                        ),
+                        mission.Fields.reviewer_discord_id_field: interaction.user.id,
+                    }
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
 
-        await mission_to_update.update(
-            fields=mission_to_update.fields.immutable_updates(
-                {
-                    mission.Fields.review_discord_channel_id_field: str(question_review_channel.id),
-                    mission.Fields.reviewer_discord_id_field: interaction.user.id,
-                }
-            ),
-            airtable_client=self.__state.airtable_client,
-        )
-
-        return await interaction.followup.send(response)
+            return await interaction.followup.send(response)
 
     async def set_rank(self, interaction: discord.Interaction, user_discord_name: str, rank: str):
         user_to_update = await User.row(

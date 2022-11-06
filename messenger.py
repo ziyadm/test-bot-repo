@@ -1,5 +1,5 @@
 import datetime
-from typing import Optional
+from typing import Optional, Union
 
 import discord
 
@@ -16,18 +16,17 @@ class Messenger:
     def __init__(self, *, discord_client: DiscordClient):
         self.__discord_client = discord_client
 
-    async def command_is_only_allowed_in_channel(
+    async def command_cannot_be_run_here(
         self,
         where_to_follow_up: discord.Webhook,
-        expected_channel_id: Optional[str],
+        expected_location: Optional[Union[discord.Thread, discord.TextChannel]],
         suggested_command: Optional[SlashCommand],
     ):
-        if expected_channel_id is None:
+        if expected_location is None:
             _ = await where_to_follow_up.send(("This command can't be used in this channel!"))
         else:
-            expected_channel = await self.__discord_client.channel(channel_id=expected_channel_id)
             _ = await where_to_follow_up.send(
-                (f"""This command can only be used in {expected_channel.mention}!""")
+                (f"""This command can only be used in {expected_location.mention}!""")
             )
         if suggested_command:
             suggested_command = await self.__discord_client.slash_command(suggested_command)

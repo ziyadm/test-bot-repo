@@ -20,9 +20,9 @@ class AdminCommandHandler:
         all_reviews_channel = await self.__state.discord_client.all_reviews_channel()
 
         if interaction.channel.id != all_reviews_channel.id:
-            _ = await self.__state.messenger.command_is_only_allowed_in_channel(
+            _ = await self.__state.messenger.command_cannot_be_run_here(
                 where_to_follow_up=interaction.followup,
-                expected_channel_id=str(all_reviews_channel.id),
+                expected_location=all_reviews_channel,
                 suggested_command=None,
             )
             return None
