@@ -49,4 +49,3 @@ class AirtableClient:
 
     async def delete_rows(self, table_name: str, record_ids: List[str]):
         self.__table(table_name).batch_delete(record_ids)
-        return None
