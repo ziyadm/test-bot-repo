@@ -129,9 +129,10 @@ class State:
         return (new_mission, mission_channel)
 
     async def sync_discord_role(self, for_user: User):
+        bot_discord_member = await self.discord_client.bot_member()
         bot_user = await User.row(
             formula=pyairtable.formulas.match(
-                {user.Fields.discord_id_field: self.discord_client.bot_id()}
+                {user.Fields.discord_id_field: str(bot_discord_member.id)}
             ),
             airtable_client=self.airtable_client,
         )
