@@ -9,6 +9,7 @@ from command_handler import CommandHandler
 from discord_client import DiscordClient
 from event_handler import EventHandler
 from player_command_handler import PlayerCommandHandler
+from slash_command import SlashCommand
 from state import State
 
 dotenv.load_dotenv()
@@ -33,30 +34,30 @@ event_handler = EventHandler(state)
 guild = discord.Object(id=discord_guild_id)
 
 
+def register_slash_command(slash_command_to_register: SlashCommand):
+    return discord_client.command_tree.command(
+        name=slash_command_to_register.name(),
+        description=slash_command_to_register.description(),
+        guild=guild,
+    )
+
+
 # ======================= #
 # === Player commands === #
 # ======================= #
-@discord_client.command_tree.command(
-    name="train", description="[PLAYER] Enter the training realm", guild=guild
-)
+@register_slash_command(SlashCommand(SlashCommand.train))
 async def register_train_command(interaction: discord.Interaction):
     await interaction.response.defer()
     return await player_command_handler.train_command(interaction)
 
 
-@discord_client.command_tree.command(
-    name="submit",
-    description="[PLAYER] Attempt to complete the current stage of a mission",
-    guild=guild,
-)
+@register_slash_command(SlashCommand(SlashCommand.submit))
 async def register_submit_command(interaction: discord.Interaction):
     await interaction.response.defer()
     return await player_command_handler.submit_command(interaction)
 
 
-@discord_client.command_tree.command(
-    name="time", description="[PLAYER] How much time remains?", guild=guild
-)
+@register_slash_command(SlashCommand(SlashCommand.time))
 async def register_time_command(interaction: discord.Interaction):
     await interaction.response.defer()
     return await command_handler.time_command(interaction)
@@ -65,25 +66,19 @@ async def register_time_command(interaction: discord.Interaction):
 # ========================= #
 # === Reviewer commands === #
 # ========================= #
-@discord_client.command_tree.command(
-    name="claim", description="[REVIEWER] Claim review of a mission", guild=guild
-)
+@register_slash_command(SlashCommand(SlashCommand.claim))
 async def register_claim_command(interaction: discord.Interaction):
     await interaction.response.defer()
     return await command_handler.claim_command(interaction)
 
 
-@discord_client.command_tree.command(
-    name="review", description="[PLAYER] Submit review of a mission", guild=guild
-)
+@register_slash_command(SlashCommand(SlashCommand.reject))
 async def register_review_command(interaction: discord.Interaction):
     await interaction.response.defer()
     return await command_handler.review_command(interaction)
 
 
-@discord_client.command_tree.command(
-    name="lgtm", description="[REVIEWER] Approve a mission", guild=guild
-)
+@register_slash_command(SlashCommand(SlashCommand.approve))
 async def register_lgtm_command(interaction: discord.Interaction, score: float):
     await interaction.response.defer()
     return await command_handler.lgtm_command(interaction, score)
@@ -92,9 +87,9 @@ async def register_lgtm_command(interaction: discord.Interaction, score: float):
 # ====================== #
 # === Admin commands === #
 # ====================== #
-@discord_client.command_tree.command(
-    name="set_rank", description="[ADMIN] Set a user's rank", guild=guild
-)
+
+
+@register_slash_command(SlashCommand(SlashCommand.set_rank))
 async def register_set_rank_command(
     interaction: discord.Interaction, user_discord_name: str, rank: str
 ):
@@ -104,9 +99,7 @@ async def register_set_rank_command(
     )
 
 
-@discord_client.command_tree.command(
-    name="wipe_state", description="[ADMIN] Wipe everything from the state", guild=guild
-)
+@register_slash_command(SlashCommand(SlashCommand.wipe_state))
 async def register_wipe_state_command(
     interaction: discord.Interaction,
     users: bool = True,
