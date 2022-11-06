@@ -69,9 +69,7 @@ class Fields:
                 self.review_discord_channel_id
             ),
             self.player_discord_id_field: self.player_discord_id,
-            self.reviewer_discord_id_field: optional_to_string(
-                self.reviewer_discord_id
-            ),
+            self.reviewer_discord_id_field: optional_to_string(self.reviewer_discord_id),
             self.question_id_field: self.question_id,
             self.stage_field: str(self.stage),
             self.design_field: optional_to_string(self.design),
@@ -88,9 +86,7 @@ class Fields:
     def of_dict(cls, fields: Dict[str, str]):
         return cls(
             discord_channel_id=fields[cls.discord_channel_id_field],
-            review_discord_channel_id=fields.get(
-                cls.review_discord_channel_id_field, None
-            ),
+            review_discord_channel_id=fields.get(cls.review_discord_channel_id_field, None),
             player_discord_id=fields[cls.player_discord_id_field],
             reviewer_discord_id=fields.get(cls.reviewer_discord_id_field, None),
             question_id=fields[cls.question_id_field],
@@ -102,9 +98,7 @@ class Fields:
             code_review=fields.get(cls.code_review_field, None),
             code_score=fields.get(cls.code_score_field, None),
             start_time=UtcTime.of_string(fields.get(cls.start_time_field)),
-            entered_stage_time=UtcTime.of_string(
-                fields.get(cls.entered_stage_time_field)
-            ),
+            entered_stage_time=UtcTime.of_string(fields.get(cls.entered_stage_time_field)),
         )
 
     def immutable_updates(self, updates):
@@ -148,18 +142,14 @@ class Mission:
 
     @classmethod
     async def rows(cls, formula: Optional[str], airtable_client: AirtableClient):
-        responses = await airtable_client.rows(
-            table_name=cls.table_name, formula=formula
-        )
+        responses = await airtable_client.rows(table_name=cls.table_name, formula=formula)
         return [cls.__of_airtable_response(response) for response in responses]
 
     @classmethod
     async def delete_rows(cls, missions_to_delete, airtable_client: AirtableClient):
         await airtable_client.delete_rows(
             table_name=cls.table_name,
-            record_ids=[
-                mission_to_delete.record_id for mission_to_delete in missions_to_delete
-            ],
+            record_ids=[mission_to_delete.record_id for mission_to_delete in missions_to_delete],
         )
         return None
 

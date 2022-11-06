@@ -16,8 +16,6 @@ airtable_api_key = os.environ["airtable_api_key"]
 airtable_database_id = os.environ["airtable_database_id"]
 discord_guild_id = int(os.environ["discord_guild_id"])
 discord_secret_token = os.environ["discord_secret_token"]
-
-# TODO: update env variable name to match
 discord_all_reviews_channel_id = os.environ["discord_all_reviews_channel_id"]
 
 airtable_client = AirtableClient(api_key=airtable_api_key, base_id=airtable_database_id)
@@ -35,12 +33,25 @@ event_handler = EventHandler(state)
 guild = discord.Object(id=discord_guild_id)
 
 
+# ======================= #
+# === Player commands === #
+# ======================= #
 @discord_client.command_tree.command(
     name="train", description="[PLAYER] Enter the training realm", guild=guild
 )
 async def register_train_command(interaction: discord.Interaction):
     await interaction.response.defer()
     return await player_command_handler.train_command(interaction)
+
+
+@discord_client.command_tree.command(
+    name="submit",
+    description="[PLAYER] Attempt to complete the current stage of a mission",
+    guild=guild,
+)
+async def register_submit_command(interaction: discord.Interaction):
+    await interaction.response.defer()
+    return await player_command_handler.submit_command(interaction)
 
 
 @discord_client.command_tree.command(
@@ -51,6 +62,9 @@ async def register_time_command(interaction: discord.Interaction):
     return await command_handler.time_command(interaction)
 
 
+# ========================= #
+# === Reviewer commands === #
+# ========================= #
 @discord_client.command_tree.command(
     name="claim", description="[REVIEWER] Claim review of a mission", guild=guild
 )
@@ -75,16 +89,9 @@ async def register_lgtm_command(interaction: discord.Interaction, score: float):
     return await command_handler.lgtm_command(interaction, score)
 
 
-@discord_client.command_tree.command(
-    name="submit",
-    description="[PLAYER] Attempt to complete the current stage of a mission",
-    guild=guild,
-)
-async def register_submit_command(interaction: discord.Interaction):
-    await interaction.response.defer()
-    return await command_handler.submit_command(interaction)
-
-
+# ====================== #
+# === Admin commands === #
+# ====================== #
 @discord_client.command_tree.command(
     name="set_rank", description="[ADMIN] Set a user's rank", guild=guild
 )

@@ -47,9 +47,7 @@ async def main():
     print(f"""parsing questions from {latest_snapshot_directory}""")
 
     for question_filename in os.listdir(latest_snapshot_directory):
-        with open(
-            "/".join([latest_snapshot_directory, question_filename])
-        ) as question_data_file:
+        with open("/".join([latest_snapshot_directory, question_filename])) as question_data_file:
             question_data = json.load(question_data_file)
 
         question_id = question_data["id"]

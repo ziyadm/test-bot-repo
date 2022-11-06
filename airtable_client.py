@@ -15,9 +15,7 @@ class AirtableClient:
         self.base_id = base_id
 
     def __table(self, table_name: str):
-        return pyairtable.Table(
-            api_key=self.api_key, base_id=self.base_id, table_name=table_name
-        )
+        return pyairtable.Table(api_key=self.api_key, base_id=self.base_id, table_name=table_name)
 
     async def rows(self, table_name: str, formula: Optional[str]):
         table = self.__table(table_name=table_name)
@@ -43,8 +41,7 @@ class AirtableClient:
 
     async def write_rows(self, table_name: str, all_fields: List[Dict[str, str]]):
         return [
-            Response(response)
-            for response in self.__table(table_name).batch_create(all_fields)
+            Response(response) for response in self.__table(table_name).batch_create(all_fields)
         ]
 
     async def update_row(self, table_name: str, record_id: str, fields: Dict[str, str]):

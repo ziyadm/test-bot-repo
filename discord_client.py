@@ -68,9 +68,7 @@ class DiscordClient:
             guild.default_role: discord.PermissionOverwrite(read_messages=False),
             member: discord.PermissionOverwrite(read_messages=True),
         }
-        return await guild.create_text_channel(
-            channel_name, overwrites=permission_overwrites
-        )
+        return await guild.create_text_channel(channel_name, overwrites=permission_overwrites)
 
     @staticmethod
     def __get_role(role_name: str, roles: List[discord.Role]):

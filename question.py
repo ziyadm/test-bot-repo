@@ -11,9 +11,7 @@ class Fields:
     tags_field = "tags"
     leetcode_url_field = "leetcode_url"
 
-    def __init__(
-        self, question_id: str, description: str, tags: List[str], leetcode_url: str
-    ):
+    def __init__(self, question_id: str, description: str, tags: List[str], leetcode_url: str):
         self.question_id = question_id
         self.description = description
         self.tags = tags
@@ -46,9 +44,7 @@ class Question:
         self.fields = fields
 
     @classmethod
-    async def create_many(
-        cls, all_fields: List[Fields], airtable_client: AirtableClient
-    ):
+    async def create_many(cls, all_fields: List[Fields], airtable_client: AirtableClient):
         responses = await airtable_client.write_rows(
             table_name=cls.table_name,
             all_fields=[fields.to_dict() for fields in all_fields],
@@ -66,7 +62,5 @@ class Question:
 
     @classmethod
     async def rows(cls, formula: Optional[str], airtable_client: AirtableClient):
-        responses = await airtable_client.rows(
-            table_name=cls.table_name, formula=formula
-        )
+        responses = await airtable_client.rows(table_name=cls.table_name, formula=formula)
         return [cls.__of_airtable_response(response) for response in responses]

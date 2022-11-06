@@ -29,15 +29,10 @@ class State:
         )
 
         questions_already_asked = set(
-            [
-                existing_mission.fields.question_id
-                for existing_mission in existing_missions
-            ]
+            [existing_mission.fields.question_id for existing_mission in existing_missions]
         )
 
-        questions = await Question.rows(
-            formula=None, airtable_client=self.airtable_client
-        )
+        questions = await Question.rows(formula=None, airtable_client=self.airtable_client)
 
         for question in questions:
             if question.fields.question_id not in questions_already_asked:
@@ -47,9 +42,7 @@ class State:
 
     async def create_mission(self, player_discord_id: str):
         player = await User.row(
-            formula=pyairtable.formulas.match(
-                {user.Fields.discord_id_field: player_discord_id}
-            ),
+            formula=pyairtable.formulas.match({user.Fields.discord_id_field: player_discord_id}),
             airtable_client=self.airtable_client,
         )
 
@@ -216,28 +209,18 @@ class State:
         return (new_user, user_channel)
 
     async def set_rank(self, for_user: User, rank: Rank):
-        updated_user = await for_user.set_rank(
-            rank, airtable_client=self.airtable_client
-        )
+        updated_user = await for_user.set_rank(rank, airtable_client=self.airtable_client)
         await self.sync_discord_role(for_user=updated_user)
         return updated_user
 
     async def delete_all_users(self) -> List[User]:
-        users_to_delete = await User.rows(
-            formula=None, airtable_client=self.airtable_client
-        )
-        _ = await User.delete_rows(
-            users_to_delete, airtable_client=self.airtable_client
-        )
+        users_to_delete = await User.rows(formula=None, airtable_client=self.airtable_client)
+        _ = await User.delete_rows(users_to_delete, airtable_client=self.airtable_client)
         return users_to_delete
 
     async def delete_all_missions(self) -> List[Mission]:
-        missions_to_delete = await Mission.rows(
-            formula=None, airtable_client=self.airtable_client
-        )
-        _ = await Mission.delete_rows(
-            missions_to_delete, airtable_client=self.airtable_client
-        )
+        missions_to_delete = await Mission.rows(formula=None, airtable_client=self.airtable_client)
+        _ = await Mission.delete_rows(missions_to_delete, airtable_client=self.airtable_client)
         return missions_to_delete
 
     async def delete_all_channels(

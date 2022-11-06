@@ -12,9 +12,7 @@ class Fields:
     discord_channel_id_field = "discord_channel_id"
     rank_field = "rank"
 
-    def __init__(
-        self, discord_id: str, discord_name: str, discord_channel_id: str, rank: Rank
-    ):
+    def __init__(self, discord_id: str, discord_name: str, discord_channel_id: str, rank: Rank):
         self.discord_id = discord_id
         self.discord_name = discord_name
         self.discord_channel_id = discord_channel_id
@@ -73,9 +71,7 @@ class User:
 
     @classmethod
     async def rows(cls, formula: Optional[str], airtable_client: AirtableClient):
-        responses = await airtable_client.rows(
-            table_name=cls.table_name, formula=formula
-        )
+        responses = await airtable_client.rows(table_name=cls.table_name, formula=formula)
         return [cls.__of_airtable_response(response) for response in responses]
 
     @classmethod
@@ -90,9 +86,7 @@ class User:
         response = await airtable_client.update_row(
             table_name=self.table_name,
             record_id=self.record_id,
-            fields=self.fields.immutable_update(
-                field=Fields.rank_field, value=rank
-            ).to_dict(),
+            fields=self.fields.immutable_update(field=Fields.rank_field, value=rank).to_dict(),
         )
 
         return self.__of_airtable_response(response)

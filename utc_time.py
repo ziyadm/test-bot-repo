@@ -82,15 +82,11 @@ class Test:
 
     @classmethod
     def roundtrip_minus_offset(cls):
-        cls.run_roundtrip(
-            timezone=datetime.timezone(offset=datetime.timedelta(hours=-1))
-        )
+        cls.run_roundtrip(timezone=datetime.timezone(offset=datetime.timedelta(hours=-1)))
 
     @classmethod
     def roundtrip_plus_offset(cls):
-        cls.run_roundtrip(
-            timezone=datetime.timezone(offset=datetime.timedelta(hours=1))
-        )
+        cls.run_roundtrip(timezone=datetime.timezone(offset=datetime.timedelta(hours=1)))
 
     @classmethod
     def run_all_roundtrip(cls):
@@ -115,9 +111,7 @@ class Test:
     @classmethod
     def diff_to_nearest_second_rounds(cls):
         earlier = cls.arbitrary_date_in_timezone(timezone=datetime.timezone.utc)
-        later = UtcTime(
-            earlier.value + datetime.timedelta(seconds=35, milliseconds=700)
-        )
+        later = UtcTime(earlier.value + datetime.timedelta(seconds=35, milliseconds=700))
 
         cls.run_diff_to_nearest_second(
             earlier=earlier,
@@ -128,9 +122,7 @@ class Test:
     @classmethod
     def run_comparisons(cls):
         earlier = cls.arbitrary_date_in_timezone(timezone=datetime.timezone.utc)
-        later = UtcTime(
-            earlier.value + datetime.timedelta(seconds=35, milliseconds=700)
-        )
+        later = UtcTime(earlier.value + datetime.timedelta(seconds=35, milliseconds=700))
 
         assert earlier < later
 

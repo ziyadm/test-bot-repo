@@ -25,7 +25,8 @@ clean: __pycache__ poetry.lock
 
 format:
 	isort .
-	black .
+	black --line-length 100 .
+	flake8 --max-line-length=200 --ignore=E203 .
 
 
 ###### run apps ######
