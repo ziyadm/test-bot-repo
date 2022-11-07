@@ -151,6 +151,36 @@ class Messenger:
             )
 
     # player functions
+    async def player_completed_stage(
+        self,
+        user_to_update: User,
+        question_channel: discord.TextChannel,
+        set_rank_callback,
+        **kwargs,
+    ):
+        level_delta = kwargs.get("level_delta", None)
+        levels_until_evolution = kwargs.get("levels_until_evolution", None)
+        current_rank = kwargs.get("current_rank", None)
+        new_level = kwargs.get("new_level", None)
+        evolving = kwargs.get("evolving", None)
+
+        await question_channel.send(
+            f"Your work has been recognized by Suriel.\n\nYou gained {level_delta} levels!\n\n"
+        )
+
+        if evolving:
+            await question_channel.send("Wait...what's happening?")
+            await question_channel.send("Suriel is slightly impressed...")
+            await question_channel.send("You are...EVOLVING!")
+            await set_rank_callback(for_user=user_to_update, rank=current_rank)
+            await question_channel.send(
+                "Suriel sees your strength - you have advanced to the next rank."
+            )
+
+        await question_channel.send(
+            f"You are now a [{current_rank.capitalize()} lvl {new_level}].\n\nYou are now only {levels_until_evolution} levels from advancing to the next rank!"
+        )
+
     async def update_summary_thread(self, mission_to_update, user_to_update, **kwargs):
         user_path_channel = await self.__discord_client.channel(
             user_to_update.fields.discord_channel_id

@@ -93,6 +93,7 @@ class ReviewerCommandHandler:
             if not mission_to_update.fields.stage.in_review():
                 return await interaction.followup.send("""Approval already provided!""")
 
+            # 1) update mission to reflect review values/scores
             review_field, review_value = await ReviewerCommandHandler.get_review_value(
                 mission_to_update, interaction
             )
@@ -120,6 +121,7 @@ class ReviewerCommandHandler:
                 airtable_client=self.__state.airtable_client,
             )
 
+            # 2) tell the player about the review values/scores
             question_channel = await self.__state.discord_client.channel(
                 updated_mission.fields.discord_channel_id
             )
@@ -128,68 +130,72 @@ class ReviewerCommandHandler:
                 updated_mission, question_channel, interaction.channel, review_value, score
             )
 
+            # 3) update the summary thread
+            # note: when updating the summary thread for the stage
+            # we want the previous (not newly updated) mission
             user_to_update = await User.row(
                 formula=pyairtable.formulas.match(
                     {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
                 ),
                 airtable_client=self.__state.airtable_client,
             )
-
-            # when updating the summary thread for the stage, we want the previous (not newly updated) mission
             await self.__state.messenger.update_summary_thread(
                 mission_to_update, user_to_update, review_value=review_value, score=score
             )
 
+            # 4) tell player about level changes
             if updated_mission.fields.stage.has_value(Stage.completed):
-                await self.handle_completing_question(updated_mission, question_channel)
+                (
+                    new_level,
+                    level_delta,
+                    levels_until_evolution,
+                    evolving,
+                    current_rank,
+                ) = await ReviewerCommandHandler.get_level_changes(
+                    self.__state.airtable_client, updated_mission
+                )
+
+                # TODO talk to hani about how to handle setting rank here
+                # is just nicer to evolve them immediately after sending the message
+                # instead of before
+                await self.__state.messenger.player_completed_stage(
+                    question_channel,
+                    user_to_update,
+                    self.__state.set_rank,
+                    current_rank=current_rank,
+                    level_delta=level_delta,
+                    new_level=new_level,
+                    levels_until_evolution=levels_until_evolution,
+                )
+
+                await question_channel.send(
+                    f"Your work has been recognized by Suriel.\n\nYou gained {level_delta} levels!\n\n"
+                )
+
+                if evolving:
+                    await question_channel.send("Wait...what's happening?")
+                    await question_channel.send("Suriel is slightly impressed...")
+                    await question_channel.send("You are...EVOLVING!")
+                    await self.__state.set_rank(for_user=user_to_update, rank=current_rank)
+                    await question_channel.send(
+                        "Suriel sees your strength - you have advanced to the next rank."
+                    )
+
+                await question_channel.send(
+                    f"You are now a [{current_rank.capitalize()} lvl {new_level}].\n\nYou are now only {levels_until_evolution} levels from advancing to the next rank!"
+                )
+
+                # update summary thread about clearing the stage thread
+                await self.__state.messenger.update_summary_thread(
+                    updated_mission,
+                    user_to_update,
+                    evolving=evolving,
+                    level_delta=level_delta,
+                    levels_until_evolution=levels_until_evolution,
+                    new_level=new_level,
+                )
 
             return await interaction.followup.send("Finished")
-
-    async def handle_completing_question(
-        self, updated_mission: mission.Mission, question_channel: discord.TextChannel
-    ):
-        (
-            new_level,
-            level_delta,
-            levels_until_evolution,
-            evolving,
-            current_rank,
-        ) = await ReviewerCommandHandler.get_level_changes(
-            self.__state.airtable_client, updated_mission
-        )
-
-        await question_channel.send(
-            f"Your work has been recognized by Suriel.\n\nYou gained {level_delta} levels!\n\n"
-        )
-
-        user_to_update = await User.row(
-            formula=pyairtable.formulas.match(
-                {user.Fields.discord_id_field: updated_mission.fields.player_discord_id}
-            ),
-            airtable_client=self.__state.airtable_client,
-        )
-        if evolving:
-            await question_channel.send("Wait...what's happening?")
-            await question_channel.send("Suriel is slightly impressed...")
-            await question_channel.send("You are...EVOLVING!")
-            await self.__state.set_rank(for_user=user_to_update, rank=current_rank)
-            await question_channel.send(
-                "Suriel sees your strength - you have advanced to the next rank."
-            )
-
-        await question_channel.send(
-            f"You are now a [{current_rank.capitalize()} lvl {new_level}].\n\nYou are now only {levels_until_evolution} levels from advancing to the next rank!"
-        )
-
-        # update thread
-        await self.__state.messenger.update_summary_thread(
-            updated_mission,
-            user_to_update,
-            evolving=evolving,
-            level_delta=level_delta,
-            levels_until_evolution=levels_until_evolution,
-            new_level=new_level,
-        )
 
     @staticmethod
     async def get_review_value(
