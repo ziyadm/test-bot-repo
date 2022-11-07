@@ -17,59 +17,6 @@ class ReviewerCommandHandler:
     def __init__(self, *, state: State):
         self.__state = state
 
-    async def update_summary_thread(self, mission_to_update, **kwargs):
-        user_to_update = await User.row(
-            formula=pyairtable.formulas.match(
-                {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
-            ),
-            airtable_client=self.__state.airtable_client,
-        )
-        user_path_channel = await self.__state.discord_client.channel(
-            user_to_update.fields.discord_channel_id
-        )
-        thread = list(
-            filter(
-                lambda thread: thread.name == f"summary-{mission_to_update.fields.question_id}",
-                user_path_channel.threads,
-            )
-        )[0]
-        # TODO: im pretty sure we want the updated missions time, not the copy
-        # of the mission before we wrote the updates to the db. dont have time
-        # to verify / fix this right now
-        time_taken_to_complete_stage = mission_to_update.time_in_stage(now=UtcTime.now())
-
-        level_delta = kwargs.get("level_delta", None)
-        levels_until_evolution = kwargs.get("levels_until_evolution", None)
-        new_level = kwargs.get("new_level", None)
-        evolving = kwargs.get("evolving", None)
-        review_value = kwargs.get("review_value", None)
-        score = kwargs.get("score", None)
-
-        def get_completed_message():
-            return f"""
-Stage cleared.\n
-Total time for stage: `{time_taken_to_complete_stage}`\n
-Levels gained: `{level_delta}`\n
-Current level: `{new_level}`\n
-Evolved?: `{evolving}`\n
-Levels until evolution: `{levels_until_evolution}`\n
-        """
-
-        def get_in_progress_message():
-            return f"""
-Suriel approved your `{mission_to_update.fields.stage.previous()}`\n
-Total time: `{time_taken_to_complete_stage}`\n
-Feedback: `{review_value}`\n
-Score: `{score}`
-        """
-
-        message = (
-            get_completed_message()
-            if mission_to_update.fields.stage.has_value(Stage.completed)
-            else get_in_progress_message()
-        )
-        await thread.send(message)
-
     async def claim_command(self, interaction: discord.Interaction):
         try:
             # TODO: store thread id in mission row so we can look up by it
@@ -107,7 +54,7 @@ Score: `{score}`
 
             question_review_channel = await self.__state.discord_client.create_private_channel(
                 interaction.user.id,
-                f"{mission_to_update.fields.stage.get_field()}-{mission_to_update.fields.question_id}-{user_to_update.fields.discord_name}",
+                f"{mission_to_update.fields.stage}-{mission_to_update.fields.question_id}-{user_to_update.fields.discord_name}",
             )
 
             await mission_to_update.update(
@@ -181,17 +128,20 @@ Score: `{score}`
                 updated_mission, question_channel, interaction.channel, review_value, score
             )
 
-            # when updating the summary thread, we want the previous (not newly updated)
-            # mission so that we can calculate the previous stage, the time in stage, etc.
+            user_to_update = await User.row(
+                formula=pyairtable.formulas.match(
+                    {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
+
+            # when updating the summary thread for the stage, we want the previous (not newly updated) mission
+            await self.__state.messenger.update_summary_thread(
+                mission_to_update, user_to_update, review_value=review_value, score=score
+            )
+
             if updated_mission.fields.stage.has_value(Stage.completed):
-                await self.update_summary_thread(
-                    mission_to_update, review_value=review_value, score=score
-                )
                 await self.handle_completing_question(updated_mission, question_channel)
-            else:
-                await self.update_summary_thread(
-                    mission_to_update, review_value=review_value, score=score
-                )
 
             return await interaction.followup.send("Finished")
 
@@ -212,14 +162,13 @@ Score: `{score}`
             f"Your work has been recognized by Suriel.\n\nYou gained {level_delta} levels!\n\n"
         )
 
+        user_to_update = await User.row(
+            formula=pyairtable.formulas.match(
+                {user.Fields.discord_id_field: updated_mission.fields.player_discord_id}
+            ),
+            airtable_client=self.__state.airtable_client,
+        )
         if evolving:
-            user_to_update = await User.row(
-                formula=pyairtable.formulas.match(
-                    {user.Fields.discord_id_field: updated_mission.fields.player_discord_id}
-                ),
-                airtable_client=self.__state.airtable_client,
-            )
-
             await question_channel.send("Wait...what's happening?")
             await question_channel.send("Suriel is slightly impressed...")
             await question_channel.send("You are...EVOLVING!")
@@ -233,8 +182,9 @@ Score: `{score}`
         )
 
         # update thread
-        await self.update_summary_thread(
+        await self.__state.messenger.update_summary_thread(
             updated_mission,
+            user_to_update,
             evolving=evolving,
             level_delta=level_delta,
             levels_until_evolution=levels_until_evolution,

@@ -10,6 +10,7 @@ from rank import Rank
 from slash_command import SlashCommand
 from stage import Stage
 from user import User
+from utc_time import UtcTime
 
 
 class Messenger:
@@ -30,6 +31,7 @@ class Messenger:
             ]
         )
 
+    # reviewer functions
     async def mission_approved(
         self,
         updated_mission: Mission,
@@ -57,6 +59,25 @@ class Messenger:
         )
         await player_question_channel.send(response_to_user)
 
+    async def review_was_claimed(
+        self,
+        for_mission: Mission,
+        for_question: Question,
+        question_review_channel: discord.TextChannel,
+        claim_review_thread: discord.TextChannel,
+    ):
+        player_submission = (
+            for_mission.fields.design
+            if for_mission.fields.stage.in_design()
+            else for_mission.fields.code
+        )
+
+        await question_review_channel.send(
+            f"Question: `{for_question.fields.description}`\nPlayer Submission: `{player_submission}`"
+        )
+        await claim_review_thread.send(f"Review claimed: {question_review_channel.mention}")
+
+    # system functions
     async def player_is_out_of_questions(self, *, player: User):
         player_discord_member = await self.__discord_client.member(
             member_id=player.fields.discord_id
@@ -85,24 +106,6 @@ class Messenger:
         _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
             "**Times up!**", mission_channel
         )
-
-    async def review_was_claimed(
-        self,
-        for_mission: Mission,
-        for_question: Question,
-        question_review_channel: discord.TextChannel,
-        claim_review_thread: discord.TextChannel,
-    ):
-        player_submission = (
-            for_mission.fields.design
-            if for_mission.fields.stage.in_design()
-            else for_mission.fields.code
-        )
-
-        await question_review_channel.send(
-            f"Question: `{for_question.fields.description}`\nPlayer Submission: `{player_submission}`"
-        )
-        await claim_review_thread.send(f"Review claimed: {question_review_channel.mention}")
 
     async def review_needs_to_be_claimed(self, for_mission: Mission):
         all_reviews_channel = await self.__discord_client.all_reviews_channel()
@@ -146,6 +149,54 @@ class Messenger:
             _ = await where_to_follow_up.send(
                 f"""Did you mean to try {suggested_command.mention}?"""
             )
+
+    # player functions
+    async def update_summary_thread(self, mission_to_update, user_to_update, **kwargs):
+        user_path_channel = await self.__discord_client.channel(
+            user_to_update.fields.discord_channel_id
+        )
+        thread = list(
+            filter(
+                lambda thread: thread.name == f"summary-{mission_to_update.fields.question_id}",
+                user_path_channel.threads,
+            )
+        )[0]
+        # TODO: im pretty sure we want the updated missions time, not the copy
+        # of the mission before we wrote the updates to the db. dont have time
+        # to verify / fix this right now
+        time_taken_to_complete_stage = mission_to_update.time_in_stage(now=UtcTime.now())
+
+        level_delta = kwargs.get("level_delta", None)
+        levels_until_evolution = kwargs.get("levels_until_evolution", None)
+        new_level = kwargs.get("new_level", None)
+        evolving = kwargs.get("evolving", None)
+        review_value = kwargs.get("review_value", None)
+        score = kwargs.get("score", None)
+
+        def get_completed_message():
+            return f"""
+Stage cleared.\n
+Total time for stage: `{time_taken_to_complete_stage}`\n
+Levels gained: `{level_delta}`\n
+Current level: `{new_level}`\n
+Evolved?: `{evolving}`\n
+Levels until evolution: `{levels_until_evolution}`\n
+        """
+
+        def get_in_progress_message():
+            return f"""
+Suriel approved your `{mission_to_update.fields.stage.previous()}`\n
+Total time: `{time_taken_to_complete_stage}`\n
+Feedback: `{review_value}`\n
+Score: `{score}`
+        """
+
+        message = (
+            get_completed_message()
+            if mission_to_update.fields.stage.has_value(Stage.completed)
+            else get_in_progress_message()
+        )
+        await thread.send(message)
 
     async def player_started_training_mission(
         self, player: User, training_mission: Mission, mission_question: Question
