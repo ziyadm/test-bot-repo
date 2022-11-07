@@ -9,7 +9,6 @@ import user
 from airtable_client import AirtableClient
 from mission import Mission
 from question import Question
-from rank import Rank
 from stage import Stage
 from state import State
 from user import User
@@ -336,16 +335,6 @@ Score: `{score}`
             )
 
             return await interaction.followup.send(response)
-
-    async def set_rank(self, interaction: discord.Interaction, user_discord_name: str, rank: str):
-        user_to_update = await User.row(
-            formula=pyairtable.formulas.match({user.Fields.discord_name_field: user_discord_name}),
-            airtable_client=self.__state.airtable_client,
-        )
-
-        await self.__state.set_rank(for_user=user_to_update, rank=Rank.of_string(rank))
-
-        return await interaction.followup.send(f"""Updated {user_discord_name}'s rank to {rank}""")
 
     @staticmethod
     def completing(mission_to_update: mission.Mission):

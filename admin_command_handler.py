@@ -1,6 +1,10 @@
 import discord
+import pyairtable.formulas
 
+import user
+from rank import Rank
 from state import State
+from user import User
 
 
 class AdminCommandHandler:
@@ -72,3 +76,13 @@ class AdminCommandHandler:
 
         if all_reviews_channel_messages:
             _ = await all_reviews_channel.purge(limit=None)
+
+    async def set_rank(self, interaction: discord.Interaction, user_discord_name: str, rank: str):
+        user_to_update = await User.row(
+            formula=pyairtable.formulas.match({user.Fields.discord_name_field: user_discord_name}),
+            airtable_client=self.__state.airtable_client,
+        )
+
+        await self.__state.set_rank(for_user=user_to_update, rank=Rank.of_string(rank))
+
+        return await interaction.followup.send(f"""Updated {user_discord_name}'s rank to {rank}""")

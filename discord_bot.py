@@ -94,7 +94,7 @@ async def register_set_rank_command(
     interaction: discord.Interaction, user_discord_name: str, rank: str
 ):
     await interaction.response.defer()
-    return await command_handler.set_rank(
+    return await admin_command_handler.set_rank(
         interaction=interaction, user_discord_name=user_discord_name, rank=rank
     )
 
