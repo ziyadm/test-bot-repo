@@ -9,6 +9,7 @@ from command_handler import CommandHandler
 from discord_client import DiscordClient
 from event_handler import EventHandler
 from player_command_handler import PlayerCommandHandler
+from reviewer_command_handler import ReviewerCommandHandler
 from slash_command import SlashCommand
 from state import State
 
@@ -28,6 +29,7 @@ discord_client = DiscordClient(
 state = State(airtable_client, discord_client)
 admin_command_handler = AdminCommandHandler(state=state)
 player_command_handler = PlayerCommandHandler(state=state)
+reviewer_command_handler = ReviewerCommandHandler(state=state)
 command_handler = CommandHandler(state)
 event_handler = EventHandler(state)
 
@@ -68,7 +70,7 @@ async def register_time_command(interaction: discord.Interaction):
 @discord.app_commands.default_permissions(administrator=True)
 async def register_claim_command(interaction: discord.Interaction):
     await interaction.response.defer()
-    return await admin_command_handler.claim_command(interaction)
+    return await reviewer_command_handler.claim_command(interaction)
 
 
 @register_slash_command(SlashCommand(SlashCommand.reject))
