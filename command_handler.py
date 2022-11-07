@@ -186,8 +186,8 @@ Score: `{score}`
                         state_field: state_value,
                         score_field: score,
                         mission.Fields.entered_stage_time_field: UtcTime.now(),
-                        mission.Fields.review_discord_channel_id_field: None,
-                        mission.Fields.reviewer_discord_id_field: None,
+                        mission.Fields.review_discord_channel_id_field: "",
+                        mission.Fields.reviewer_discord_id_field: "",
                     }
                 ),
                 airtable_client=self.__state.airtable_client,
