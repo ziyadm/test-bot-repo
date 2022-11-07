@@ -406,4 +406,14 @@ Score: `{score}`
             review_thread = await review_message.create_thread(
                 name=self.review_thread_name(for_mission=updated_mission, for_stage=stage_submitted)
             )
+            # 2022-11-07 prointerviewschool: using @everyone in a thread only
+            # pings everyone who is already in the thread, which is only people
+            # who have been added manually by @mention or who have messaged in
+            # the thread already. so we add all reviewers by @mentioning them
+            # and then immediately deleting the message
+            for reviewer in all_reviews_channel.members:
+                message_to_add_reviewer_to_thread = await review_thread.send(
+                    f"""{reviewer.mention}"""
+                )
+                _ = await message_to_add_reviewer_to_thread.delete()
             _ = await review_thread.send("""@everyone race to claim it!!""")
