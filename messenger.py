@@ -13,8 +13,76 @@ from user import User
 
 
 class Messenger:
-    def __init__(self, *, discord_client: DiscordClient):
+    def __init__(
+        self,
+        *,
+        discord_client: DiscordClient,
+    ):
         self.__discord_client = discord_client
+
+    @staticmethod
+    def review_thread_name(*, for_mission: Mission, for_stage: Stage):
+        return "-".join(
+            [
+                str(for_stage),
+                for_mission.fields.discord_channel_id,
+                for_mission.fields.question_id,
+            ]
+        )
+
+    async def player_is_out_of_questions(self, *, player: User):
+        player_discord_member = await self.__discord_client.member(
+            member_id=player.fields.discord_id
+        )
+        path_channel = await self.__discord_client.channel(
+            channel_id=player.fields.discord_channel_id
+        )
+        guild_owner = await self.__discord_client.guild_owner()
+        _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
+            message=f"""Congrats {player_discord_member.mention}!! You've done every training mission we have to offer!""",
+            channel=path_channel,
+        )
+        _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
+            message=f"""Your time to meet {guild_owner.mention} has finally come...""",
+            channel=path_channel,
+        )
+
+    async def player_is_out_of_time_for_mission(self, *, mission_past_due: Mission):
+        mission_channel = await self.__discord_client.channel(
+            channel_id=mission_past_due.fields.discord_channel_id
+        )
+        _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
+            "*Beep beep beep!*", mission_channel
+        )
+        # TODO: give the player our expected solution if they run out of time
+        _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
+            "**Times up!**", mission_channel
+        )
+
+    async def review_needs_to_be_claimed(self, for_mission: Mission):
+        all_reviews_channel = await self.__discord_client.all_reviews_channel()
+        unclaimed_review_thread = list(
+            filter(
+                lambda thread: thread.name
+                == self.review_thread_name(
+                    for_mission=for_mission,
+                    for_stage=for_mission.fields.stage.previous(),
+                ),
+                all_reviews_channel.threads,
+            )
+        )[0]
+        _ = await unclaimed_review_thread.send("@everyone ping! race to claim this!!")
+
+    async def reviewer_needs_to_review(self, for_mission: Mission):
+        review_channel = await self.__discord_client.channel(
+            channel_id=for_mission.fields.review_discord_channel_id
+        )
+        reviewer_discord_member = await self.__discord_client.member(
+            member_id=for_mission.fields.reviewer_discord_id
+        )
+        _ = await review_channel.send(
+            f"""{reviewer_discord_member.mention} dont leave them hanging, review this!!"""
+        )
 
     async def command_cannot_be_run_here(
         self,
@@ -40,6 +108,15 @@ class Messenger:
         discord_member = await self.__discord_client.member(member_id=player.fields.discord_id)
         mission_channel = await self.__discord_client.channel(
             channel_id=training_mission.fields.discord_channel_id
+        )
+        path_channel = await self.__discord_client.channel(
+            channel_id=player.fields.discord_channel_id
+        )
+        mission_summary_thread_message = await path_channel.send(
+            f"""Your training mission awaits you...head to {mission_channel.mention} to begin!"""
+        )
+        _ = await mission_summary_thread_message.create_thread(
+            name=f"summary-{training_mission.fields.question_id}"
         )
 
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
@@ -85,17 +162,17 @@ class Messenger:
     async def welcome_new_discord_member(
         self, *, discord_member: discord.Member, path_channel: discord.TextChannel
     ):
-        await DiscordClient.with_typing_time_determined_by_number_of_words(
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message=f"""Suriel senses your weakness {discord_member.mention}""",
             channel=path_channel,
         )
 
-        await DiscordClient.with_typing_time_determined_by_number_of_words(
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message="Suriel invites you to follow The Way",
             channel=path_channel,
         )
 
-        await DiscordClient.with_typing_time_determined_by_number_of_words(
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message="While following your Path along The Way, you will be challenged to rise through the ranks:",
             channel=path_channel,
         )
@@ -104,22 +181,22 @@ class Messenger:
             rank_name = Rank.to_string_hum(rank_to_explain)
             rank_description = rank_to_explain.description()
 
-            await DiscordClient.with_typing_time_determined_by_number_of_words(
+            _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
                 message=f"""`{rank_name}`: *{rank_description}*""",
                 channel=path_channel,
             )
 
-        await DiscordClient.with_typing_time_determined_by_number_of_words(
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message="Complete training missions to progress through the ranks",
             channel=path_channel,
         )
 
-        await DiscordClient.with_typing_time_determined_by_number_of_words(
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message="Type `/train` to begin your first training mission",
             channel=path_channel,
         )
 
-        await DiscordClient.with_typing_time_determined_by_number_of_words(
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message=f"""Ascend through the ranks {discord_member.mention}, a special prize waits for you at the end!""",
             channel=path_channel,
         )
@@ -180,12 +257,6 @@ class Messenger:
                 f"""{player.fields.discord_name} has submitted {stage_submitted} for {updated_mission.fields.question_id}"""
             )
             review_thread = await review_message.create_thread(
-                name="-".join(
-                    [
-                        str(stage_submitted),
-                        updated_mission.fields.discord_channel_id,
-                        updated_mission.fields.question_id,
-                    ]
-                )
+                name=self.review_thread_name(for_mission=updated_mission, for_stage=stage_submitted)
             )
             _ = await review_thread.send("""@everyone race to claim it!!""")

@@ -17,7 +17,7 @@ setup: ../.env
 format:
 	isort .
 	black --line-length 100 .
-	flake8 --max-line-length=200 --ignore=E203 .
+	flake8 --max-line-length=200 --ignore=E203,W503 .
 
 test: format test_*.py
 	python3 test_*.py

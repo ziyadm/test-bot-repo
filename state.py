@@ -1,3 +1,4 @@
+import datetime
 from typing import FrozenSet, List
 
 import discord
@@ -170,3 +171,44 @@ class State:
         for channel_to_delete in channels_to_delete:
             _ = await channel_to_delete.delete()
         return channels_to_delete
+
+    async def enforce_time_limits(self):
+        print("enforcing time limits")
+        all_missions = await Mission.rows(formula=None, airtable_client=self.airtable_client)
+
+        now = UtcTime.now()
+
+        for mission_to_check in all_missions:
+            time_in_stage = mission_to_check.time_in_stage(now)
+            # design
+            # and time_in_stage >= datetime.timedelta(minutes=60)
+
+            # code
+            # and time_in_stage >= datetime.timedelta(minutes=20)
+
+            # unclaimed review
+            # and time_in_stage >= datetime.timedelta(minutes=10)
+
+            # unreviewed submission
+            # and time_in_stage >= datetime.timedelta(minutes=20)
+
+            if (
+                mission_to_check.fields.stage.has_value(Stage.design)
+                and time_in_stage >= datetime.timedelta(seconds=10)
+            ) or (
+                mission_to_check.fields.stage.has_value(Stage.code)
+                and time_in_stage >= datetime.timedelta(seconds=10)
+            ):
+                _ = await self.messenger.player_is_out_of_time_for_mission(
+                    mission_past_due=mission_to_check
+                )
+            elif (
+                mission_to_check.fields.stage.in_review()
+                and mission_to_check.fields.reviewer_discord_id is None
+                and time_in_stage >= datetime.timedelta(seconds=10)
+            ):
+                _ = await self.messenger.review_needs_to_be_claimed(for_mission=mission_to_check)
+            elif mission_to_check.fields.stage.in_review() and time_in_stage >= datetime.timedelta(
+                seconds=10
+            ):
+                _ = await self.messenger.reviewer_needs_to_review(for_mission=mission_to_check)
