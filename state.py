@@ -7,6 +7,7 @@ import pyairtable.formulas
 import mission
 import user
 from airtable_client import AirtableClient
+from constants import Constants
 from discord_client import DiscordClient
 from messenger import Messenger
 from mission import Mission
@@ -183,10 +184,10 @@ class State:
 
             if (
                 mission_to_check.fields.stage.has_value(Stage.design)
-                and time_in_stage >= datetime.timedelta(minutes=60)
+                and time_in_stage >= datetime.timedelta(minutes=Constants.DESIGN_TIME_LIMIT_MINUTES)
             ) or (
                 mission_to_check.fields.stage.has_value(Stage.code)
-                and time_in_stage >= datetime.timedelta(minutes=20)
+                and time_in_stage >= datetime.timedelta(minutes=Constants.CODE_TIME_LIMIT_MINUTES)
             ):
                 _ = await self.messenger.player_is_out_of_time_for_mission(
                     mission_past_due=mission_to_check
@@ -194,7 +195,7 @@ class State:
             elif (
                 mission_to_check.fields.stage.in_review()
                 and mission_to_check.fields.reviewer_discord_id is None
-                and time_in_stage >= datetime.timedelta(minutes=10)
+                and time_in_stage >= datetime.timedelta(minutes=Constants.REVIEW_TIME_LIMIT_MINUTES)
             ):
                 _ = await self.messenger.review_needs_to_be_claimed(for_mission=mission_to_check)
             elif mission_to_check.fields.stage.in_review() and time_in_stage >= datetime.timedelta(

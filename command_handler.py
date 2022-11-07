@@ -4,6 +4,7 @@ import discord
 import pyairtable.formulas
 
 import mission
+from constants import Constants
 from mission import Mission
 from state import State
 from utc_time import UtcTime
@@ -29,10 +30,15 @@ class CommandHandler:
             )
             return None
         else:
-            # TODO: this time should depend on what stage theyre in, not just be 60
-            # minutes
+            time_limit_minutes = Constants.STAGE_TIME_LIMIT_MINUTES
+            if for_mission.fields.stage.in_review():
+                time_limit_minutes = Constants.REVIEW_TIME_LIMIT_MINUTES
+            elif for_mission.fields.stage.in_code():
+                time_limit_minutes = Constants.CODE_TIME_LIMIT_MINUTES
+
             time_remaining = max(
-                datetime.timedelta(minutes=60) - for_mission.time_in_stage(now=UtcTime.now()),
+                datetime.timedelta(minutes=time_limit_minutes)
+                - for_mission.time_in_stage(now=UtcTime.now()),
                 datetime.timedelta(seconds=0),
             )
 
