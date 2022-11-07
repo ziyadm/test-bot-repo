@@ -13,7 +13,7 @@ class EventHandler:
     async def __enforce_time_limits_loop(self):
         while True:
             _ = await self.__state.enforce_time_limits()
-            # TODO: pull hard coded constants like this from the state
+            # TODO: pull hard coded constants like this into the state
             _ = await asyncio.sleep(datetime.timedelta(minutes=1).total_seconds())
 
     async def on_ready(self):
