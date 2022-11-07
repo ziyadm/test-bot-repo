@@ -4,7 +4,6 @@ import pyairtable
 import mission
 import question
 import user
-from airtable_client import AirtableClient
 from mission import Mission
 from question import Question
 from stage import Stage
@@ -151,9 +150,7 @@ class ReviewerCommandHandler:
                     levels_until_evolution,
                     evolving,
                     current_rank,
-                ) = await ReviewerCommandHandler.get_level_changes(
-                    self.__state.airtable_client, updated_mission
-                )
+                ) = await self.__state.get_level_changes(updated_mission)
 
                 # TODO talk to hani about how to handle setting rank here
                 # is just nicer to evolve them immediately after sending the message
@@ -162,6 +159,7 @@ class ReviewerCommandHandler:
                     user_to_update,
                     question_channel,
                     self.__state.set_rank,
+                    evolving=evolving,
                     current_rank=current_rank,
                     level_delta=level_delta,
                     new_level=new_level,
@@ -245,96 +243,3 @@ class ReviewerCommandHandler:
         ]
         review_value = messages[0].content
         return review_field, review_value
-
-    @staticmethod
-    async def get_level_changes(
-        airtable_client: AirtableClient, mission_to_update: mission.Mission
-    ):
-        # steps:
-        # - find previously completed missions
-        # - we combine scores of the previous HOW_MANY_PREVIOUS_QUESTIONS_TO_SCORE completed missions
-        #   to calculate a users level/rank
-        # - if the user hasn't completed enough missions, we just add all scores up to get their level
-        # - we calculate the score_delta (current level using newest mission - previous level not including
-        #   current mission
-        completed_missions = await Mission.rows(
-            formula=pyairtable.formulas.match(
-                {
-                    mission.Fields.player_discord_id_field: mission_to_update.fields.player_discord_id,
-                    mission.Fields.stage_field: str(mission_to_update.fields.stage),
-                }
-            ),
-            airtable_client=airtable_client,
-        )
-        completed_missions.sort(key=lambda mission: mission.fields.entered_stage_time)
-
-        # filter to just the scores from missions
-        scores_from_completed_missions = list(
-            map(
-                lambda question: (
-                    question.fields.design_score,
-                    question.fields.code_score,
-                ),
-                completed_missions,
-            )
-        )
-        not_enough_scores = (
-            len(scores_from_completed_missions) < Mission.HOW_MANY_PREVIOUS_QUESTIONS_TO_SCORE
-        )
-
-        # calculate the existing level for the user
-        previous_scores = (
-            scores_from_completed_missions[:-1]
-            if not_enough_scores
-            else scores_from_completed_missions[
-                -(Mission.HOW_MANY_PREVIOUS_QUESTIONS_TO_SCORE - 1) : -1
-            ]
-        )
-        previous_level = int(ReviewerCommandHandler.calculate_level(previous_scores))
-
-        current_scores = [scores_from_completed_missions[-1]]
-        current_level = None
-
-        # calculate the new level for the user
-        if not_enough_scores:
-            current_level = int(
-                ReviewerCommandHandler.calculate_level(previous_scores + current_scores)
-            )
-        else:
-            current_level = int(
-                ReviewerCommandHandler.calculate_level(previous_scores[1:] + current_scores)
-            )
-
-        # calculate what the level delta (what is the current level - previous level of the user)
-        # players can't lose levels, so de-evolutions shouldn't be a problem
-        level_delta = max(current_level - previous_level, 0)
-        levels_until_evolution = ((int(current_level / 10) + 1) * 10) - current_level
-
-        # fetch ranks and see if this user is evolving
-        user_to_update = await User.row(
-            formula=pyairtable.formulas.match(
-                {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
-            ),
-            airtable_client=airtable_client,
-        )
-        previous_rank = user_to_update.fields.rank.get_rank_for_level(previous_level)
-        current_rank = user_to_update.fields.rank.get_rank_for_level(current_level)
-        evolving = True if previous_rank != current_rank else False
-
-        return (
-            current_level,
-            level_delta,
-            levels_until_evolution,
-            evolving,
-            current_rank,
-        )
-
-    @staticmethod
-    def calculate_level(scores):
-        aggregate_score = 0.0
-
-        for score in scores:
-            aggregate_score += score[0]
-            aggregate_score += score[1]
-
-        return aggregate_score

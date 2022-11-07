@@ -177,14 +177,22 @@ class Messenger:
         new_level = kwargs.get("new_level", None)
         evolving = kwargs.get("evolving", None)
 
+        lost_levels = False
+        if level_delta < 0:
+            lost_levels = True
+
+        level_change_blurb = "Sadly, you lost " if lost_levels else "You gained "
+
         await question_channel.send(
-            f"Your work has been recognized by Suriel.\n\nYou gained {level_delta} levels!\n\n"
+            f"Your work has been recognized by Suriel.\n\n{level_change_blurb} {level_delta} levels!\n\n"
         )
 
         if evolving:
             await question_channel.send("Wait...what's happening?")
-            await question_channel.send("Suriel is slightly impressed...")
-            await question_channel.send("You are...EVOLVING!")
+            impressed_or_not = "not" if lost_levels else "slightly"
+            await question_channel.send(f"Suriel is {impressed_or_not} impressed...")
+            evolution_prefix = "DE-" if lost_levels else ""
+            await question_channel.send(f"You are...{evolution_prefix}EVOLVING!")
             await set_rank_callback(for_user=user_to_update, rank=current_rank)
             await question_channel.send(
                 "Suriel sees your strength - you have advanced to the next rank."

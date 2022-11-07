@@ -20,7 +20,7 @@ format:
 	flake8 --max-line-length=200 --ignore=E203,W503 .
 
 test: format test_*.py
-	python3 test_*.py
+	python3 -m poetry run python3 -m unittest test_*.py
 
 build: test pyproject.toml
 	python3 -m poetry lock --no-update
