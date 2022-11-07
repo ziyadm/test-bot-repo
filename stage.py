@@ -47,5 +47,11 @@ class Stage:
     def players_turn(self) -> bool:
         return self.has_value(self.design) or self.has_value(self.code)
 
+    def in_design(self) -> bool:
+        return self.has_value(self.design) or self.has_value(self.design_review)
+
+    def in_code(self) -> bool:
+        return self.has_value(self.code) or self.has_value(self.code_review)
+
     def in_review(self) -> bool:
         return self.has_value(self.design_review) or self.has_value(self.code_review)

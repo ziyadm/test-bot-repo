@@ -68,7 +68,7 @@ async def register_time_command(interaction: discord.Interaction):
 @discord.app_commands.default_permissions(administrator=True)
 async def register_claim_command(interaction: discord.Interaction):
     await interaction.response.defer()
-    return await command_handler.claim_command(interaction)
+    return await admin_command_handler.claim_command(interaction)
 
 
 @register_slash_command(SlashCommand(SlashCommand.reject))

@@ -59,6 +59,24 @@ class Messenger:
             "**Times up!**", mission_channel
         )
 
+    async def review_was_claimed(
+        self,
+        for_mission: Mission,
+        for_question: Question,
+        question_review_channel: discord.TextChannel,
+        claim_review_thread: discord.TextChannel,
+    ):
+        player_submission = (
+            for_mission.fields.design
+            if for_mission.fields.stage.in_design()
+            else for_mission.fields.code
+        )
+
+        await question_review_channel.send(
+            f"Question: `{for_question.fields.description}`\nPlayer Submission: `{player_submission}`"
+        )
+        await claim_review_thread.send(f"Review claimed: {question_review_channel.mention}")
+
     async def review_needs_to_be_claimed(self, for_mission: Mission):
         all_reviews_channel = await self.__discord_client.all_reviews_channel()
         unclaimed_review_thread = list(

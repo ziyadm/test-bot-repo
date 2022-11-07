@@ -4,11 +4,9 @@ import discord
 import pyairtable.formulas
 
 import mission
-import question
 import user
 from airtable_client import AirtableClient
 from mission import Mission
-from question import Question
 from stage import Stage
 from state import State
 from user import User
@@ -270,71 +268,6 @@ Score: `{score}`
             levels_until_evolution=levels_until_evolution,
             new_level=new_level,
         )
-
-    async def claim_command(self, interaction: discord.Interaction):
-        try:
-            # TODO: store thread id in mission row so we can look up by it
-            question_discord_channel_id = str(interaction.channel.name.split("-")[1])
-            mission_to_update = await Mission.row(
-                formula=pyairtable.formulas.match(
-                    {mission.Fields.discord_channel_id_field: question_discord_channel_id}
-                ),
-                airtable_client=self.__state.airtable_client,
-            )
-        except Exception:
-            _ = await self.__state.messenger.command_cannot_be_run_here(
-                where_to_follow_up=interaction.followup,
-                expected_location=None,
-                suggested_command=None,
-            )
-            return None
-        else:
-            if not CommandHandler.in_review(mission_to_update):
-                return await interaction.followup.send("""Review already claimed!""")
-
-            user_to_update = await User.row(
-                formula=pyairtable.formulas.match(
-                    {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
-                ),
-                airtable_client=self.__state.airtable_client,
-            )
-
-            question_to_update = await Question.row(
-                formula=pyairtable.formulas.match(
-                    {question.Fields.question_id_field: mission_to_update.fields.question_id}
-                ),
-                airtable_client=self.__state.airtable_client,
-            )
-
-            question_review_channel = await self.__state.discord_client.create_private_channel(
-                interaction.user.id,
-                f"{mission_to_update.fields.stage.get_field()}-{mission_to_update.fields.question_id}-{user_to_update.fields.discord_name}",
-            )
-            design_stage = mission_to_update.fields.stage.has_value(
-                Stage.design_review
-            ) or mission_to_update.fields.stage.has_value(Stage.design)
-            content_value = (
-                mission_to_update.fields.design if design_stage else mission_to_update.fields.code
-            )
-
-            await question_review_channel.send(
-                f"Question: {question_to_update.fields.leetcode_url}\n\nContent: {content_value}"
-            )
-            response = f"Review claimed: {question_review_channel.mention}"
-
-            await mission_to_update.update(
-                fields=mission_to_update.fields.immutable_updates(
-                    {
-                        mission.Fields.review_discord_channel_id_field: str(
-                            question_review_channel.id
-                        ),
-                        mission.Fields.reviewer_discord_id_field: interaction.user.id,
-                    }
-                ),
-                airtable_client=self.__state.airtable_client,
-            )
-
-            return await interaction.followup.send(response)
 
     @staticmethod
     def completing(mission_to_update: mission.Mission):
