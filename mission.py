@@ -125,6 +125,10 @@ class Mission:
         self.fields = fields
 
     @classmethod
+    def of_dict(cls, data):
+        return cls(record_id=data.record_id, fields=data.fields)
+
+    @classmethod
     def __of_airtable_response(cls, response: airtable_client.Response):
         return cls(record_id=response.record_id, fields=Fields.of_dict(response.fields))
 
