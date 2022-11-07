@@ -75,9 +75,9 @@ async def register_claim_command(interaction: discord.Interaction):
 
 @register_slash_command(SlashCommand(SlashCommand.reject))
 @discord.app_commands.default_permissions(administrator=True)
-async def register_review_command(interaction: discord.Interaction):
+async def register_reject_command(interaction: discord.Interaction):
     await interaction.response.defer()
-    return await command_handler.review_command(interaction)
+    return await reviewer_command_handler.reject_command(interaction)
 
 
 @register_slash_command(SlashCommand(SlashCommand.approve))

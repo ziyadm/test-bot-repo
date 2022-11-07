@@ -159,30 +159,13 @@ class ReviewerCommandHandler:
                 # is just nicer to evolve them immediately after sending the message
                 # instead of before
                 await self.__state.messenger.player_completed_stage(
-                    question_channel,
                     user_to_update,
+                    question_channel,
                     self.__state.set_rank,
                     current_rank=current_rank,
                     level_delta=level_delta,
                     new_level=new_level,
                     levels_until_evolution=levels_until_evolution,
-                )
-
-                await question_channel.send(
-                    f"Your work has been recognized by Suriel.\n\nYou gained {level_delta} levels!\n\n"
-                )
-
-                if evolving:
-                    await question_channel.send("Wait...what's happening?")
-                    await question_channel.send("Suriel is slightly impressed...")
-                    await question_channel.send("You are...EVOLVING!")
-                    await self.__state.set_rank(for_user=user_to_update, rank=current_rank)
-                    await question_channel.send(
-                        "Suriel sees your strength - you have advanced to the next rank."
-                    )
-
-                await question_channel.send(
-                    f"You are now a [{current_rank.capitalize()} lvl {new_level}].\n\nYou are now only {levels_until_evolution} levels from advancing to the next rank!"
                 )
 
                 # update summary thread about clearing the stage thread
@@ -196,6 +179,55 @@ class ReviewerCommandHandler:
                 )
 
             return await interaction.followup.send("Finished")
+
+    async def reject_command(self, interaction: discord.Interaction):
+        try:
+            mission_to_update = await Mission.row(
+                formula=pyairtable.formulas.match(
+                    {mission.Fields.review_discord_channel_id_field: str(interaction.channel.id)}
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
+        except Exception:
+            _ = await self.__state.messenger.command_cannot_be_run_here(
+                where_to_follow_up=interaction.followup,
+                expected_location=None,
+                suggested_command=None,
+            )
+            return None
+        else:
+            if not mission_to_update.fields.stage.in_review():
+                return await interaction.followup.send("""Review already completed!""")
+
+            review_field, review_value = await ReviewerCommandHandler.get_review_value(
+                mission_to_update, interaction
+            )
+
+            state_field = mission.Fields.stage_field
+            state_value = mission_to_update.fields.stage.previous()
+
+            await mission_to_update.update(
+                fields=mission_to_update.fields.immutable_updates(
+                    {
+                        review_field: review_value,
+                        state_field: state_value,
+                        mission.Fields.entered_stage_time_field: UtcTime.now(),
+                    }
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
+
+            question_channel = await self.__state.discord_client.channel(
+                mission_to_update.fields.discord_channel_id
+            )
+
+            player = await self.__state.discord_client.member(
+                mission_to_update.fields.player_discord_id
+            )
+
+            await self.__state.messenger.mission_rejected(
+                player, question_channel, interaction.followup, review_value
+            )
 
     @staticmethod
     async def get_review_value(

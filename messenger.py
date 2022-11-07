@@ -32,6 +32,19 @@ class Messenger:
         )
 
     # reviewer functions
+    async def mission_rejected(
+        self,
+        player: User,
+        player_channel: discord.TextChannel,
+        review_channel: discord.TextChannel,
+        review_value: str,
+    ):
+        _ = await player_channel.send(
+            f"{player.mention} your work has been reviewed by Suriel\n\nSuriel's feedback: {review_value}"
+        )
+
+        await review_channel.send("Sent review followups.")
+
     async def mission_approved(
         self,
         updated_mission: Mission,
