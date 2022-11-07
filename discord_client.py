@@ -8,6 +8,9 @@ from slash_command import SlashCommand
 
 class DiscordClient:
 
+    all_reviews_channel_name = "reviews"
+    chat_channel_name = "chat"
+
     default_permissions = discord.Permissions(
         read_messages=True,
         send_messages=True,
@@ -19,7 +22,9 @@ class DiscordClient:
     admin_permissions = discord.Permissions.all
 
     def __init__(
-        self, guild_id: int, secret_token: str, all_reviews_channel_id: str, chat_channel_id: str
+        self,
+        guild_id: int,
+        secret_token: str,
     ):
         self.client = discord.Client(
             intents=discord.Intents(
@@ -33,8 +38,8 @@ class DiscordClient:
         self.guild_id = guild_id
         self.command_tree = discord.app_commands.CommandTree(self.client)
         self.secret_token = secret_token
-        self.all_reviews_channel_id = all_reviews_channel_id
-        self.chat_channel_id = chat_channel_id
+        self.__all_reviews_channel_id = None
+        self.__chat_channel_id = None
 
     async def __guild(self):
         return await self.client.fetch_guild(self.guild_id)
@@ -108,11 +113,35 @@ class DiscordClient:
 
         _ = await member.edit(nick=f"""[{role_name}] {member.name}""")
 
+    async def __get_all_reviews_channel_id(self) -> str:
+        if self.__all_reviews_channel_id is not None:
+            return self.__all_reviews_channel_id
+
+        channels = await self.channels()
+        for channel in channels:
+            if channel.name == self.all_reviews_channel_name:
+                self.__all_reviews_channel_id = str(channel.id)
+
+        return self.__all_reviews_channel_id
+
     async def all_reviews_channel(self) -> discord.TextChannel:
-        return await self.channel(channel_id=self.all_reviews_channel_id)
+        all_reviews_channel_id = await self.__get_all_reviews_channel_id()
+        return await self.channel(channel_id=all_reviews_channel_id)
+
+    async def __get_chat_channel_id(self) -> str:
+        if self.__chat_channel_id is not None:
+            return self.__chat_channel_id
+
+        channels = await self.channels()
+        for channel in channels:
+            if channel.name == self.chat_channel_name:
+                self.__chat_channel_id = str(channel.id)
+
+        return self.__chat_channel_id
 
     async def chat_channel(self) -> discord.TextChannel:
-        return await self.channel(channel_id=self.chat_channel_id)
+        chat_channel_id = await self.__get_chat_channel_id()
+        return await self.channel(channel_id=chat_channel_id)
 
     @staticmethod
     async def with_typing_time_determined_by_number_of_words(
