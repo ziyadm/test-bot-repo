@@ -30,6 +30,33 @@ class Messenger:
             ]
         )
 
+    async def mission_approved(
+        self,
+        updated_mission: Mission,
+        player_question_channel: discord.TextChannel,
+        reviewer_question_channel: discord.TextChannel,
+        review_value: str,
+        score: float,
+    ):
+        # message reviewer
+        response_to_reviewer = (
+            "Approved question."
+            if updated_mission.stage.has_value(Stage.completed)
+            else "Approved design."
+        )
+        await reviewer_question_channel.send(response_to_reviewer)
+
+        # message player
+        base_response_to_player = (
+            "Suriel approved of your work! Suriel left you the following to help you along your path"
+            if updated_mission.stage.has_value(Stage.completed)
+            else "Suriel approved your design. Continue along to coding."
+        )
+        response_to_user = (
+            f"{base_response_to_player}\nFeedback: `{review_value}`\nScore: `{score}`"
+        )
+        await player_question_channel.send(response_to_user)
+
     async def player_is_out_of_questions(self, *, player: User):
         player_discord_member = await self.__discord_client.member(
             member_id=player.fields.discord_id

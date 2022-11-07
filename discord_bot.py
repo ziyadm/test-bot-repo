@@ -82,9 +82,9 @@ async def register_review_command(interaction: discord.Interaction):
 
 @register_slash_command(SlashCommand(SlashCommand.approve))
 @discord.app_commands.default_permissions(administrator=True)
-async def register_lgtm_command(interaction: discord.Interaction, score: float):
+async def register_approve_command(interaction: discord.Interaction, score: float):
     await interaction.response.defer()
-    return await command_handler.lgtm_command(interaction, score)
+    return await reviewer_command_handler.approve_command(interaction, score)
 
 
 # ====================== #
