@@ -5,6 +5,7 @@ import pyairtable.formulas
 
 import mission
 from mission import Mission
+from reviewer_command_handler import ReviewerCommandHandler
 from state import State
 from utc_time import UtcTime
 
@@ -54,10 +55,10 @@ class CommandHandler:
             )
             return None
         else:
-            if not mission_to_update.stage.in_review():
+            if not mission_to_update.fields.stage.in_review():
                 return await interaction.followup.send("""Review already completed!""")
 
-            review_field, review_value = await CommandHandler.get_review_value(
+            review_field, review_value = await ReviewerCommandHandler.get_review_value(
                 mission_to_update, interaction
             )
 

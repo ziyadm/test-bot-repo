@@ -41,7 +41,7 @@ class Messenger:
         # message reviewer
         response_to_reviewer = (
             "Approved question."
-            if updated_mission.stage.has_value(Stage.completed)
+            if updated_mission.fields.stage.has_value(Stage.completed)
             else "Approved design."
         )
         await reviewer_question_channel.send(response_to_reviewer)
@@ -49,7 +49,7 @@ class Messenger:
         # message player
         base_response_to_player = (
             "Suriel approved of your work! Suriel left you the following to help you along your path"
-            if updated_mission.stage.has_value(Stage.completed)
+            if updated_mission.fields.stage.has_value(Stage.completed)
             else "Suriel approved your design. Continue along to coding."
         )
         response_to_user = (

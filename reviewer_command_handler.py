@@ -65,7 +65,7 @@ Score: `{score}`
 
         message = (
             get_completed_message()
-            if mission_to_update.stage.has_value(Stage.completed)
+            if mission_to_update.fields.stage.has_value(Stage.completed)
             else get_in_progress_message()
         )
         await thread.send(message)
@@ -143,7 +143,7 @@ Score: `{score}`
             )
             return None
         else:
-            if not mission_to_update.stage.in_review():
+            if not mission_to_update.fields.stage.in_review():
                 return await interaction.followup.send("""Approval already provided!""")
 
             review_field, review_value = await ReviewerCommandHandler.get_review_value(
@@ -155,7 +155,7 @@ Score: `{score}`
 
             score_field = (
                 mission.Fields.code_score_field
-                if mission_to_update.stage.in_code()
+                if mission_to_update.fields.stage.in_code()
                 else mission.Fields.design_score_field
             )
 
@@ -177,21 +177,26 @@ Score: `{score}`
                 updated_mission.fields.discord_channel_id
             )
 
-            self.__state.messenger.mission_approved(
+            await self.__state.messenger.mission_approved(
                 updated_mission, question_channel, interaction.channel, review_value, score
             )
 
-            if mission_to_update.stage.has_value(Stage.completed):
-                await self.handle_completing_question(mission_to_update, question_channel)
+            # when updating the summary thread, we want the previous (not newly updated)
+            # mission so that we can calculate the previous stage, the time in stage, etc.
+            if updated_mission.fields.stage.has_value(Stage.completed):
+                await self.update_summary_thread(
+                    mission_to_update, review_value=review_value, score=score
+                )
+                await self.handle_completing_question(updated_mission, question_channel)
             else:
                 await self.update_summary_thread(
-                    updated_mission, review_value=review_value, score=score
+                    mission_to_update, review_value=review_value, score=score
                 )
 
             return await interaction.followup.send("Finished")
 
     async def handle_completing_question(
-        self, mission_to_update: mission.Mission, question_channel: discord.TextChannel
+        self, updated_mission: mission.Mission, question_channel: discord.TextChannel
     ):
         (
             new_level,
@@ -200,7 +205,7 @@ Score: `{score}`
             evolving,
             current_rank,
         ) = await ReviewerCommandHandler.get_level_changes(
-            self.__state.airtable_client, mission_to_update
+            self.__state.airtable_client, updated_mission
         )
 
         await question_channel.send(
@@ -210,7 +215,7 @@ Score: `{score}`
         if evolving:
             user_to_update = await User.row(
                 formula=pyairtable.formulas.match(
-                    {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
+                    {user.Fields.discord_id_field: updated_mission.fields.player_discord_id}
                 ),
                 airtable_client=self.__state.airtable_client,
             )
@@ -229,7 +234,7 @@ Score: `{score}`
 
         # update thread
         await self.update_summary_thread(
-            mission_to_update,
+            updated_mission,
             evolving=evolving,
             level_delta=level_delta,
             levels_until_evolution=levels_until_evolution,
@@ -264,11 +269,11 @@ Score: `{score}`
         # - if the user hasn't completed enough missions, we just add all scores up to get their level
         # - we calculate the score_delta (current level using newest mission - previous level not including
         #   current mission
-        completed_missions = await mission_to_update.rows(
+        completed_missions = await Mission.rows(
             formula=pyairtable.formulas.match(
                 {
                     mission.Fields.player_discord_id_field: mission_to_update.fields.player_discord_id,
-                    mission.Fields.stage_field: mission_to_update.fields.stage.next().get_field(),
+                    mission.Fields.stage_field: str(mission_to_update.fields.stage),
                 }
             ),
             airtable_client=airtable_client,

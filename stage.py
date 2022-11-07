@@ -20,9 +20,6 @@ class Stage:
     def has_value(self, value: int):
         return self.value == value
 
-    def get_field(self):
-        return self.__str__()
-
     def __str__(self):
         return self.name[self.value]
 
