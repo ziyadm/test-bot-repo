@@ -13,7 +13,8 @@ class EventHandler:
     async def __enforce_time_limits_loop(self):
         while True:
             _ = await self.__state.enforce_time_limits()
-            _ = await asyncio.sleep(datetime.timedelta(seconds=10).total_seconds())
+            # TODO: pull hard coded constants like this from the state
+            _ = await asyncio.sleep(datetime.timedelta(minutes=1).total_seconds())
 
     async def on_ready(self):
         guild = discord.Object(id=self.__state.discord_client.guild_id)
