@@ -82,9 +82,12 @@ class PlayerCommandHandler:
 
             now = UtcTime.now()
 
+            time_field = f"{mission_to_update.fields.stage}_completion_time"
+
             mission_updates = {
                 mission.Fields.stage_field: mission_to_update.fields.stage.next(),
                 mission.Fields.entered_stage_time_field: now,
+                time_field: now,
             }
 
             stage_submitted = mission_to_update.fields.stage

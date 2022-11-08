@@ -106,6 +106,7 @@ class ReviewerCommandHandler:
                 else mission.Fields.design_score_field
             )
 
+            time_field = f"{mission_to_update.fields.stage}_completion_time"
             updated_mission = await mission_to_update.update(
                 fields=mission_to_update.fields.immutable_updates(
                     {
@@ -115,6 +116,7 @@ class ReviewerCommandHandler:
                         mission.Fields.entered_stage_time_field: UtcTime.now(),
                         mission.Fields.review_discord_channel_id_field: "",
                         mission.Fields.reviewer_discord_id_field: "",
+                        time_field: UtcTime.now(),
                     }
                 ),
                 airtable_client=self.__state.airtable_client,
@@ -203,6 +205,7 @@ class ReviewerCommandHandler:
 
             state_field = mission.Fields.stage_field
             state_value = mission_to_update.fields.stage.previous()
+            time_field = f"{mission_to_update.fields.stage}_completion_time"
 
             await mission_to_update.update(
                 fields=mission_to_update.fields.immutable_updates(
@@ -210,6 +213,7 @@ class ReviewerCommandHandler:
                         review_field: review_value,
                         state_field: state_value,
                         mission.Fields.entered_stage_time_field: UtcTime.now(),
+                        time_field: UtcTime.now(),
                     }
                 ),
                 airtable_client=self.__state.airtable_client,

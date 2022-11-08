@@ -22,6 +22,10 @@ class Fields:
     code_review_field = "code_review"
     code_score_field = "code_score"
     start_time_field = "start_time"
+    design_completion_time_field = "design_completion_time"
+    design_review_completion_time_field = "design_review_completion_time"
+    code_completion_time_field = "code_completion_time"
+    code_review_completion_time_field = "code_review_completion_time"
     entered_stage_time_field = "entered_stage_time"
 
     def __init__(
@@ -39,6 +43,10 @@ class Fields:
         code_review: Optional[str],
         code_score: Optional[float],
         start_time: UtcTime,
+        design_completion_time: UtcTime,
+        design_review_completion_time: UtcTime,
+        code_completion_time: UtcTime,
+        code_review_completion_time: UtcTime,
         entered_stage_time: UtcTime,
     ):
         self.discord_channel_id = discord_channel_id
@@ -54,6 +62,10 @@ class Fields:
         self.code_review = code_review
         self.code_score = code_score
         self.start_time = start_time
+        self.design_completion_time = design_completion_time
+        self.design_review_completion_time = design_review_completion_time
+        self.code_completion_time = code_completion_time
+        self.code_review_completion_time = code_review_completion_time
         self.entered_stage_time = entered_stage_time
 
     def to_dict(self):
@@ -79,6 +91,10 @@ class Fields:
             self.code_review_field: optional_to_string(self.code_review),
             self.code_score_field: optional_to_float(self.code_score),
             self.start_time_field: str(self.start_time),
+            self.design_completion_time_field: str(self.design_completion_time),
+            self.design_review_completion_time_field: str(self.design_review_completion_time),
+            self.code_completion_time_field: str(self.code_completion_time),
+            self.code_review_completion_time_field: str(self.code_review_completion_time),
             self.entered_stage_time_field: str(self.entered_stage_time),
         }
 
@@ -98,6 +114,14 @@ class Fields:
             code_review=fields.get(cls.code_review_field, None),
             code_score=fields.get(cls.code_score_field, None),
             start_time=UtcTime.of_string(fields.get(cls.start_time_field)),
+            design_completion_time=UtcTime.of_string(fields.get(cls.design_completion_time_field)),
+            design_review_completion_time=UtcTime.of_string(
+                fields.get(cls.design_review_completion_time_field)
+            ),
+            code_completion_time=UtcTime.of_string(fields.get(cls.code_completion_time_field)),
+            code_review_completion_time=UtcTime.of_string(
+                fields.get(cls.code_review_completion_time_field)
+            ),
             entered_stage_time=UtcTime.of_string(fields.get(cls.entered_stage_time_field)),
         )
 
@@ -170,3 +194,25 @@ class Mission:
 
     def time_in_stage(self, now: UtcTime) -> datetime.timedelta:
         return now.diff_to_nearest_second(self.fields.entered_stage_time)
+
+    # TODO make a helper for calculating time in different
+    # stages (code is mostly the same)
+    def time_in_design(self) -> datetime.timedelta:
+        completion_time = UtcTime.of_string(self.fields.design_completion_time)
+        start_time = UtcTime.of_string(self.fields.start_time)
+        return completion_time.diff_to_nearest_second(start_time)
+
+    def time_in_design_review(self) -> datetime.timedelta:
+        completion_time = UtcTime.of_string(self.fields.design_review_completion_time)
+        start_time = UtcTime.of_string(self.fields.design_completion_time)
+        return completion_time.diff_to_nearest_second(start_time)
+
+    def time_in_code(self) -> datetime.timedelta:
+        completion_time = UtcTime.of_string(self.fields.code_completion_time)
+        start_time = UtcTime.of_string(self.fields.design_review_completion_time)
+        return completion_time.diff_to_nearest_second(start_time)
+
+    def time_in_code_review(self) -> datetime.timedelta:
+        completion_time = UtcTime.of_string(self.fields.code_review_completion_time)
+        start_time = UtcTime.of_string(self.fields.code_completion_time)
+        return completion_time.diff_to_nearest_second(start_time)

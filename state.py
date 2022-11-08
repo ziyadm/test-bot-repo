@@ -78,6 +78,10 @@ class State:
                 code_score=None,
                 start_time=now,
                 entered_stage_time=now,
+                design_completion_time=now,
+                design_review_completion_time=now,
+                code_completion_time=now,
+                code_review_completion_time=now,
             ),
             airtable_client=self.airtable_client,
         )
@@ -220,7 +224,7 @@ class State:
             ),
             airtable_client=self.airtable_client,
         )
-        completed_missions.sort(key=lambda mission: mission.fields.entered_stage_time)
+        completed_missions.sort(key=lambda mission: mission.fields.code_review_completed_time)
 
         # filter to just the scores from missions
         scores_from_completed_missions = list(
