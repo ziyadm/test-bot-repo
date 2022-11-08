@@ -73,6 +73,10 @@ def add_mission_with_scores(design_score: float, code_score: float):
                             "code_score": code_score,
                             "start_time": str(UtcTime.now()),
                             "entered_stage_time": str(UtcTime.now()),
+                            "design_completion_time": str(UtcTime.now()),
+                            "design_review_completion_time": str(UtcTime.now()),
+                            "code_completion_time": str(UtcTime.now()),
+                            "code_review_completion_time": str(UtcTime.now()),
                         }
                     ),
                 }

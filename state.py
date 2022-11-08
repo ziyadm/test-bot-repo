@@ -224,7 +224,7 @@ class State:
             ),
             airtable_client=self.airtable_client,
         )
-        completed_missions.sort(key=lambda mission: mission.fields.code_review_completed_time)
+        completed_missions.sort(key=lambda mission: mission.fields.code_review_completion_time)
 
         # filter to just the scores from missions
         scores_from_completed_missions = list(
