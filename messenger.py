@@ -14,6 +14,9 @@ from utc_time import UtcTime
 
 
 class Messenger:
+
+    command_acknowledged_by_suriel = "✅"
+
     def __init__(
         self,
         *,
@@ -108,16 +111,28 @@ class Messenger:
             channel=path_channel,
         )
 
-    async def player_is_out_of_time_for_mission(self, *, mission_past_due: Mission):
+    async def player_is_out_of_time_for_mission(
+        self, *, mission_past_due: Mission, expected_solution: str
+    ):
         mission_channel = await self.__discord_client.channel(
             channel_id=mission_past_due.fields.discord_channel_id
         )
         _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
             "*Beep beep beep!*", mission_channel
         )
-        # TODO: give the player our expected solution if they run out of time
         _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
             "**Times up!**", mission_channel
+        )
+        _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
+            "Here's our solution:", mission_channel
+        )
+        _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
+            f"""```{expected_solution}```""",
+            mission_channel,
+        )
+        _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
+            "We've added some more time to your timer, read and understand this solution then try to rewrite it yourself and submit!",
+            mission_channel,
         )
 
     async def review_needs_to_be_claimed(self, for_mission: Mission):

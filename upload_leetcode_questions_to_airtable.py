@@ -58,6 +58,9 @@ async def main():
                 question.Fields(
                     question_id,
                     description,
+                    # TODO: pull solutions from .md/.py files in the leetcode-questions/ directory
+                    design_solution=f"""{question_id} design solution""",
+                    code_solution=f"""{question_id} code solution""",
                     tags=question_data["tags"],
                     leetcode_url=f"""https://www.leetcode.com/problems/{question_id}""",
                 )

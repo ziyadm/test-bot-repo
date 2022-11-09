@@ -3,7 +3,7 @@ import pyairtable
 
 import mission
 import user
-from constants import Constants
+from messenger import Messenger
 from mission import Mission
 from slash_command import SlashCommand
 from stage import Stage
@@ -40,7 +40,7 @@ class PlayerCommandHandler:
         if training_mission_and_channel is None:
             _ = await self.__state.messenger.player_is_out_of_questions(player=player)
 
-        _ = await interaction.followup.send(Constants.COMMAND_ACKNOWLEDGED_BY_SURIEL)
+        _ = await interaction.followup.send(Messenger.command_acknowledged_by_suriel)
 
     async def submit_command(self, interaction: discord.Interaction):
         mission_discord_channel_id = str(interaction.channel.id)
@@ -114,4 +114,4 @@ class PlayerCommandHandler:
             )
 
             # TODO: revert all state changes if theres any exceptions
-            _ = await interaction.followup.send(Constants.COMMAND_ACKNOWLEDGED_BY_SURIEL)
+            _ = await interaction.followup.send(Messenger.command_acknowledged_by_suriel)

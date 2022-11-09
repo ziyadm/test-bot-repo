@@ -5,9 +5,9 @@ import discord
 import pyairtable.formulas
 
 import mission
+import question
 import user
 from airtable_client import AirtableClient
-from constants import Constants
 from discord_client import DiscordClient
 from messenger import Messenger
 from mission import Mission
@@ -19,10 +19,25 @@ from utc_time import UtcTime
 
 
 class State:
-    def __init__(self, airtable_client: AirtableClient, discord_client: DiscordClient):
+    def __init__(
+        self,
+        *,
+        airtable_client: AirtableClient,
+        discord_client: DiscordClient,
+        enforce_time_limits_every: datetime.timedelta,
+        design_time_limit: datetime.timedelta,
+        code_time_limit: datetime.timedelta,
+        unclaimed_review_time_limit: datetime.timedelta,
+        claimed_review_time_limit: datetime.timedelta,
+    ):
         self.airtable_client = airtable_client
         self.discord_client = discord_client
         self.messenger = Messenger(discord_client=discord_client)
+        self.enforce_time_limits_every = enforce_time_limits_every
+        self.design_time_limit = design_time_limit
+        self.code_time_limit = code_time_limit
+        self.unclaimed_review_time_limit = unclaimed_review_time_limit
+        self.claimed_review_time_limit = claimed_review_time_limit
 
     async def first_unasked_question(self, for_user: User):
         existing_missions = await Mission.rows(
@@ -36,11 +51,11 @@ class State:
             [existing_mission.fields.question_id for existing_mission in existing_missions]
         )
 
-        questions = await Question.rows(formula=None, airtable_client=self.airtable_client)
+        all_questions = await Question.rows(formula=None, airtable_client=self.airtable_client)
 
-        for question in questions:
-            if question.fields.question_id not in questions_already_asked:
-                return question
+        for potential_question in all_questions:
+            if potential_question.fields.question_id not in questions_already_asked:
+                return potential_question
 
         return None
 
@@ -106,11 +121,10 @@ class State:
         if for_user.fields.rank >= bot_user.fields.rank:
             return None
 
-        await self.discord_client.set_role(
+        _ = await self.discord_client.set_role(
             member_id=for_user.fields.discord_id,
             role_name=for_user.fields.rank.to_string_hum(),
         )
-        return None
 
     @staticmethod
     def get_rank(discord_member: discord.Member):
@@ -188,22 +202,38 @@ class State:
 
             if (
                 mission_to_check.fields.stage.has_value(Stage.design)
-                and time_in_stage >= datetime.timedelta(minutes=Constants.DESIGN_TIME_LIMIT_MINUTES)
+                and time_in_stage >= self.design_time_limit
             ) or (
                 mission_to_check.fields.stage.has_value(Stage.code)
-                and time_in_stage >= datetime.timedelta(minutes=Constants.CODE_TIME_LIMIT_MINUTES)
+                and time_in_stage >= self.code_time_limit
             ):
+                mission_question = await Question.row(
+                    formula=pyairtable.formulas.match(
+                        {question.Fields.question_id_field: mission_to_check.fields.question_id}
+                    ),
+                    airtable_client=self.airtable_client,
+                )
                 _ = await self.messenger.player_is_out_of_time_for_mission(
-                    mission_past_due=mission_to_check
+                    mission_past_due=mission_to_check,
+                    expected_solution=mission_question.solution_for_stage(
+                        mission_to_check.fields.stage
+                    ),
+                )
+                _ = await mission_to_check.update(
+                    fields=mission_to_check.fields.immutable_updates(
+                        {mission.Fields.entered_stage_time_field: UtcTime.now()}
+                    ),
+                    airtable_client=self.airtable_client,
                 )
             elif (
                 mission_to_check.fields.stage.in_review()
                 and mission_to_check.fields.reviewer_discord_id is None
-                and time_in_stage >= datetime.timedelta(minutes=Constants.REVIEW_TIME_LIMIT_MINUTES)
+                and time_in_stage >= self.unclaimed_review_time_limit
             ):
                 _ = await self.messenger.review_needs_to_be_claimed(for_mission=mission_to_check)
-            elif mission_to_check.fields.stage.in_review() and time_in_stage >= datetime.timedelta(
-                minutes=20
+            elif (
+                mission_to_check.fields.stage.in_review()
+                and time_in_stage >= self.claimed_review_time_limit
             ):
                 _ = await self.messenger.reviewer_needs_to_review(for_mission=mission_to_check)
 

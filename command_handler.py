@@ -4,8 +4,8 @@ import discord
 import pyairtable.formulas
 
 import mission
-from constants import Constants
 from mission import Mission
+from stage import Stage
 from state import State
 from utc_time import UtcTime
 
@@ -30,15 +30,20 @@ class CommandHandler:
             )
             return None
         else:
-            time_limit_minutes = Constants.STAGE_TIME_LIMIT_MINUTES
-            if for_mission.fields.stage.in_review():
-                time_limit_minutes = Constants.REVIEW_TIME_LIMIT_MINUTES
-            elif for_mission.fields.stage.in_code():
-                time_limit_minutes = Constants.CODE_TIME_LIMIT_MINUTES
+            if not for_mission.fields.stage.players_turn():
+                guild_owner = await self.__state.discord_client.guild_owner()
+                _ = await interaction.followup.send(
+                    f"""You've done everything you can so far, wait for further instructions from {guild_owner.display_name}!"""
+                )
+                return None
+
+            if for_mission.fields.stage.has_value(Stage.design):
+                time_limit = self.__state.design_time_limit
+            else:
+                time_limit = self.__state.code_time_limit
 
             time_remaining = max(
-                datetime.timedelta(minutes=time_limit_minutes)
-                - for_mission.time_in_stage(now=UtcTime.now()),
+                time_limit - for_mission.time_in_stage(now=UtcTime.now()),
                 datetime.timedelta(seconds=0),
             )
 

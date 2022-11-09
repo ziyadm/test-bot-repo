@@ -1,3 +1,4 @@
+import datetime
 import os
 
 import discord
@@ -24,7 +25,15 @@ discord_client = DiscordClient(
     guild_id=discord_guild_id,
     secret_token=discord_secret_token,
 )
-state = State(airtable_client, discord_client)
+state = State(
+    airtable_client=airtable_client,
+    discord_client=discord_client,
+    enforce_time_limits_every=datetime.timedelta(seconds=10),
+    design_time_limit=datetime.timedelta(minutes=1),
+    code_time_limit=datetime.timedelta(minutes=20),
+    unclaimed_review_time_limit=datetime.timedelta(minutes=10),
+    claimed_review_time_limit=datetime.timedelta(minutes=20),
+)
 admin_command_handler = AdminCommandHandler(state=state)
 player_command_handler = PlayerCommandHandler(state=state)
 reviewer_command_handler = ReviewerCommandHandler(state=state)

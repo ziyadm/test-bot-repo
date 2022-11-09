@@ -1,3 +1,4 @@
+import datetime
 import os
 import unittest
 from unittest.mock import AsyncMock
@@ -49,7 +50,15 @@ fake_user = User.of_dict(
 
 airtable_client.rows = AsyncMock(return_value=fake_missions)
 airtable_client.row = AsyncMock(return_value=fake_user)
-state = State(airtable_client, discord_client)
+state = State(
+    airtable_client=airtable_client,
+    discord_client=discord_client,
+    enforce_time_limits_every=datetime.timedelta(minutes=1),
+    design_time_limit=datetime.timedelta(minutes=60),
+    code_time_limit=datetime.timedelta(minutes=20),
+    unclaimed_review_time_limit=datetime.timedelta(minutes=10),
+    claimed_review_time_limit=datetime.timedelta(minutes=20),
+)
 
 
 def add_mission_with_scores(design_score: float, code_score: float):
