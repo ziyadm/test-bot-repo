@@ -10,6 +10,7 @@ class DiscordClient:
 
     all_reviews_channel_name = "reviews"
     chat_channel_name = "chat"
+    seconds_to_type_one_word = 0.15
 
     default_permissions = discord.Permissions(
         read_messages=True,
@@ -148,7 +149,7 @@ class DiscordClient:
         message: str, channel: discord.TextChannel
     ):
         number_of_words = len(message.split(" "))
-        seconds_to_type_one_word = 0
+        seconds_to_type_one_word = DiscordClient.seconds_to_type_one_word
 
         if seconds_to_type_one_word > 0:
             async with channel.typing():
