@@ -394,6 +394,10 @@ Score: `{score}`
             message=f"""Head back to {player_path_channel.mention} to continue training.""",
             channel=mission_channel,
         )
+        _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
+            message=f"{player_path_channel.mention} type `/train` to continue growing.",
+            channel=player_path_channel,
+        )
 
         if updated_mission.fields.review_discord_channel_id is not None:
             mission_review_channel = await self.__discord_client.channel(
