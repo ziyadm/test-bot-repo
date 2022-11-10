@@ -36,6 +36,13 @@ make release
 this automatically pushes and creates a pull request with its title set to the feature name
 
 
+## ssh into AWS box
+```
+ssh ubuntu@ec2-3-83-214-95.compute-1.amazonaws.com  -i ~/Downloads/discord.pem
+cd /home/ec2-user/app
+```
+
+
 ## links
 * airtable: https://airtable.com/app8xDpApplv8WrVJ/tblq9OP7XbjDidPZC/viwuD5OT73LN5yaEg?blocks=hide
 * discord: https://discord.gg/Qbm4mgSr
