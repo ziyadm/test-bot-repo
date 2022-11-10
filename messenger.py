@@ -395,7 +395,7 @@ Score: `{score}`
             channel=mission_channel,
         )
         _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
-            message=f"{player_path_channel.mention} type `/train` to continue growing.",
+            message=f"{player.mention} type `/train` to continue growing.",
             channel=player_path_channel,
         )
 
