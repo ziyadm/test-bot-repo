@@ -151,6 +151,10 @@ class DiscordClient:
         number_of_words = len(message.split(" "))
         seconds_to_type_one_word = DiscordClient.seconds_to_type_one_word
 
+        # we don't want to wait that long (e.g., question descriptions)
+        if number_of_words > 50:
+            seconds_to_type_one_word = 0
+
         if seconds_to_type_one_word > 0:
             async with channel.typing():
                 await asyncio.sleep(number_of_words * seconds_to_type_one_word)
