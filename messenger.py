@@ -183,6 +183,7 @@ class Messenger:
         self,
         user_to_update: User,
         question_channel: discord.TextChannel,
+        path_channel: discord.TextChannel,
         set_rank_callback,
         **kwargs,
     ):
@@ -215,6 +216,11 @@ class Messenger:
 
         await question_channel.send(
             f"You are now a [{current_rank.capitalize()} lvl {new_level}].\n\nYou are now only {levels_until_evolution} levels from advancing to the next rank!"
+        )
+
+        _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
+            message="@everyone type `/train` to continue growing.",
+            channel=path_channel,
         )
 
     async def update_summary_thread(self, mission_to_update, user_to_update, **kwargs):
@@ -395,7 +401,7 @@ Score: `{score}`
             channel=mission_channel,
         )
         _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
-            message=f"{player.mention} type `/train` to continue growing.",
+            message="@everyone type `/train` to continue growing.",
             channel=player_path_channel,
         )
 

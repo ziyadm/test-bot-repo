@@ -154,12 +154,17 @@ class ReviewerCommandHandler:
                     current_rank,
                 ) = await self.__state.get_level_changes(updated_mission)
 
+                path_channel = await self.__state.discord_client.channel(
+                    channel_id=user_to_update.fields.discord_channel_id
+                )
+
                 # TODO talk to hani about how to handle setting rank here
                 # is just nicer to evolve them immediately after sending the message
                 # instead of before
                 await self.__state.messenger.player_completed_stage(
                     user_to_update,
                     question_channel,
+                    path_channel,
                     self.__state.set_rank,
                     evolving=evolving,
                     current_rank=current_rank,
