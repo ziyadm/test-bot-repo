@@ -292,11 +292,6 @@ Score: `{score}`
         )
 
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"{discord_member.mention} Your mission:",
-            channel=mission_channel,
-        )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message=f"""```{mission_question.fields.description}```""",
             channel=mission_channel,
         )
@@ -307,7 +302,7 @@ Score: `{score}`
         )
 
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="""Type `/submit` to send your work for review. **Only your most recent message*** will be used in your submission.""",
+            message=f"""{discord_member.mention} type `/submit` to send your work for review. **Only your most recent message*** will be used in your submission.""",
             channel=mission_channel,
         )
 
