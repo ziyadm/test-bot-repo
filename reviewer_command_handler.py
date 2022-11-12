@@ -159,9 +159,6 @@ class ReviewerCommandHandler:
                 ),
                 airtable_client=self.__state.airtable_client,
             )
-            await self.__state.messenger.update_summary_thread(
-                mission_to_update, user_to_update, review_value=review_value, score=score
-            )
 
             # 4) tell player about level changes
             if updated_mission.fields.stage.has_value(Stage.completed):
@@ -190,16 +187,6 @@ class ReviewerCommandHandler:
                     level_delta=level_delta,
                     new_level=new_level,
                     levels_until_evolution=levels_until_evolution,
-                )
-
-                # update summary thread about clearing the stage thread
-                await self.__state.messenger.update_summary_thread(
-                    updated_mission,
-                    user_to_update,
-                    evolving=evolving,
-                    level_delta=level_delta,
-                    levels_until_evolution=levels_until_evolution,
-                    new_level=new_level,
                 )
 
             return await interaction.followup.send("Finished")
