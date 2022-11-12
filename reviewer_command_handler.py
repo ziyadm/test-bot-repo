@@ -123,12 +123,31 @@ class ReviewerCommandHandler:
             )
 
             # 2) tell the player about the review values/scores
+            user_to_update = await User.row(
+                formula=pyairtable.formulas.match(
+                    {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
+
             question_channel = await self.__state.discord_client.channel(
                 updated_mission.fields.discord_channel_id
             )
 
+            path_channel = await self.__state.discord_client.channel(
+                user_to_update.fields.discord_channel_id
+            )
+
+            player = await self.__state.discord_client.member(user_to_update.fields.discord_id)
+
             await self.__state.messenger.mission_approved(
-                updated_mission, question_channel, interaction.channel, review_value, score
+                player,
+                updated_mission,
+                question_channel,
+                interaction.channel,
+                path_channel,
+                review_value,
+                score,
             )
 
             # 3) update the summary thread

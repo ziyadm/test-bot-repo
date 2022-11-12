@@ -43,16 +43,18 @@ class Messenger:
         review_value: str,
     ):
         _ = await player_channel.send(
-            f"{player.mention} your work has been reviewed by Suriel\n\nSuriel's feedback: {review_value}"
+            f"{player.mention} your work has been reviewed by Suriel\n\nFeedback: `{review_value}`"
         )
 
         await review_channel.send("Sent review followups.")
 
     async def mission_approved(
         self,
+        player: discord.Member,
         updated_mission: Mission,
         player_question_channel: discord.TextChannel,
         reviewer_question_channel: discord.TextChannel,
+        player_path_channel: discord.TextChannel,
         review_value: str,
         score: float,
     ):
@@ -66,13 +68,16 @@ class Messenger:
 
         # message player
         base_response_to_player = (
-            "Suriel approved of your work! Suriel left you the following to help you along your path"
+            "You completed this mission.\n"
             if updated_mission.fields.stage.has_value(Stage.completed)
-            else "Suriel approved your design. Continue along to coding."
+            else "You completed the `Design` stage.\n"
         )
-        response_to_user = (
-            f"{base_response_to_player}\nFeedback: `{review_value}`\nScore: `{score}`"
+        next_step_for_player = (
+            f"Head back to {player_path_channel.mention} to continue training."
+            if updated_mission.fields.stage.has_value(Stage.completed)
+            else """`Code`: *Implement the solution your described in the* `Design` *stage in the programming language of your choice.*\nType `/submit` to send your work on a stage to Suriel for review. **Only your most recent message*** will be used in your submission."""
         )
+        response_to_user = f"{player.mention} {base_response_to_player}\nFeedback: `{review_value}`\nScore: `{score}`\n\n{next_step_for_player}"
         await player_question_channel.send(response_to_user)
 
     async def review_was_claimed(
@@ -218,10 +223,9 @@ class Messenger:
             f"You are now a [{current_rank.capitalize()} lvl {new_level}].\n\nYou are now only {levels_until_evolution} levels from advancing to the next rank!"
         )
 
-        _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
-            message="@everyone type `/train` to continue growing.",
-            channel=path_channel,
-        )
+        await path_channel.send("Type `/train` to take on another mission.")
+        ping_user_message = await path_channel.send("@everyone")
+        await ping_user_message.delete()
 
     async def update_summary_thread(self, mission_to_update, user_to_update, **kwargs):
         user_path_channel = await self.__discord_client.channel(
@@ -288,12 +292,7 @@ Score: `{score}`
         )
 
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"""Welcome to your training mission {discord_member.mention}!""",
-            channel=mission_channel,
-        )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="Your mission instructions follow, read them carefully:",
+            message=f"{discord_member.mention} Your mission:",
             channel=mission_channel,
         )
 
@@ -303,27 +302,12 @@ Score: `{score}`
         )
 
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"""Good luck, {discord_member.mention}, you'll need it...""",
-            channel=mission_channel,
-        )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="Missions consist of two stages:",
-            channel=mission_channel,
-        )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message="""`Design`: *Describe how you plan to solve the question. Make sure to write this **in english** without getting too close to the code!*""",
             channel=mission_channel,
         )
 
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="""`Code`: *Implement the solution your described in the* `Design` *stage in the programming language of your choice.*""",
-            channel=mission_channel,
-        )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="""Type `/submit` to send your work on a stage to Suriel for review. Only your most recent message will be used in your submission.""",
+            message="""Type `/submit` to send your work on a stage to Suriel for review. **Only your most recent message*** will be used in your submission.""",
             channel=mission_channel,
         )
 
@@ -400,10 +384,12 @@ Score: `{score}`
             message=f"""Head back to {player_path_channel.mention} to continue training.""",
             channel=mission_channel,
         )
-        _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
-            message="@everyone type `/train` to continue growing.",
-            channel=player_path_channel,
-        )
+
+        # check if the last message is already asking them to train more
+        # if so, we can just @everyone and then delete the message
+        await player_path_channel.send("Type `/train` to take on another mission.")
+        ping_user_message = await player_path_channel.send("@everyone")
+        await ping_user_message.delete()
 
         if updated_mission.fields.review_discord_channel_id is not None:
             mission_review_channel = await self.__discord_client.channel(
