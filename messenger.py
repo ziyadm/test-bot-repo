@@ -6,7 +6,6 @@ import discord
 from discord_client import DiscordClient
 from mission import Mission
 from question import Question
-from rank import Rank
 from slash_command import SlashCommand
 from stage import Stage
 from user import User
@@ -310,41 +309,12 @@ Score: `{score}`
         self, *, discord_member: discord.Member, path_channel: discord.TextChannel
     ):
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"""Suriel senses your weakness {discord_member.mention}""",
+            message=f"""Ascend through the ranks {discord_member.mention}, a special prize waits for you at the end...""",
             channel=path_channel,
         )
 
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="Suriel invites you to follow The Way",
-            channel=path_channel,
-        )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="While following your Path along The Way, you will be challenged to rise through the ranks:",
-            channel=path_channel,
-        )
-
-        for rank_to_explain in Rank.all():
-            rank_name = Rank.to_string_hum(rank_to_explain)
-            rank_description = rank_to_explain.description()
-
-            _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-                message=f"""`{rank_name}`: *{rank_description}*""",
-                channel=path_channel,
-            )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="Complete training missions to progress through the ranks",
-            channel=path_channel,
-        )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="Type `/train` to begin your first training mission",
-            channel=path_channel,
-        )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"""Ascend through the ranks {discord_member.mention}, a special prize waits for you at the end!""",
+            message="Type `/train` to begin",
             channel=path_channel,
         )
 
