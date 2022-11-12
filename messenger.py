@@ -43,7 +43,7 @@ class Messenger:
         review_value: str,
     ):
         _ = await player_channel.send(
-            f"{player.mention} your work has been reviewed by Suriel\n\nFeedback: `{review_value}`"
+            f"{player.mention} your work has been reviewed by Suriel\n\nFeedback: `{review_value}`\n\n Update your work then type `/submit` to send it for review. **Only your most recent message*** will be used in your submission.",
         )
 
         await review_channel.send("Sent review followups.")
@@ -75,7 +75,7 @@ class Messenger:
         next_step_for_player = (
             f"Head back to {player_path_channel.mention} to continue training."
             if updated_mission.fields.stage.has_value(Stage.completed)
-            else """`Code`: *Implement the solution your described in the* `Design` *stage in the programming language of your choice.*\nType `/submit` to send your work on a stage to Suriel for review. **Only your most recent message*** will be used in your submission."""
+            else """`Code`: *Implement the solution your described in the* `Design` *stage in the programming language of your choice.*\n\nType `/submit` to send your work for review. **Only your most recent message*** will be used in your submission."""
         )
         response_to_user = f"{player.mention} {base_response_to_player}\nFeedback: `{review_value}`\nScore: `{score}`\n\n{next_step_for_player}"
         await player_question_channel.send(response_to_user)
@@ -307,7 +307,7 @@ Score: `{score}`
         )
 
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="""Type `/submit` to send your work on a stage to Suriel for review. **Only your most recent message*** will be used in your submission.""",
+            message="""Type `/submit` to send your work for review. **Only your most recent message*** will be used in your submission.""",
             channel=mission_channel,
         )
 
