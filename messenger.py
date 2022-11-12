@@ -222,7 +222,8 @@ class Messenger:
             f"You are now a [{current_rank.capitalize()} lvl {new_level}].\n\nYou are now only {levels_until_evolution} levels from advancing to the next rank!"
         )
 
-        await path_channel.send("Type `/train` to take on another mission.")
+        train_command = await self.__discord_client.slash_command(SlashCommand(SlashCommand.train))
+        await path_channel.send(f"Type {train_command.mention} to take on another mission.")
         ping_user_message = await path_channel.send("@everyone")
         await ping_user_message.delete()
 
@@ -286,6 +287,7 @@ Score: `{score}`
         mission_summary_thread_message = await path_channel.send(
             f"""Your training mission awaits you...head to {mission_channel.mention} to begin!"""
         )
+
         _ = await mission_summary_thread_message.create_thread(
             name=f"summary-{training_mission.fields.question_id}"
         )
@@ -313,10 +315,8 @@ Score: `{score}`
             channel=path_channel,
         )
 
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="Type `/train` to begin",
-            channel=path_channel,
-        )
+        train_command = await self.__discord_client.slash_command(SlashCommand(SlashCommand.train))
+        await path_channel.send(f"Type {train_command.mention} to begin...")
 
     async def player_submitted_stage(
         self,
@@ -352,7 +352,8 @@ Score: `{score}`
 
         # check if the last message is already asking them to train more
         # if so, we can just @everyone and then delete the message
-        await player_path_channel.send("Type `/train` to take on another mission.")
+        train_command = await self.__discord_client.slash_command(SlashCommand(SlashCommand.train))
+        await player_path_channel.send(f"Type {train_command.mention} to begin...")
         ping_user_message = await player_path_channel.send("@everyone")
         await ping_user_message.delete()
 
