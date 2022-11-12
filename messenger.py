@@ -43,7 +43,7 @@ class Messenger:
         review_value: str,
     ):
         _ = await player_channel.send(
-            f"{player.mention} your work has been reviewed by Suriel\n\nFeedback: `{review_value}`\n\n Update your work then type `/submit` to send it for review. **Only your most recent message*** will be used in your submission.",
+            f"{player.mention} your work has been reviewed by Suriel\n\nFeedback: `{review_value}`\n\nUpdate your work then type `/submit` to send it for review. **Only your most recent message*** will be used in your submission.",
         )
 
         await review_channel.send("Sent review followups.")
