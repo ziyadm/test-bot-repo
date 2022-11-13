@@ -7,3 +7,4 @@ venv
 poetry.lock
 *~undo-tree~
 .#*
+token.json

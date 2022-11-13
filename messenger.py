@@ -87,7 +87,12 @@ class Messenger:
         )
 
         response_to_user = f"{player.mention} {base_response_to_player}\nScore: `{score}`\n\n{next_step_for_player}"
-        await player_question_channel.send(response_to_user)
+
+        await self.__discord_client.with_typing_time_determined_by_number_of_words(
+            message=response_to_user,
+            channel=player_question_channel,
+            slowness_factor=3.5,
+        )
 
     async def review_was_claimed(
         self,
@@ -132,7 +137,8 @@ class Messenger:
             channel_id=mission_past_due.fields.discord_channel_id
         )
         _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
-            "*Beep beep beep!*", mission_channel
+            "*Beep beep beep!*",
+            mission_channel,
         )
         _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
             "**Times up!**", mission_channel
@@ -252,10 +258,40 @@ class Messenger:
         message_thread = await message.create_thread(name=f"{question_id}")
         await message_thread.add_user(player)
 
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message="1) read the problem",
+            channel=message_thread,
+            slowness_factor=3.5,
+        )
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message="2) add a section for your design where you **EXPLAIN your solution in english**...",
+            channel=message_thread,
+            slowness_factor=3.5,
+        )
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message="...like you would *explain it to a coworker*...",
+            channel=message_thread,
+            slowness_factor=3.5,
+        )
         submit_command = await self.__discord_client.slash_command(
             SlashCommand(SlashCommand.submit)
         )
-        await message_thread.send(f"Type {submit_command.mention} to have your work reviewed")
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message=f"3) type {submit_command.mention} to have your work reviewed",
+            channel=message_thread,
+            slowness_factor=3.5,
+        )
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message="...",
+            channel=message_thread,
+            slowness_factor=3.5,
+        )
+        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
+            message="...**GO**...time is ticking...",
+            channel=message_thread,
+            slowness_factor=3.5,
+        )
+
         return message_thread
 
     async def welcome_new_discord_member(

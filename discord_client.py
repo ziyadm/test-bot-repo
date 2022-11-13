@@ -149,10 +149,10 @@ class DiscordClient:
 
     @staticmethod
     async def with_typing_time_determined_by_number_of_words(
-        message: str, channel: discord.TextChannel
+        message: str, channel: discord.TextChannel, slowness_factor: float = 1.0
     ):
         number_of_words = len(message.split(" "))
-        seconds_to_type_one_word = DiscordClient.seconds_to_type_one_word
+        seconds_to_type_one_word = DiscordClient.seconds_to_type_one_word * slowness_factor
 
         # we don't want to wait that long (e.g., question descriptions)
         if number_of_words > 50:
