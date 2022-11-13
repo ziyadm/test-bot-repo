@@ -23,24 +23,20 @@ class PlayerCommandHandler:
             airtable_client=self.__state.airtable_client,
         )
 
-        path_channel = await self.__state.discord_client.channel(
-            channel_id=player.fields.discord_channel_id
-        )
         if str(interaction.channel.id) != player.fields.discord_channel_id:
             _ = await self.__state.messenger.command_cannot_be_run_here(
                 where_to_follow_up=interaction.followup,
-                expected_location=path_channel,
                 suggested_command=SlashCommand(SlashCommand.submit),
             )
             return None
 
-        training_mission_and_channel = await self.__state.create_mission(
-            player_discord_id=player_discord_id
+        training_mission = await self.__state.create_mission(
+            player_discord_id=player_discord_id,
+            channel=interaction.channel,
+            where_to_follow_up=interaction.followup,
         )
-        if training_mission_and_channel is None:
+        if training_mission is None:
             _ = await self.__state.messenger.player_is_out_of_questions(player=player)
-
-        _ = await interaction.followup.send(Messenger.command_acknowledged_by_suriel)
 
     async def submit_command(self, interaction: discord.Interaction):
         mission_discord_channel_id = str(interaction.channel.id)

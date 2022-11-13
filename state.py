@@ -9,6 +9,7 @@ import question
 import user
 from airtable_client import AirtableClient
 from discord_client import DiscordClient
+from google_client import GoogleClient
 from messenger import Messenger
 from mission import Mission
 from question import Question
@@ -24,6 +25,7 @@ class State:
         *,
         airtable_client: AirtableClient,
         discord_client: DiscordClient,
+        google_client: GoogleClient,
         enforce_time_limits_every: datetime.timedelta,
         design_time_limit: datetime.timedelta,
         code_time_limit: datetime.timedelta,
@@ -32,6 +34,7 @@ class State:
     ):
         self.airtable_client = airtable_client
         self.discord_client = discord_client
+        self.google_client = google_client
         self.messenger = Messenger(discord_client=discord_client)
         self.enforce_time_limits_every = enforce_time_limits_every
         self.design_time_limit = design_time_limit
@@ -59,7 +62,12 @@ class State:
 
         return None
 
-    async def create_mission(self, player_discord_id: str):
+    async def create_mission(
+        self,
+        player_discord_id: str,
+        channel: discord.TextChannel,
+        where_to_follow_up: discord.TextChannel,
+    ):
         player = await User.row(
             formula=pyairtable.formulas.match({user.Fields.discord_id_field: player_discord_id}),
             airtable_client=self.airtable_client,
@@ -70,16 +78,21 @@ class State:
             return None
 
         question_id = mission_question.fields.question_id
-        mission_channel = await self.discord_client.create_private_channel(
-            member_id=player_discord_id,
-            channel_name=f"""{player.fields.discord_name}-{question_id}""",
+
+        player = await self.discord_client.member(player_discord_id)
+        thread = await self.messenger.player_started_training_mission(
+            player=player,
+            channel=channel,
+            where_to_follow_up=where_to_follow_up,
+            guild_id=self.discord_client.get_guild_id(),
+            question_id=question_id,
+            link=self.google_client.create_link(mission_question),
         )
 
         now = UtcTime.now()
-
-        training_mission = await Mission.create(
+        return await Mission.create(
             fields=mission.Fields(
-                discord_channel_id=str(mission_channel.id),
+                discord_channel_id=str(thread.id),
                 review_discord_channel_id=None,
                 player_discord_id=player_discord_id,
                 reviewer_discord_id=None,
@@ -100,14 +113,6 @@ class State:
             ),
             airtable_client=self.airtable_client,
         )
-
-        _ = await self.messenger.player_started_training_mission(
-            player=player,
-            training_mission=training_mission,
-            mission_question=mission_question,
-        )
-
-        return (training_mission, mission_channel)
 
     async def sync_discord_role(self, for_user: User):
         bot_discord_member = await self.discord_client.bot_member()

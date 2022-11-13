@@ -9,6 +9,7 @@ from airtable_client import AirtableClient
 from command_handler import CommandHandler
 from discord_client import DiscordClient
 from event_handler import EventHandler
+from google_client import GoogleClient
 from player_command_handler import PlayerCommandHandler
 from reviewer_command_handler import ReviewerCommandHandler
 from slash_command import SlashCommand
@@ -25,9 +26,12 @@ discord_client = DiscordClient(
     guild_id=discord_guild_id,
     secret_token=discord_secret_token,
 )
+google_client = GoogleClient(api_key=os.environ["google_api_key"])
+
 state = State(
     airtable_client=airtable_client,
     discord_client=discord_client,
+    google_client=google_client,
     enforce_time_limits_every=datetime.timedelta(seconds=10),
     design_time_limit=datetime.timedelta(minutes=10),
     code_time_limit=datetime.timedelta(minutes=20),

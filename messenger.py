@@ -227,34 +227,27 @@ class Messenger:
         await ping_user_message.delete()
 
     async def player_started_training_mission(
-        self, player: User, training_mission: Mission, mission_question: Question
+        self,
+        player: discord.Member,
+        channel: discord.TextChannel,
+        where_to_follow_up: discord.TextChannel,
+        guild_id: int,
+        question_id: str,
+        link: str,
     ):
-        discord_member = await self.__discord_client.member(member_id=player.fields.discord_id)
-        mission_channel = await self.__discord_client.channel(
-            channel_id=training_mission.fields.discord_channel_id
-        )
+        message = await where_to_follow_up.send(f"""Your mission awaits: {link}""")
 
-        path_channel = await self.__discord_client.channel(
-            channel_id=player.fields.discord_channel_id
-        )
-        _ = await path_channel.send(
-            f"""Your training mission awaits you...head to {mission_channel.mention} to begin!"""
-        )
+        # There's a bug in discord.py that the owner won't fix.
+        # https://github.com/Rapptz/discord.py/issues/9008
+        message.guild = guild_id
+        message_thread = await message.create_thread(name=f"{question_id}")
+        await message_thread.add_user(player)
 
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"""```{mission_question.fields.description}```""",
-            channel=mission_channel,
+        submit_command = await self.__discord_client.slash_command(
+            SlashCommand(SlashCommand.submit)
         )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="""`Design`: *Describe how you plan to solve the question. Make sure to write this **in english** without getting too close to the code!*""",
-            channel=mission_channel,
-        )
-
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"""{discord_member.mention} type `/submit` to send your work for review. **Only your most recent message*** will be used in your submission.""",
-            channel=mission_channel,
-        )
+        await message_thread.send(f"Type {submit_command.mention} to have your work reviewed")
+        return message_thread
 
     async def welcome_new_discord_member(
         self, *, discord_member: discord.Member, path_channel: discord.TextChannel
