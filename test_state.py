@@ -7,6 +7,7 @@ import dotenv
 
 from airtable_client import AirtableClient
 from discord_client import DiscordClient
+from google_client import GoogleClient
 from mission import Mission
 from stage import Stage
 from state import State
@@ -24,6 +25,7 @@ discord_client = DiscordClient(
     guild_id=discord_guild_id,
     secret_token=discord_secret_token,
 )
+google_client = GoogleClient(api_key=os.environ["google_api_key"])
 
 
 class dotdict(dict):
@@ -50,9 +52,11 @@ fake_user = User.of_dict(
 
 airtable_client.rows = AsyncMock(return_value=fake_missions)
 airtable_client.row = AsyncMock(return_value=fake_user)
+
 state = State(
     airtable_client=airtable_client,
     discord_client=discord_client,
+    google_client=google_client,
     enforce_time_limits_every=datetime.timedelta(minutes=1),
     design_time_limit=datetime.timedelta(minutes=60),
     code_time_limit=datetime.timedelta(minutes=20),

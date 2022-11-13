@@ -45,6 +45,9 @@ class DiscordClient:
     async def __guild(self):
         return await self.client.fetch_guild(self.guild_id)
 
+    def get_guild_id(self):
+        return self.guild_id
+
     async def member(self, member_id: str):
         guild = await self.__guild()
         return await guild.fetch_member(member_id)
