@@ -221,8 +221,6 @@ class Messenger:
             f"You are now a [{current_rank.capitalize()} lvl {new_level}].\n\nYou are now only {levels_until_evolution} levels from advancing to the next rank!"
         )
 
-        train_command = await self.__discord_client.slash_command(SlashCommand(SlashCommand.train))
-        await path_channel.send(f"Type {train_command.mention} to take on another mission.")
         ping_user_message = await path_channel.send("@everyone")
         await ping_user_message.delete()
 
@@ -266,12 +264,11 @@ class Messenger:
         updated_mission: Mission,
         stage_submitted: Stage,
         time_taken: datetime.timedelta,
+        channel: discord.TextChannel,
+        where_to_follow_up: discord.TextChannel,
     ):
         player_path_channel = await self.__discord_client.channel(
             channel_id=player.fields.discord_channel_id
-        )
-        mission_channel = await self.__discord_client.channel(
-            channel_id=updated_mission.fields.discord_channel_id
         )
 
         if not stage_submitted.players_turn():
@@ -279,23 +276,16 @@ class Messenger:
                 "cant send messages for player submitting stage {stage_submitted} as its not their turn. this should already have been filtered out, is this a bug?"
             )
 
+        await where_to_follow_up.send(f"""Only {time_taken}...not bad!""")
         _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
-            message=f"""Only {time_taken}...not bad!""",
-            channel=mission_channel,
+            message=f"Suriel is reviewing your {stage_submitted}",
+            channel=channel,
         )
         _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
-            message=f"I've sent your {stage_submitted} to Suriel for approval.",
-            channel=mission_channel,
-        )
-        _ = await self.__discord_client.with_typing_time_determined_by_number_of_words(
-            message=f"""Head back to {player_path_channel.mention} to continue training.""",
-            channel=mission_channel,
+            message=f"""Head to {player_path_channel.mention} to continue training.""",
+            channel=channel,
         )
 
-        # check if the last message is already asking them to train more
-        # if so, we can just @everyone and then delete the message
-        train_command = await self.__discord_client.slash_command(SlashCommand(SlashCommand.train))
-        await player_path_channel.send(f"Type {train_command.mention} to begin...")
         ping_user_message = await player_path_channel.send("@everyone")
         await ping_user_message.delete()
 

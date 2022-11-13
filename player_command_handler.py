@@ -3,7 +3,6 @@ import pyairtable
 
 import mission
 import user
-from messenger import Messenger
 from mission import Mission
 from slash_command import SlashCommand
 from stage import Stage
@@ -61,14 +60,6 @@ class PlayerCommandHandler:
                 )
                 return None
 
-            mission_channel_messages = await self.__state.discord_client.messages(
-                channel_id=mission_discord_channel_id
-            )
-            if len(mission_channel_messages) == 0:
-                return await interaction.followup.send(
-                    "Send your work as a message before running this command"
-                )
-
             player = await User.row(
                 formula=pyairtable.formulas.match(
                     {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
@@ -77,7 +68,6 @@ class PlayerCommandHandler:
             )
 
             now = UtcTime.now()
-
             time_field = f"{mission_to_update.fields.stage}_completion_time"
 
             mission_updates = {
@@ -87,12 +77,9 @@ class PlayerCommandHandler:
             }
 
             stage_submitted = mission_to_update.fields.stage
-
-            if stage_submitted.has_value(Stage.design):
-                mission_updates[mission.Fields.design_field] = mission_channel_messages[0].content
-            elif stage_submitted.has_value(Stage.code):
-                mission_updates[mission.Fields.code_field] = mission_channel_messages[0].content
-            else:
+            if not stage_submitted.has_value(Stage.design) and not stage_submitted.has_value(
+                Stage.code
+            ):
                 raise Exception(
                     f"""player attempted to submit a mission in review or completed (stage: {stage_submitted}), but we already filtered for this. is this a bug?"""
                 )
@@ -107,7 +94,8 @@ class PlayerCommandHandler:
                 updated_mission,
                 stage_submitted,
                 time_taken=mission_to_update.time_in_stage(now),
+                channel=interaction.channel,
+                where_to_follow_up=interaction.followup,
             )
 
             # TODO: revert all state changes if theres any exceptions
-            _ = await interaction.followup.send(Messenger.command_acknowledged_by_suriel)
