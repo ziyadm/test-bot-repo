@@ -14,7 +14,7 @@ ACCOUNT_FILE = "token.json"
 
 
 class GoogleClient:
-    def __init__(self, api_key: str):
+    def __init__(self):
         credentials = Credentials.from_service_account_file(ACCOUNT_FILE, scopes=SCOPES)
         self.service = build("drive", "v3", credentials=credentials)
 

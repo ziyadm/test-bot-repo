@@ -23,7 +23,7 @@ format:
 test: format test_*.py
 	python3 -m poetry run python3 -m unittest test_*.py
 
-build: test pyproject.toml
+build: pyproject.toml
 	python3 -m poetry lock --no-update
 	python3 -m poetry install
 

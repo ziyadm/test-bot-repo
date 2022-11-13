@@ -26,7 +26,7 @@ discord_client = DiscordClient(
     guild_id=discord_guild_id,
     secret_token=discord_secret_token,
 )
-google_client = GoogleClient(api_key=os.environ["google_api_key"])
+google_client = GoogleClient()
 
 state = State(
     airtable_client=airtable_client,

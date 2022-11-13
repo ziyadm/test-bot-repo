@@ -5,3 +5,4 @@ sudo make env
 sudo make setup
 sudo make build
 cp ../.env .
+cp ../.token.json .
