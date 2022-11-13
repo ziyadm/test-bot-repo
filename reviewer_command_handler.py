@@ -139,7 +139,6 @@ class ReviewerCommandHandler:
                 player,
                 updated_mission,
                 question_channel,
-                interaction.channel,
                 interaction.followup,
                 path_channel,
                 score,

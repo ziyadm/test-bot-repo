@@ -57,7 +57,6 @@ class Messenger:
         player_question_channel: discord.TextChannel,
         reviewer_question_channel: discord.TextChannel,
         player_path_channel: discord.TextChannel,
-        where_to_follow_up: discord.TextChannel,
         score: float,
     ):
         # message reviewer
@@ -66,7 +65,7 @@ class Messenger:
             if updated_mission.fields.stage.has_value(Stage.completed)
             else "Approved design."
         )
-        await where_to_follow_up.send(response_to_reviewer)
+        await reviewer_question_channel.send(response_to_reviewer)
 
         # message player
         base_response_to_player = (
@@ -79,7 +78,7 @@ class Messenger:
             SlashCommand(SlashCommand.submit)
         )
         submit_next_step = (
-            f"Head back to the doc and paste your code there\nThen use {submit_command.mention}"
+            f"Head back to the doc and paste your code there\n\nThen use {submit_command.mention}"
         )
         next_step_for_player = (
             f"Head back to {player_path_channel.mention} to continue training."
