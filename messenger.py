@@ -40,8 +40,13 @@ class Messenger:
         review_channel: discord.TextChannel,
         review_value: str,
     ):
-        _ = await player_channel.send(
-            f"{player.mention} your work has been reviewed by Suriel\n\nFeedback: `{review_value}`\n\nUpdate your work then type `/submit` to send it for review. **Only your most recent message*** will be used in your submission.",
+        _ = await player_channel.send(f"{player.mention} your work has been reviewed by Suriel\n\n")
+
+        submit_command = await self.__discord_client.slash_command(
+            SlashCommand(SlashCommand.submit)
+        )
+        await player_channel.send(
+            f"Review the feedback and then use {submit_command.mention} once you've updated your work"
         )
 
         await review_channel.send("Sent review followups.")
