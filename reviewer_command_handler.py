@@ -93,10 +93,6 @@ class ReviewerCommandHandler:
                 return await interaction.followup.send("""Approval already provided!""")
 
             # 1) update mission to reflect review values/scores
-            review_field, review_value = await ReviewerCommandHandler.get_review_value(
-                mission_to_update, interaction
-            )
-
             state_field = mission.Fields.stage_field
             state_value = mission_to_update.fields.stage.next()
 
@@ -110,7 +106,6 @@ class ReviewerCommandHandler:
             updated_mission = await mission_to_update.update(
                 fields=mission_to_update.fields.immutable_updates(
                     {
-                        review_field: review_value,
                         state_field: state_value,
                         score_field: score,
                         mission.Fields.entered_stage_time_field: UtcTime.now(),
@@ -122,7 +117,7 @@ class ReviewerCommandHandler:
                 airtable_client=self.__state.airtable_client,
             )
 
-            # 2) tell the player about the review values/scores
+            # 2) tell the player about the review outcome
             user_to_update = await User.row(
                 formula=pyairtable.formulas.match(
                     {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
@@ -145,8 +140,8 @@ class ReviewerCommandHandler:
                 updated_mission,
                 question_channel,
                 interaction.channel,
+                interaction.followup,
                 path_channel,
-                review_value,
                 score,
             )
 
@@ -170,10 +165,6 @@ class ReviewerCommandHandler:
                     current_rank,
                 ) = await self.__state.get_level_changes(updated_mission)
 
-                path_channel = await self.__state.discord_client.channel(
-                    channel_id=user_to_update.fields.discord_channel_id
-                )
-
                 # TODO talk to hani about how to handle setting rank here
                 # is just nicer to evolve them immediately after sending the message
                 # instead of before
@@ -188,8 +179,6 @@ class ReviewerCommandHandler:
                     new_level=new_level,
                     levels_until_evolution=levels_until_evolution,
                 )
-
-            return await interaction.followup.send("Finished")
 
     async def reject_command(self, interaction: discord.Interaction):
         try:
@@ -210,10 +199,6 @@ class ReviewerCommandHandler:
             if not mission_to_update.fields.stage.in_review():
                 return await interaction.followup.send("""Review already completed!""")
 
-            review_field, review_value = await ReviewerCommandHandler.get_review_value(
-                mission_to_update, interaction
-            )
-
             state_field = mission.Fields.stage_field
             state_value = mission_to_update.fields.stage.previous()
             time_field = f"{mission_to_update.fields.stage}_completion_time"
@@ -221,7 +206,6 @@ class ReviewerCommandHandler:
             await mission_to_update.update(
                 fields=mission_to_update.fields.immutable_updates(
                     {
-                        review_field: review_value,
                         state_field: state_value,
                         mission.Fields.entered_stage_time_field: UtcTime.now(),
                         time_field: UtcTime.now(),
@@ -239,7 +223,7 @@ class ReviewerCommandHandler:
             )
 
             await self.__state.messenger.mission_rejected(
-                player, question_channel, interaction.followup, review_value
+                player, question_channel, interaction.followup
             )
 
     @staticmethod
