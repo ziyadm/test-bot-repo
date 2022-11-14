@@ -6,7 +6,6 @@ import dotenv
 
 from admin_command_handler import AdminCommandHandler
 from airtable_client import AirtableClient
-from command_handler import CommandHandler
 from discord_client import DiscordClient
 from event_handler import EventHandler
 from google_client import GoogleClient
@@ -41,7 +40,6 @@ state = State(
 admin_command_handler = AdminCommandHandler(state=state)
 player_command_handler = PlayerCommandHandler(state=state)
 reviewer_command_handler = ReviewerCommandHandler(state=state)
-command_handler = CommandHandler(state)
 event_handler = EventHandler(state)
 
 
@@ -71,7 +69,13 @@ async def register_submit_command(interaction: discord.Interaction):
 @register_slash_command(SlashCommand(SlashCommand.time))
 async def register_time_command(interaction: discord.Interaction):
     await interaction.response.defer()
-    return await command_handler.time_command(interaction)
+    return await player_command_handler.time_command(interaction)
+
+
+@register_slash_command(SlashCommand(SlashCommand.give_up))
+async def register_give_up_command(interaction: discord.Interaction):
+    await interaction.response.defer()
+    return await player_command_handler.give_up_command(interaction)
 
 
 # ========================= #

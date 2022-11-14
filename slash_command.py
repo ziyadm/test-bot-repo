@@ -8,6 +8,7 @@ class SlashCommand:
     approve = 6
     set_rank = 7
     wipe_state = 8
+    give_up = 9
 
     all_values = [
         train,
@@ -18,6 +19,7 @@ class SlashCommand:
         approve,
         set_rank,
         wipe_state,
+        give_up,
     ]
 
     names = {
@@ -29,6 +31,7 @@ class SlashCommand:
         approve: "approve",
         set_rank: "set_rank",
         wipe_state: "wipe_state",
+        give_up: "give_up",
     }
 
     descriptions = {
@@ -40,6 +43,7 @@ class SlashCommand:
         approve: "Approve a player's submission",
         set_rank: "Set a user's rank",
         wipe_state: "Wipe the entire discord and db state",
+        give_up: "Give up on this mission",
     }
 
     def __init__(self, value: int):
