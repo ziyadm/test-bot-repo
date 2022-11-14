@@ -5,10 +5,8 @@ import mission
 import user
 from mission import Mission
 from slash_command import SlashCommand
-from stage import Stage
 from state import State
 from user import User
-from utc_time import UtcTime
 
 
 class PlayerCommandHandler:
@@ -60,45 +58,9 @@ class PlayerCommandHandler:
                 )
                 return None
 
-            player = await User.row(
-                formula=pyairtable.formulas.match(
-                    {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
-                ),
-                airtable_client=self.__state.airtable_client,
+            await self.__state.update_mission(
+                mission_to_update, interaction.channel, interaction.followup
             )
-
-            now = UtcTime.now()
-            time_field = f"{mission_to_update.fields.stage}_completion_time"
-
-            mission_updates = {
-                mission.Fields.stage_field: mission_to_update.fields.stage.next(),
-                mission.Fields.entered_stage_time_field: now,
-                time_field: now,
-            }
-
-            stage_submitted = mission_to_update.fields.stage
-            if not stage_submitted.has_value(Stage.design) and not stage_submitted.has_value(
-                Stage.code
-            ):
-                raise Exception(
-                    f"""player attempted to submit a mission in review or completed (stage: {stage_submitted}), but we already filtered for this. is this a bug?"""
-                )
-
-            updated_mission = await mission_to_update.update(
-                fields=mission_to_update.fields.immutable_updates(mission_updates),
-                airtable_client=self.__state.airtable_client,
-            )
-
-            _ = await self.__state.messenger.player_submitted_stage(
-                player,
-                updated_mission,
-                stage_submitted,
-                time_taken=mission_to_update.time_in_stage(now),
-                channel=interaction.channel,
-                where_to_follow_up=interaction.followup,
-            )
-
-            # TODO: revert all state changes if theres any exceptions
 
     async def time_command(self, interaction: discord.Interaction):
         try:

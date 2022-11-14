@@ -162,6 +162,52 @@ class State:
             airtable_client=self.airtable_client,
         )
 
+    async def update_mission(
+        self,
+        mission_to_update: Mission,
+        channel: discord.TextChannel,
+        where_to_follow_up: discord.TextChannel,
+    ):
+        player = await User.row(
+            formula=pyairtable.formulas.match(
+                {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
+            ),
+            airtable_client=self.airtable_client,
+        )
+
+        now = UtcTime.now()
+        time_field = f"{mission_to_update.fields.stage}_completion_time"
+
+        mission_updates = {
+            mission.Fields.stage_field: mission_to_update.fields.stage.next(),
+            mission.Fields.entered_stage_time_field: now,
+            time_field: now,
+        }
+
+        stage_submitted = mission_to_update.fields.stage
+        if not stage_submitted.has_value(Stage.design) and not stage_submitted.has_value(
+            Stage.code
+        ):
+            raise Exception(
+                f"""player attempted to submit a mission in review or completed (stage: {stage_submitted}), but we already filtered for this. is this a bug?"""
+            )
+
+        updated_mission = await mission_to_update.update(
+            fields=mission_to_update.fields.immutable_updates(mission_updates),
+            airtable_client=self.airtable_client,
+        )
+
+        _ = await self.messenger.player_submitted_stage(
+            player,
+            updated_mission,
+            stage_submitted,
+            time_taken=mission_to_update.time_in_stage(now),
+            channel=channel,
+            where_to_follow_up=where_to_follow_up,
+        )
+
+        # TODO: revert all state changes if theres any exceptions
+
     async def sync_discord_role(self, for_user: User):
         bot_discord_member = await self.discord_client.bot_member()
         bot_user = await User.row(
