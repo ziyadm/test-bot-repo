@@ -254,7 +254,7 @@ class Messenger:
         # - it can't be used correctly with DiscordClient.with_.....
         # - we need to send a message directly to it
         await where_to_follow_up.send(
-            f"""{player.mention} it is wise to pick your battles carefully...\n\n**study the solution well**: `{question.fields.code_solution}`"""
+            f"""{player.mention} it is wise to pick your battles carefully...\n\n**study the solution well**...we've added it to the doc""",
         )
 
     async def player_started_training_mission(
@@ -266,7 +266,7 @@ class Messenger:
         question_id: str,
         link: str,
     ):
-        message = await where_to_follow_up.send(f"""Your mission awaits: {link}""")
+        message = await where_to_follow_up.send(f"""{link}""")
 
         # There's a bug in discord.py that the owner won't fix.
         # https://github.com/Rapptz/discord.py/issues/9008

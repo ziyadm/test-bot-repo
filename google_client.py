@@ -46,4 +46,28 @@ class GoogleClient:
         }
         self.service.permissions().create(fileId=fileId, body=permission).execute()
 
+        return f"https://docs.google.com/document/d/{fileId}/edit"
+
+    def add_to_document(self, content: str, file_id: str):
+        existing_file = self.service.files().export(fileId=file_id, mimeType="text/plain").execute()
+
+        additional_doc_body = f"\n\n***Solution:***\n\n{content}"
+
+        media_body = MediaIoBaseUpload(
+            io.BytesIO(existing_file + bytes(additional_doc_body, encoding="utf8")),
+            mimetype="text/plain",
+            resumable=True,
+        )
+
+        file_metadata = {
+            "mimeType": "application/vnd.google-apps.document",
+            "uploadType": "media",
+        }
+
+        file = (
+            self.service.files()
+            .update(fileId=file_id, body=file_metadata, media_body=media_body, fields="id")
+            .execute()
+        )
+
         return f"https://docs.google.com/document/d/{file.get('id')}/edit"

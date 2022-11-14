@@ -103,4 +103,6 @@ class PlayerCommandHandler:
             )
             return None
         else:
-            await self.__state.give_up_mission(for_mission, interaction.followup)
+            await self.__state.give_up_mission(
+                for_mission, interaction.channel, interaction.followup
+            )

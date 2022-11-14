@@ -28,15 +28,7 @@ class DiscordClient:
         guild_id: int,
         secret_token: str,
     ):
-        self.client = discord.Client(
-            intents=discord.Intents(
-                messages=True,
-                guilds=True,
-                message_content=True,
-                members=True,
-                presences=True,
-            )
-        )
+        self.client = discord.Client(intents=discord.Intents.all())
         self.guild_id = guild_id
         self.command_tree = discord.app_commands.CommandTree(self.client)
         self.secret_token = secret_token

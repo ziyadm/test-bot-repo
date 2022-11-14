@@ -65,6 +65,7 @@ class State:
     async def give_up_mission(
         self,
         for_mission: Mission,
+        thread: discord.Thread,
         where_to_follow_up: discord.TextChannel,
     ):
         mission_updates = {
@@ -82,6 +83,12 @@ class State:
             ),
             airtable_client=self.airtable_client,
         )
+
+        # update google doc
+        document_link = [message async for message in thread.history()][-1].system_content
+        file_id = document_link.split("/")[-2]
+
+        self.google_client.add_to_document(for_question.fields.code_solution, file_id)
 
         await self.messenger.player_gave_up(
             player=player,
