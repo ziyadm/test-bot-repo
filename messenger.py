@@ -13,8 +13,6 @@ from user import User
 
 class Messenger:
 
-    command_acknowledged_by_suriel = "✅"
-
     def __init__(
         self,
         *,
