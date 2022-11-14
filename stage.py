@@ -5,6 +5,7 @@ class Stage:
     code = 3
     code_review = 4
     completed = 5
+    gave_up = 6
 
     name = {
         design: "design",
@@ -12,6 +13,7 @@ class Stage:
         code: "code",
         code_review: "code_review",
         completed: "completed",
+        gave_up: "gave_up",
     }
 
     def __init__(self, value: int):

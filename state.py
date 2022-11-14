@@ -62,6 +62,36 @@ class State:
 
         return None
 
+    async def give_up_mission(
+        self,
+        for_mission: Mission,
+        channel: discord.TextChannel,
+        where_to_follow_up: discord.TextChannel,
+    ):
+        mission_updates = {
+            mission.Fields.stage_field: Stage.of_string("gave_up"),
+        }
+        updated_mission = await for_mission.update(
+            fields=for_mission.fields.immutable_updates(mission_updates),
+            airtable_client=self.airtable_client,
+        )
+
+        player = await self.discord_client.member(updated_mission.fields.player_discord_id)
+        for_question = await Question.row(
+            formula=pyairtable.formulas.match(
+                {question.Fields.question_id_field: updated_mission.fields.question_id}
+            ),
+            airtable_client=self.airtable_client,
+        )
+
+        await self.messenger.player_gave_up(
+            player=player,
+            mission_given_up=updated_mission,
+            question=for_question,
+            channel=channel,
+            where_to_follow_up=where_to_follow_up,
+        )
+
     async def create_mission(
         self,
         player_discord_id: str,

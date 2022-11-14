@@ -241,6 +241,21 @@ class Messenger:
         ping_user_message = await path_channel.send("@everyone")
         await ping_user_message.delete()
 
+    async def player_gave_up(
+        self,
+        player: discord.Member,
+        mission_given_up: Mission,
+        question: Question,
+        channel: discord.TextChannel,
+        where_to_follow_up: discord.TextChannel,
+    ):
+        # TODO: interaction.followup is weird
+        # - it can't be used correctly with DiscordClient.with_.....
+        # - we need to send a message directly to it
+        await where_to_follow_up.send(
+            f"""{player.mention} it is wise to pick your battles carefully...\n\n**study the solution well**: `{question.fields.code_solution}`"""
+        )
+
     async def player_started_training_mission(
         self,
         player: discord.Member,

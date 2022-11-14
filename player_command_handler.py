@@ -1,3 +1,5 @@
+import datetime
+
 import discord
 import pyairtable
 
@@ -136,4 +138,21 @@ class PlayerCommandHandler:
             _ = await interaction.followup.send(f"""{time_remaining} left.""")
 
     async def give_up_command(self, interaction: discord.Interaction):
-        pass
+        try:
+            for_mission = await Mission.row(
+                formula=pyairtable.formulas.match(
+                    {mission.Fields.discord_channel_id_field: str(interaction.channel.id)}
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
+        except Exception:
+            _ = await self.__state.messenger.command_cannot_be_run_here(
+                where_to_follow_up=interaction.followup,
+                expected_location=None,
+                suggested_command=None,
+            )
+            return None
+        else:
+            await self.__state.give_up_mission(
+                for_mission, interaction.channel, interaction.followup
+            )

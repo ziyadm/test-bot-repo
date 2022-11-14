@@ -19,7 +19,9 @@ class GoogleClient:
         self.service = build("drive", "v3", credentials=credentials)
 
     def create_link(self, mission_question: Question):
-        doc_body = f"{mission_question.fields.leetcode_url}\n\n{mission_question.fields.description}"
+        doc_body = (
+            f"{mission_question.fields.leetcode_url}\n\n{mission_question.fields.description}"
+        )
         media_body = MediaIoBaseUpload(
             io.BytesIO(bytes(doc_body, encoding="utf8")),
             mimetype="text/plain",
