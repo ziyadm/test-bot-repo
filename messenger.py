@@ -91,7 +91,7 @@ class Messenger:
         await self.__discord_client.with_typing_time_determined_by_number_of_words(
             message=response_to_user,
             channel=player_question_channel,
-            slowness_factor=3.0,
+            slowness_factor=2.5,
         )
 
     async def review_was_claimed(
@@ -280,17 +280,17 @@ class Messenger:
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message="1) read the problem",
             channel=message_thread,
-            slowness_factor=3.0,
+            slowness_factor=2.5,
         )
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message="2) add a section for your design where you **EXPLAIN your solution in english**...",
             channel=message_thread,
-            slowness_factor=3.0,
+            slowness_factor=2.5,
         )
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message="...like you would *explain it to a coworker*...",
             channel=message_thread,
-            slowness_factor=3.0,
+            slowness_factor=2.5,
         )
         submit_command = await self.__discord_client.slash_command(
             SlashCommand(SlashCommand.submit)
@@ -298,17 +298,17 @@ class Messenger:
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message=f"3) type {submit_command.mention} to have your work reviewed",
             channel=message_thread,
-            slowness_factor=3.0,
+            slowness_factor=2.5,
         )
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message="...",
             channel=message_thread,
-            slowness_factor=3.0,
+            slowness_factor=2.5,
         )
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message="...**GO**...time is ticking...",
             channel=message_thread,
-            slowness_factor=3.0,
+            slowness_factor=2.5,
         )
 
         return message_thread
