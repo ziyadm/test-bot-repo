@@ -246,7 +246,6 @@ class Messenger:
         player: discord.Member,
         mission_given_up: Mission,
         question: Question,
-        channel: discord.TextChannel,
         where_to_follow_up: discord.TextChannel,
     ):
         # TODO: interaction.followup is weird

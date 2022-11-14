@@ -88,7 +88,6 @@ class State:
             player=player,
             mission_given_up=updated_mission,
             question=for_question,
-            channel=channel,
             where_to_follow_up=where_to_follow_up,
         )
 
