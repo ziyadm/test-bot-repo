@@ -10,6 +10,7 @@ class DiscordClient:
 
     all_reviews_channel_name = "reviews"
     chat_channel_name = "chat"
+    music_channel_name = "music"
     seconds_to_type_one_word = 0.15
 
     default_permissions = discord.Permissions(
@@ -41,6 +42,7 @@ class DiscordClient:
         self.secret_token = secret_token
         self.__all_reviews_channel_id = None
         self.__chat_channel_id = None
+        self.__music_channel_id = None
 
     async def __guild(self):
         return await self.client.fetch_guild(self.guild_id)
@@ -146,6 +148,21 @@ class DiscordClient:
     async def chat_channel(self) -> discord.TextChannel:
         chat_channel_id = await self.__get_chat_channel_id()
         return await self.channel(channel_id=chat_channel_id)
+
+    async def __get_music_channel_id(self) -> str:
+        if self.__music_channel_id is not None:
+            return self.__music_channel_id
+
+        channels = await self.channels()
+        for channel in channels:
+            if channel.name == self.music_channel_name:
+                self.__music_channel_id = str(channel.id)
+
+        return self.__music_channel_id
+
+    async def music_channel(self) -> discord.TextChannel:
+        music_channel_id = await self.__get_music_channel_id()
+        return await self.channel(channel_id=music_channel_id)
 
     @staticmethod
     async def with_typing_time_determined_by_number_of_words(

@@ -12,7 +12,6 @@ from user import User
 
 
 class Messenger:
-
     def __init__(
         self,
         *,

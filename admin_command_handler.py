@@ -23,6 +23,7 @@ class AdminCommandHandler:
     ):
         all_reviews_channel = await self.__state.discord_client.all_reviews_channel()
         chat_channel = await self.__state.discord_client.chat_channel()
+        music_channel = await self.__state.discord_client.music_channel()
 
         if interaction.channel.id != all_reviews_channel.id:
             _ = await self.__state.messenger.command_cannot_be_run_here(
@@ -47,7 +48,7 @@ class AdminCommandHandler:
         if channels:
             _ = await all_reviews_channel.send("deleting all channels")
             channels_deleted = await self.__state.delete_all_channels(
-                except_for=frozenset([all_reviews_channel, chat_channel])
+                except_for=frozenset([all_reviews_channel, chat_channel, music_channel])
             )
             channels_deleted = len(channels_deleted)
             _ = await all_reviews_channel.send(f"""deleted {channels_deleted} channels""")
