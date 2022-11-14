@@ -65,7 +65,6 @@ class State:
     async def give_up_mission(
         self,
         for_mission: Mission,
-        channel: discord.TextChannel,
         where_to_follow_up: discord.TextChannel,
     ):
         mission_updates = {
@@ -88,6 +87,26 @@ class State:
             player=player,
             mission_given_up=updated_mission,
             question=for_question,
+            where_to_follow_up=where_to_follow_up,
+        )
+
+    async def get_time_for_mission(
+        self,
+        for_mission: Mission,
+        where_to_follow_up: discord.TextChannel,
+    ):
+        if for_mission.fields.stage.has_value(Stage.design):
+            time_limit = self.design_time_limit
+        else:
+            time_limit = self.code_time_limit
+
+        time_remaining = max(
+            time_limit - for_mission.time_in_stage(now=UtcTime.now()),
+            datetime.timedelta(seconds=0),
+        )
+
+        await self.messenger.get_time_for_mission(
+            time_remaining=time_remaining,
             where_to_follow_up=where_to_follow_up,
         )
 

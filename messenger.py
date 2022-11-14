@@ -241,6 +241,11 @@ class Messenger:
         ping_user_message = await path_channel.send("@everyone")
         await ping_user_message.delete()
 
+    async def get_time_for_mission(
+        self, time_remaining: str, where_to_follow_up: discord.TextChannel
+    ):
+        await where_to_follow_up.send(f"""{time_remaining} left.""")
+
     async def player_gave_up(
         self,
         player: discord.Member,

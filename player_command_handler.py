@@ -1,5 +1,3 @@
-import datetime
-
 import discord
 import pyairtable
 
@@ -125,17 +123,7 @@ class PlayerCommandHandler:
                 )
                 return None
 
-            if for_mission.fields.stage.has_value(Stage.design):
-                time_limit = self.__state.design_time_limit
-            else:
-                time_limit = self.__state.code_time_limit
-
-            time_remaining = max(
-                time_limit - for_mission.time_in_stage(now=UtcTime.now()),
-                datetime.timedelta(seconds=0),
-            )
-
-            _ = await interaction.followup.send(f"""{time_remaining} left.""")
+            await self.__state.get_time_for_mission(for_mission, interaction.followup)
 
     async def give_up_command(self, interaction: discord.Interaction):
         try:
@@ -153,6 +141,4 @@ class PlayerCommandHandler:
             )
             return None
         else:
-            await self.__state.give_up_mission(
-                for_mission, interaction.channel, interaction.followup
-            )
+            await self.__state.give_up_mission(for_mission, interaction.followup)
