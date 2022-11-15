@@ -13,6 +13,7 @@ from player_command_handler import PlayerCommandHandler
 from reviewer_command_handler import ReviewerCommandHandler
 from slash_command import SlashCommand
 from state import State
+from time_limit_config import TimeLimitConfig
 
 dotenv.load_dotenv()
 airtable_api_key = os.environ["airtable_api_key"]
@@ -27,15 +28,19 @@ discord_client = DiscordClient(
 )
 google_client = GoogleClient()
 
+time_limit_config = TimeLimitConfig(
+    design=datetime.timedelta(seconds=10),
+    code=datetime.timedelta(minutes=20),
+    unclaimed_review=datetime.timedelta(minutes=10),
+    claimed_review=datetime.timedelta(minutes=20),
+)
+
 state = State(
     airtable_client=airtable_client,
     discord_client=discord_client,
     google_client=google_client,
     enforce_time_limits_every=datetime.timedelta(seconds=10),
-    design_time_limit=datetime.timedelta(minutes=10),
-    code_time_limit=datetime.timedelta(minutes=20),
-    unclaimed_review_time_limit=datetime.timedelta(minutes=10),
-    claimed_review_time_limit=datetime.timedelta(minutes=20),
+    time_limit_config=time_limit_config,
 )
 admin_command_handler = AdminCommandHandler(state=state)
 player_command_handler = PlayerCommandHandler(state=state)
