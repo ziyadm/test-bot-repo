@@ -14,6 +14,9 @@ setup: ../.env
 	if [[ ! -f ".env" ]]; then \
 	  ln ../.env ./.env; \
 	fi
+	if [[ ! -f "token.json" ]]; then \
+	  ln ../token.json ./token.json; \
+	fi
 
 format:
 	isort .
