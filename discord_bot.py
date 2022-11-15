@@ -29,7 +29,7 @@ discord_client = DiscordClient(
 google_client = GoogleClient()
 
 time_limit_config = TimeLimitConfig(
-    design=datetime.timedelta(seconds=10),
+    design=datetime.timedelta(minutes=60),
     code=datetime.timedelta(minutes=20),
     unclaimed_review=datetime.timedelta(minutes=10),
     claimed_review=datetime.timedelta(minutes=20),
