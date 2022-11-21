@@ -15,9 +15,7 @@ class Fields:
     reviewer_discord_id_field = "reviewer_discord_id"
     question_id_field = "question_id"
     stage_field = "stage"
-    design_field = "design"
     design_score_field = "design_score"
-    code_field = "code"
     code_score_field = "code_score"
     start_time_field = "start_time"
     design_completion_time_field = "design_completion_time"
@@ -35,9 +33,7 @@ class Fields:
         reviewer_discord_id: Optional[str],
         question_id: str,
         stage: Stage,
-        design: Optional[str],
         design_score: Optional[float],
-        code: Optional[str],
         code_score: Optional[float],
         start_time: UtcTime,
         design_completion_time: UtcTime,
@@ -53,9 +49,7 @@ class Fields:
         self.reviewer_discord_id = reviewer_discord_id
         self.question_id = question_id
         self.stage = stage
-        self.design = design
         self.design_score = design_score
-        self.code = code
         self.code_score = code_score
         self.start_time = start_time
         self.design_completion_time = design_completion_time
@@ -81,9 +75,7 @@ class Fields:
             self.reviewer_discord_id_field: optional_to_string(self.reviewer_discord_id),
             self.question_id_field: self.question_id,
             self.stage_field: str(self.stage),
-            self.design_field: optional_to_string(self.design),
             self.design_score_field: optional_to_float(self.design_score),
-            self.code_field: optional_to_string(self.code),
             self.code_score_field: optional_to_float(self.code_score),
             self.start_time_field: str(self.start_time),
             self.design_completion_time_field: str(self.design_completion_time),
@@ -103,9 +95,7 @@ class Fields:
             reviewer_discord_id=fields.get(cls.reviewer_discord_id_field, None),
             question_id=fields[cls.question_id_field],
             stage=Stage.of_string(fields[cls.stage_field]),
-            design=fields.get(cls.design_field, None),
             design_score=fields.get(cls.design_score_field, None),
-            code=fields.get(cls.code_field, None),
             code_score=fields.get(cls.code_score_field, None),
             start_time=UtcTime.of_string(fields.get(cls.start_time_field)),
             design_completion_time=UtcTime.of_string(fields.get(cls.design_completion_time_field)),
