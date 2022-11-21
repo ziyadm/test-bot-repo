@@ -74,9 +74,10 @@ class GoogleClient:
                 }
             },
             {
-                "replaceAllText": {
-                    "containsText": {"text": "{{question_link}}", "matchCase": "true"},
-                    "replaceText": mission_question.fields.leetcode_url,
+                "updateTextStyle": {
+                    "textStyle": {"link": {"url": f"{mission_question.fields.leetcode_url}"}},
+                    "range": {"startIndex": 24, "endIndex": 28},
+                    "fields": "link",
                 }
             },
         ]
