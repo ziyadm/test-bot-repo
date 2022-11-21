@@ -88,7 +88,7 @@ class Messenger:
         await self.__discord_client.with_typing_time_determined_by_number_of_words(
             message=response_to_user,
             channel=player_question_channel,
-            slowness_factor=2.5,
+            slowness_factor=2.1,
         )
 
     async def review_was_claimed(
@@ -260,12 +260,12 @@ class Messenger:
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message="1) read the problem",
             channel=message_thread,
-            slowness_factor=2.5,
+            slowness_factor=2.1,
         )
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message="2) go to the Design section and **follow the instructions there**...",
             channel=message_thread,
-            slowness_factor=2.5,
+            slowness_factor=2.1,
         )
         submit_command = await self.__discord_client.slash_command(
             SlashCommand(SlashCommand.submit)
@@ -273,17 +273,17 @@ class Messenger:
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message=f"3) type {submit_command.mention} to have your work reviewed",
             channel=message_thread,
-            slowness_factor=2.5,
+            slowness_factor=2.1,
         )
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message="...",
             channel=message_thread,
-            slowness_factor=2.5,
+            slowness_factor=2.1,
         )
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
             message="...**GO**...time is ticking...",
             channel=message_thread,
-            slowness_factor=2.5,
+            slowness_factor=2.1,
         )
 
         return message_thread
