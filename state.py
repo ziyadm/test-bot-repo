@@ -128,15 +128,15 @@ class State:
             return None
 
         question_id = mission_question.fields.question_id
-
         player = await self.discord_client.member(player_discord_id)
+        link = self.google_client.create_template_instance(mission_question)
         thread = await self.messenger.player_started_training_mission(
             player=player,
             channel=channel,
             where_to_follow_up=where_to_follow_up,
             guild_id=self.discord_client.get_guild_id(),
             question_id=question_id,
-            link=self.google_client.create_template_instance(mission_question),
+            link=link,
         )
 
         now = UtcTime.now()
@@ -160,6 +160,7 @@ class State:
                 design_review_completion_time=now,
                 code_completion_time=now,
                 code_review_completion_time=now,
+                link=link,
             ),
             airtable_client=self.airtable_client,
         )

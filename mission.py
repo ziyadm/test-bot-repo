@@ -27,6 +27,7 @@ class Fields:
     code_completion_time_field = "code_completion_time"
     code_review_completion_time_field = "code_review_completion_time"
     entered_stage_time_field = "entered_stage_time"
+    link_field = "link"
 
     def __init__(
         self,
@@ -48,6 +49,7 @@ class Fields:
         code_completion_time: UtcTime,
         code_review_completion_time: UtcTime,
         entered_stage_time: UtcTime,
+        link: Optional[str],
     ):
         self.discord_channel_id = discord_channel_id
         self.review_discord_channel_id = review_discord_channel_id
@@ -67,6 +69,7 @@ class Fields:
         self.code_completion_time = code_completion_time
         self.code_review_completion_time = code_review_completion_time
         self.entered_stage_time = entered_stage_time
+        self.link = link
 
     def to_dict(self):
         def optional_to_string(optional: Optional[str]):
@@ -96,6 +99,7 @@ class Fields:
             self.code_completion_time_field: str(self.code_completion_time),
             self.code_review_completion_time_field: str(self.code_review_completion_time),
             self.entered_stage_time_field: str(self.entered_stage_time),
+            self.link_field: optional_to_string(self.link),
         }
 
     @classmethod
@@ -123,6 +127,7 @@ class Fields:
                 fields.get(cls.code_review_completion_time_field)
             ),
             entered_stage_time=UtcTime.of_string(fields.get(cls.entered_stage_time_field)),
+            link=fields.get(cls.link_field, None),
         )
 
     def immutable_updates(self, updates):
