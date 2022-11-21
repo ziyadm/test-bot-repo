@@ -141,7 +141,7 @@ class State:
             where_to_follow_up=where_to_follow_up,
             guild_id=self.discord_client.get_guild_id(),
             question_id=question_id,
-            link=self.google_client.create_link(mission_question),
+            link=self.google_client.create_template_instance(mission_question),
         )
 
         now = UtcTime.now()
