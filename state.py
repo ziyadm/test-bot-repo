@@ -79,15 +79,8 @@ class State:
             airtable_client=self.airtable_client,
         )
 
-        # update google doc
-        document_link = [message async for message in thread.history()][-1].system_content
-        file_id = document_link.split("/")[-2]
-
-        self.google_client.add_to_document(for_question.fields.code_solution, file_id)
-
         await self.messenger.player_gave_up(
             player=player,
-            mission_given_up=updated_mission,
             question=for_question,
             where_to_follow_up=where_to_follow_up,
         )

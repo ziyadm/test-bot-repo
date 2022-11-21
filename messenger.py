@@ -233,15 +233,11 @@ class Messenger:
     async def player_gave_up(
         self,
         player: discord.Member,
-        mission_given_up: Mission,
         question: Question,
         where_to_follow_up: discord.TextChannel,
     ):
-        # TODO: interaction.followup is weird
-        # - it can't be used correctly with DiscordClient.with_.....
-        # - we need to send a message directly to it
         await where_to_follow_up.send(
-            f"""{player.mention} it is wise to pick your battles carefully...\n\n**study the solution well**...we've added it to the doc""",
+            f"""{player.mention} it is wise to pick your battles carefully...\n\n**study the solution well**...\n{question.fields.solution}""",
         )
 
     async def player_started_training_mission(
