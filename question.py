@@ -9,8 +9,7 @@ class Fields:
 
     question_id_field = "question_id"
     description_field = "description"
-    design_solution_field = "design_solution"
-    code_solution_field = "code_solution"
+    solution_field = "solution"
     tags_field = "tags"
     leetcode_url_field = "leetcode_url"
 
@@ -18,15 +17,13 @@ class Fields:
         self,
         question_id: str,
         description: str,
-        design_solution: str,
-        code_solution: str,
+        solution: str,
         tags: List[str],
         leetcode_url: str,
     ):
         self.question_id = question_id
         self.description = description
-        self.design_solution = design_solution
-        self.code_solution = code_solution
+        self.solution = solution
         self.tags = tags
         self.leetcode_url = leetcode_url
 
@@ -34,8 +31,7 @@ class Fields:
         return {
             self.question_id_field: self.question_id,
             self.description_field: self.description,
-            self.design_solution_field: self.design_solution,
-            self.code_solution_field: self.code_solution,
+            self.solution_field: self.solution,
             self.tags_field: ",".join(self.tags),
             self.leetcode_url_field: self.leetcode_url,
         }
@@ -45,8 +41,7 @@ class Fields:
         return cls(
             question_id=fields[cls.question_id_field],
             description=fields[cls.description_field],
-            design_solution=fields[cls.design_solution_field],
-            code_solution=fields[cls.code_solution_field],
+            solution=fields[cls.solution_field],
             tags=fields[cls.tags_field].split(","),
             leetcode_url=fields[cls.leetcode_url_field],
         )
@@ -86,8 +81,4 @@ class Question:
         if not stage.players_turn():
             raise Exception("cant get solution for a stage that isnt the players turn")
 
-        return (
-            self.fields.design_solution
-            if stage.has_value(Stage.design)
-            else self.fields.code_solution
-        )
+        return self.fields.solution
