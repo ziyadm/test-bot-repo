@@ -92,14 +92,9 @@ class Messenger:
         )
 
     async def review_was_claimed(
-        self,
-        for_mission: Mission,
-        for_question: Question,
-        question_review_channel: discord.TextChannel,
-        claim_review_thread: discord.TextChannel,
+        self, for_mission: Mission, for_question: Question, where_to_follow_up: discord.TextChannel
     ):
-        await question_review_channel.send(f"{for_mission.fields.link}")
-        await claim_review_thread.send(f"Review claimed: {question_review_channel.mention}")
+        await where_to_follow_up.send(f"Review claimed: {for_mission.fields.link}")
 
     # system functions
     async def player_is_out_of_questions(self, *, player: User):

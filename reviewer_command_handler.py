@@ -37,13 +37,6 @@ class ReviewerCommandHandler:
             if not mission_to_update.fields.stage.in_review():
                 return await interaction.followup.send("""Review already claimed!""")
 
-            user_to_update = await User.row(
-                formula=pyairtable.formulas.match(
-                    {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
-                ),
-                airtable_client=self.__state.airtable_client,
-            )
-
             question_to_update = await Question.row(
                 formula=pyairtable.formulas.match(
                     {question.Fields.question_id_field: mission_to_update.fields.question_id}
@@ -51,17 +44,10 @@ class ReviewerCommandHandler:
                 airtable_client=self.__state.airtable_client,
             )
 
-            question_review_channel = await self.__state.discord_client.create_private_channel(
-                interaction.user.id,
-                f"{mission_to_update.fields.stage}-{mission_to_update.fields.question_id}-{user_to_update.fields.discord_name}",
-            )
-
             await mission_to_update.update(
                 fields=mission_to_update.fields.immutable_updates(
                     {
-                        mission.Fields.review_discord_channel_id_field: str(
-                            question_review_channel.id
-                        ),
+                        mission.Fields.review_discord_channel_id_field: str(interaction.channel.id),
                         mission.Fields.reviewer_discord_id_field: interaction.user.id,
                     }
                 ),
@@ -69,9 +55,8 @@ class ReviewerCommandHandler:
             )
 
             await self.__state.messenger.review_was_claimed(
-                mission_to_update, question_to_update, question_review_channel, interaction.channel
+                mission_to_update, question_to_update, interaction.followup
             )
-            return await interaction.followup.send("Finished")
 
     async def approve_command(self, interaction: discord.Interaction, score: float):
         try:
