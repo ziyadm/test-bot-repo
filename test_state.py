@@ -85,8 +85,6 @@ def add_mission_with_scores(design_score: float, code_score: float):
                             "stage": Stage.of_string("completed"),
                             "design": "design",
                             "code": "code",
-                            "design_review": "design_review",
-                            "code_review": "code_review",
                             "design_score": design_score,
                             "code_score": code_score,
                             "start_time": str(UtcTime.now()),

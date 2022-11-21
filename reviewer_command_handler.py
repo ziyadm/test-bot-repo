@@ -224,20 +224,3 @@ class ReviewerCommandHandler:
             await self.__state.messenger.mission_rejected(
                 player, question_channel, interaction.followup
             )
-
-    @staticmethod
-    async def get_review_value(
-        mission_to_update: mission.Mission, interaction: discord.Interaction
-    ):
-        review_field = (
-            mission.Fields.design_review_field
-            if mission_to_update.fields.stage.has_value(Stage.design_review)
-            else mission.Fields.code_review_field
-        )
-        messages = [
-            message
-            async for message in interaction.channel.history()
-            if message.type == discord.MessageType.default
-        ]
-        review_value = messages[0].content
-        return review_field, review_value

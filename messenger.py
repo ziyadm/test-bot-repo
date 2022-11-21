@@ -83,7 +83,7 @@ class Messenger:
             else submit_next_step
         )
 
-        response_to_user = f"{player.mention} {base_response_to_player}\nScore: `{score}`\n\n{next_step_for_player}"
+        response_to_user = f"{player.mention} {base_response_to_player}\n{next_step_for_player}"
 
         await self.__discord_client.with_typing_time_determined_by_number_of_words(
             message=response_to_user,
@@ -98,15 +98,7 @@ class Messenger:
         question_review_channel: discord.TextChannel,
         claim_review_thread: discord.TextChannel,
     ):
-        player_submission = (
-            for_mission.fields.design
-            if for_mission.fields.stage.in_design()
-            else for_mission.fields.code
-        )
-
-        await question_review_channel.send(
-            f"Question: `{for_question.fields.description}`\nPlayer Submission: `{player_submission}`"
-        )
+        await question_review_channel.send(f"{for_mission.fields.link}")
         await claim_review_thread.send(f"Review claimed: {question_review_channel.mention}")
 
     # system functions
@@ -280,12 +272,7 @@ class Messenger:
             slowness_factor=2.5,
         )
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="2) add a section for your design where you **EXPLAIN your solution in english**...",
-            channel=message_thread,
-            slowness_factor=2.5,
-        )
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="...like you would *explain it to a coworker*...",
+            message="2) go to the Design section and **follow the instructions there**...",
             channel=message_thread,
             slowness_factor=2.5,
         )
@@ -362,14 +349,6 @@ class Messenger:
             _ = await mission_review_channel.send(
                 f"""{player.fields.discord_name} has revised and resubmitted their work. {reviewer_discord_member.mention} please review."""
             )
-            _ = await mission_review_channel.send("New submission:")
-
-            player_submission = None
-            if stage_submitted.has_value(Stage.design):
-                player_submission = updated_mission.fields.design
-            else:
-                player_submission = updated_mission.fields.code
-            _ = await mission_review_channel.send(f"""```{player_submission}```""")
         else:
             all_reviews_channel = await self.__discord_client.all_reviews_channel()
             review_message = await all_reviews_channel.send(
