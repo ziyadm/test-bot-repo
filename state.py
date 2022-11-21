@@ -15,6 +15,7 @@ from mission import Mission
 from question import Question
 from rank import Rank
 from stage import Stage
+from time_limit_config import TimeLimitConfig
 from user import User
 from utc_time import UtcTime
 
@@ -27,20 +28,14 @@ class State:
         discord_client: DiscordClient,
         google_client: GoogleClient,
         enforce_time_limits_every: datetime.timedelta,
-        design_time_limit: datetime.timedelta,
-        code_time_limit: datetime.timedelta,
-        unclaimed_review_time_limit: datetime.timedelta,
-        claimed_review_time_limit: datetime.timedelta,
+        time_limit_config: TimeLimitConfig,
     ):
         self.airtable_client = airtable_client
         self.discord_client = discord_client
         self.google_client = google_client
         self.messenger = Messenger(discord_client=discord_client)
         self.enforce_time_limits_every = enforce_time_limits_every
-        self.design_time_limit = design_time_limit
-        self.code_time_limit = code_time_limit
-        self.unclaimed_review_time_limit = unclaimed_review_time_limit
-        self.claimed_review_time_limit = claimed_review_time_limit
+        self.time_limit_config = time_limit_config
 
     async def first_unasked_question(self, for_user: User):
         existing_missions = await Mission.rows(
@@ -103,9 +98,9 @@ class State:
         where_to_follow_up: discord.TextChannel,
     ):
         if for_mission.fields.stage.has_value(Stage.design):
-            time_limit = self.design_time_limit
+            time_limit = self.time_limit_config.design
         else:
-            time_limit = self.code_time_limit
+            time_limit = self.time_limit_config.code
 
         time_remaining = max(
             time_limit - for_mission.time_in_stage(now=UtcTime.now()),
@@ -308,10 +303,10 @@ class State:
 
             if (
                 mission_to_check.fields.stage.has_value(Stage.design)
-                and time_in_stage >= self.design_time_limit
+                and time_in_stage >= self.time_limit_config.design
             ) or (
                 mission_to_check.fields.stage.has_value(Stage.code)
-                and time_in_stage >= self.code_time_limit
+                and time_in_stage >= self.time_limit_config.code
             ):
                 mission_question = await Question.row(
                     formula=pyairtable.formulas.match(
@@ -334,12 +329,12 @@ class State:
             elif (
                 mission_to_check.fields.stage.in_review()
                 and mission_to_check.fields.reviewer_discord_id is None
-                and time_in_stage >= self.unclaimed_review_time_limit
+                and time_in_stage >= self.time_limit_config.unclaimed_review
             ):
                 _ = await self.messenger.review_needs_to_be_claimed(for_mission=mission_to_check)
             elif (
                 mission_to_check.fields.stage.in_review()
-                and time_in_stage >= self.claimed_review_time_limit
+                and time_in_stage >= self.time_limit_config.claimed_review
             ):
                 _ = await self.messenger.reviewer_needs_to_review(for_mission=mission_to_check)
 

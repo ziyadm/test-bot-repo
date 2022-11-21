@@ -11,6 +11,7 @@ from google_client import GoogleClient
 from mission import Mission
 from stage import Stage
 from state import State
+from time_limit_config import TimeLimitConfig
 from user import User
 from utc_time import UtcTime
 
@@ -53,15 +54,19 @@ fake_user = User.of_dict(
 airtable_client.rows = AsyncMock(return_value=fake_missions)
 airtable_client.row = AsyncMock(return_value=fake_user)
 
+time_limit_config = TimeLimitConfig(
+    design=datetime.timedelta(minutes=10),
+    code=datetime.timedelta(minutes=20),
+    unclaimed_review=datetime.timedelta(minutes=10),
+    claimed_review=datetime.timedelta(minutes=20),
+)
+
 state = State(
     airtable_client=airtable_client,
     discord_client=discord_client,
     google_client=google_client,
     enforce_time_limits_every=datetime.timedelta(minutes=1),
-    design_time_limit=datetime.timedelta(minutes=60),
-    code_time_limit=datetime.timedelta(minutes=20),
-    unclaimed_review_time_limit=datetime.timedelta(minutes=10),
-    claimed_review_time_limit=datetime.timedelta(minutes=20),
+    time_limit_config=time_limit_config,
 )
 
 
