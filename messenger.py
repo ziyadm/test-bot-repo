@@ -74,7 +74,7 @@ class Messenger:
             else "You completed the `Design` stage.\n"
         )
 
-        score_message = f"Your score: `{score}`\n"
+        score_message = f"Your score: `{score}/10`\n"
 
         submit_command = await self.__discord_client.slash_command(
             SlashCommand(SlashCommand.submit)
