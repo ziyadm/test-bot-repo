@@ -36,7 +36,7 @@ class SlashCommand:
 
     descriptions = {
         train: "Begin a new training mission",
-        submit: "Submit your most recent message for the current stage of a training mission",
+        submit: "Submit your work for review",
         time: "Get the amount of time remaining for a training mission",
         claim: "Claim review of a mission",
         reject: "Reject a player's submission",

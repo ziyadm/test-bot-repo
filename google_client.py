@@ -71,7 +71,7 @@ class GoogleClient:
             {
                 "replaceAllText": {
                     "containsText": {"text": f"{score_field}", "matchCase": "true"},
-                    "replaceText": str(score_value),
+                    "replaceText": str(score_value) + "/10",
                 }
             }
         ]

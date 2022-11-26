@@ -81,12 +81,10 @@ class Messenger:
         )
         submit_next_step = f"Write your code (in your favorite editor), then paste your code **in the Stage 2: Code section** here: {updated_mission.fields.link}\n\nThen return here and use {submit_command.mention}"
         next_step_for_player = (
-            f"Head back to {player_path_channel.mention} to continue training."
+            f"Head back to {player_path_channel.mention} to see the results of this mission."
             if updated_mission.fields.stage.has_value(Stage.completed)
             else submit_next_step
         )
-
-        await self.maybe_send_train_command(player, player_path_channel)
 
         response_to_user = (
             f"{player.mention} {base_response_to_player}\n{score_message}\n{next_step_for_player}"
@@ -190,7 +188,7 @@ class Messenger:
             )
 
     # player functions
-    async def player_completed_stage(
+    async def mission_completed(
         self,
         user_to_update: User,
         question_channel: discord.TextChannel,
@@ -204,31 +202,29 @@ class Messenger:
         new_level = kwargs.get("new_level", None)
         evolving = kwargs.get("evolving", None)
 
+        player_discord_member = await self.__discord_client.member(
+            member_id=user_to_update.fields.discord_id
+        )
+
         lost_levels = False
         if level_delta < 0:
             lost_levels = True
 
-        level_change_blurb = "Sadly, you lost " if lost_levels else "You gained "
-
-        await question_channel.send(f"**{level_change_blurb} {level_delta}** levels!\n\n")
-
         if evolving:
-            await question_channel.send("Wait...what's happening?")
+            await path_channel.send("Wait...what's happening?")
             impressed_or_not = "not" if lost_levels else "slightly"
-            await question_channel.send(f"Suriel is {impressed_or_not} impressed...")
+            await path_channel.send(f"Suriel is {impressed_or_not} impressed...")
             evolution_prefix = "DE-" if lost_levels else ""
-            await question_channel.send(f"You are...{evolution_prefix}EVOLVING!")
+            await path_channel.send(f"You are...{evolution_prefix}EVOLVING!")
             await set_rank_callback(for_user=user_to_update, rank=current_rank)
-            await question_channel.send(
-                "Suriel sees your strength - you have advanced to the next rank."
-            )
 
-        await question_channel.send(
-            f"You are now a [{current_rank.capitalize()} lvl {new_level}].\n\nYou are now only {levels_until_evolution} levels from advancing to the next rank!"
+        level_change_blurb = "Sadly, you lost " if lost_levels else "You gained "
+        level_change_message = (
+            f"**{player_discord_member.mention} {level_change_blurb} {level_delta}** levels!"
         )
-
-        ping_user_message = await path_channel.send("@everyone")
-        await ping_user_message.delete()
+        summary_message = f"**You are now a [{current_rank.capitalize()} lvl {new_level}]**.\n\nYou are now only {levels_until_evolution} levels from advancing to the next rank!"
+        await path_channel.send(f"{level_change_message}\n\n{summary_message}")
+        await self.maybe_send_train_command(player_discord_member, path_channel)
 
     async def get_time_for_mission(
         self, time_remaining: str, where_to_follow_up: discord.TextChannel
@@ -295,7 +291,7 @@ class Messenger:
                 f"{player.mention} type {train_command.mention} to continue..."
             )
         else:
-            ping_user_message = await player_path_channel.send("@everyone")
+            ping_user_message = await player_path_channel.send(f"{player.mention}")
             await ping_user_message.delete()
 
     async def player_submitted_stage(

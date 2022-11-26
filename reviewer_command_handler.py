@@ -152,9 +152,7 @@ class ReviewerCommandHandler:
                     current_rank,
                 ) = await self.__state.get_level_changes(updated_mission)
 
-                # is just nicer to evolve them immediately after sending the message
-                # instead of before
-                await self.__state.messenger.player_completed_stage(
+                await self.__state.messenger.mission_completed(
                     user_to_update,
                     question_channel,
                     path_channel,
