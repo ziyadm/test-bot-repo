@@ -33,17 +33,20 @@ class Messenger:
     async def mission_rejected(
         self,
         player: User,
+        rejected_mission: Mission,
         player_channel: discord.TextChannel,
         review_channel: discord.TextChannel,
     ):
-        _ = await player_channel.send(f"{player.mention} your work has been reviewed by Suriel\n\n")
-
         submit_command = await self.__discord_client.slash_command(
             SlashCommand(SlashCommand.submit)
         )
-        await player_channel.send(
-            f"Review the feedback and then use {submit_command.mention} once you've updated your work"
+        which_stage_was_reviewed = (
+            "Code Review"
+            if rejected_mission.fields.stage.has_value(Stage.code_review)
+            else "Design Review"
         )
+        message_to_user = f"{player.mention} your work has been reviewed by Suriel\n\nReview the feedback (**in the {which_stage_was_reviewed} section**): {rejected_mission.fields.link}\n\nThen use {submit_command.mention} once you've updated your work"
+        _ = await player_channel.send(message_to_user)
 
         await review_channel.send("Sent review followups.")
 
@@ -76,14 +79,14 @@ class Messenger:
         submit_command = await self.__discord_client.slash_command(
             SlashCommand(SlashCommand.submit)
         )
-        submit_next_step = (
-            f"Head back to the doc and paste your code there\n\nThen use {submit_command.mention}"
-        )
+        submit_next_step = f"Write your code (in your favorite editor), then paste your code **in the Stage 2: Code section** here: {updated_mission.fields.link}\n\nThen return here and use {submit_command.mention}"
         next_step_for_player = (
             f"Head back to {player_path_channel.mention} to continue training."
             if updated_mission.fields.stage.has_value(Stage.completed)
             else submit_next_step
         )
+
+        await self.maybe_send_train_command(player, player_path_channel)
 
         response_to_user = (
             f"{player.mention} {base_response_to_player}\n{score_message}\n{next_step_for_player}"
@@ -260,25 +263,7 @@ class Messenger:
         )
 
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"{player.mention} here are your instructions",
-            channel=mission_channel,
-            slowness_factor=2.1,
-        )
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="1) go to **Stage 1: Design** and follow the instructions there...",
-            channel=mission_channel,
-            slowness_factor=2.1,
-        )
-        submit_command = await self.__discord_client.slash_command(
-            SlashCommand(SlashCommand.submit)
-        )
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"2) type {submit_command.mention} to have your work reviewed",
-            channel=mission_channel,
-            slowness_factor=2.1,
-        )
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"{link}",
+            message=f"{player.mention} go to **Stage 1: Design**: {link}",
             channel=mission_channel,
             slowness_factor=2.1,
         )
@@ -295,6 +280,23 @@ class Messenger:
 
         train_command = await self.__discord_client.slash_command(SlashCommand(SlashCommand.train))
         await path_channel.send(f"Type {train_command.mention} to begin...")
+
+    async def maybe_send_train_command(
+        self, player: discord.Member, player_path_channel: discord.TextChannel
+    ):
+        # if the last message in the path channel tells them to train: ping them with a notification
+        # otherwise, ping them and tell them to train
+        last_message = [message async for message in player_path_channel.history()][0]
+        if "to continue" not in last_message.content:
+            train_command = await self.__discord_client.slash_command(
+                SlashCommand(SlashCommand.train)
+            )
+            await player_path_channel.send(
+                f"{player.mention} type {train_command.mention} to continue..."
+            )
+        else:
+            ping_user_message = await player_path_channel.send("@everyone")
+            await ping_user_message.delete()
 
     async def player_submitted_stage(
         self,
@@ -324,8 +326,11 @@ class Messenger:
             channel=channel,
         )
 
-        ping_user_message = await player_path_channel.send("@everyone")
-        await ping_user_message.delete()
+        player_discord_member = await self.__discord_client.member(
+            member_id=player.fields.discord_id
+        )
+
+        await self.maybe_send_train_command(player_discord_member, player_path_channel)
 
         if updated_mission.fields.review_discord_channel_id is not None:
             mission_review_channel = await self.__discord_client.channel(

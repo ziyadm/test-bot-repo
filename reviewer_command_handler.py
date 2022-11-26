@@ -118,7 +118,9 @@ class ReviewerCommandHandler:
                 user_to_update.fields.discord_channel_id
             )
 
-            player = await self.__state.discord_client.member(user_to_update.fields.discord_id)
+            player_discord_member = await self.__state.discord_client.member(
+                user_to_update.fields.discord_id
+            )
 
             # 3) update the google doc with the score
             self.__state.google_client.update_document(
@@ -126,7 +128,7 @@ class ReviewerCommandHandler:
             )
 
             await self.__state.messenger.mission_approved(
-                player,
+                player_discord_member,
                 updated_mission,
                 question_channel,
                 interaction.followup,
@@ -207,5 +209,5 @@ class ReviewerCommandHandler:
             )
 
             await self.__state.messenger.mission_rejected(
-                player, question_channel, interaction.followup
+                player, mission_to_update, question_channel, interaction.followup
             )

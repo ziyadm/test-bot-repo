@@ -37,7 +37,7 @@ class GoogleClient:
             {
                 "replaceAllText": {
                     "containsText": {"text": "{{question_description}}", "matchCase": "true"},
-                    "replaceText": mission_question.fields.description,
+                    "replaceText": mission_question.fields.description.strip(),
                 }
             },
             {
