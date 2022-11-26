@@ -66,10 +66,12 @@ class Messenger:
 
         # message player
         base_response_to_player = (
-            "You completed this mission.\n"
+            "You completed the `Code` stage.\n"
             if updated_mission.fields.stage.has_value(Stage.completed)
             else "You completed the `Design` stage.\n"
         )
+
+        score_message = f"Your score: `{score}`\n"
 
         submit_command = await self.__discord_client.slash_command(
             SlashCommand(SlashCommand.submit)
@@ -83,7 +85,9 @@ class Messenger:
             else submit_next_step
         )
 
-        response_to_user = f"{player.mention} {base_response_to_player}\n{next_step_for_player}"
+        response_to_user = (
+            f"{player.mention} {base_response_to_player}\n{score_message}\n{next_step_for_player}"
+        )
 
         await self.__discord_client.with_typing_time_determined_by_number_of_words(
             message=response_to_user,
@@ -203,9 +207,7 @@ class Messenger:
 
         level_change_blurb = "Sadly, you lost " if lost_levels else "You gained "
 
-        await question_channel.send(
-            f"Your work has been recognized by Suriel.\n\n{level_change_blurb} {level_delta} levels!\n\n"
-        )
+        await question_channel.send(f"**{level_change_blurb} {level_delta}** levels!\n\n")
 
         if evolving:
             await question_channel.send("Wait...what's happening?")
@@ -248,45 +250,40 @@ class Messenger:
         guild_id: int,
         question_id: str,
         link: str,
+        training_mission: Mission,
     ):
-        message = await where_to_follow_up.send(f"""{link}""")
-
-        # There's a bug in discord.py that the owner won't fix.
-        # https://github.com/Rapptz/discord.py/issues/9008
-        message.guild = guild_id
-        message_thread = await message.create_thread(name=f"{question_id}")
-        await message_thread.add_user(player)
+        mission_channel = await self.__discord_client.channel(
+            channel_id=training_mission.fields.discord_channel_id
+        )
+        _ = await where_to_follow_up.send(
+            f"Your mission awaits: head to {mission_channel.mention} to begin."
+        )
 
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="1) read the problem",
-            channel=message_thread,
+            message=f"{player.mention} here are your instructions",
+            channel=mission_channel,
             slowness_factor=2.1,
         )
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="2) go to the Design section and **follow the instructions there**...",
-            channel=message_thread,
+            message="1) go to **Stage 1: Design** and follow the instructions there...",
+            channel=mission_channel,
             slowness_factor=2.1,
         )
         submit_command = await self.__discord_client.slash_command(
             SlashCommand(SlashCommand.submit)
         )
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message=f"3) type {submit_command.mention} to have your work reviewed",
-            channel=message_thread,
+            message=f"2) type {submit_command.mention} to have your work reviewed",
+            channel=mission_channel,
             slowness_factor=2.1,
         )
         _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="...",
-            channel=message_thread,
-            slowness_factor=2.1,
-        )
-        _ = await DiscordClient.with_typing_time_determined_by_number_of_words(
-            message="...**GO**...time is ticking...",
-            channel=message_thread,
+            message=f"{link}",
+            channel=mission_channel,
             slowness_factor=2.1,
         )
 
-        return message_thread
+        return mission_channel
 
     async def welcome_new_discord_member(
         self, *, discord_member: discord.Member, path_channel: discord.TextChannel

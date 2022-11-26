@@ -121,21 +121,17 @@ class State:
             return None
 
         question_id = mission_question.fields.question_id
+        mission_channel = await self.discord_client.create_private_channel(
+            member_id=player_discord_id,
+            channel_name=f"{question_id}",
+        )
         player = await self.discord_client.member(player_discord_id)
         link = self.google_client.create_template_instance(mission_question)
-        thread = await self.messenger.player_started_training_mission(
-            player=player,
-            channel=channel,
-            where_to_follow_up=where_to_follow_up,
-            guild_id=self.discord_client.get_guild_id(),
-            question_id=question_id,
-            link=link,
-        )
 
         now = UtcTime.now()
-        return await Mission.create(
+        training_mission = await Mission.create(
             fields=mission.Fields(
-                discord_channel_id=str(thread.id),
+                discord_channel_id=str(mission_channel.id),
                 review_discord_channel_id=None,
                 player_discord_id=player_discord_id,
                 reviewer_discord_id=None,
@@ -153,6 +149,18 @@ class State:
             ),
             airtable_client=self.airtable_client,
         )
+
+        _ = await self.messenger.player_started_training_mission(
+            player=player,
+            channel=channel,
+            where_to_follow_up=where_to_follow_up,
+            guild_id=self.discord_client.get_guild_id(),
+            question_id=question_id,
+            link=link,
+            training_mission=training_mission,
+        )
+
+        return training_mission
 
     async def update_mission(
         self,

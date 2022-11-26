@@ -120,6 +120,11 @@ class ReviewerCommandHandler:
 
             player = await self.__state.discord_client.member(user_to_update.fields.discord_id)
 
+            # 3) update the google doc with the score
+            self.__state.google_client.update_document(
+                link=updated_mission.fields.link, score_field=score_field, score_value=score
+            )
+
             await self.__state.messenger.mission_approved(
                 player,
                 updated_mission,
@@ -129,17 +134,13 @@ class ReviewerCommandHandler:
                 score,
             )
 
-            # 3) update the summary thread
-            # note: when updating the summary thread for the stage
-            # we want the previous (not newly updated) mission
+            # 4) tell player about level changes
             user_to_update = await User.row(
                 formula=pyairtable.formulas.match(
                     {user.Fields.discord_id_field: mission_to_update.fields.player_discord_id}
                 ),
                 airtable_client=self.__state.airtable_client,
             )
-
-            # 4) tell player about level changes
             if updated_mission.fields.stage.has_value(Stage.completed):
                 (
                     new_level,
@@ -149,7 +150,6 @@ class ReviewerCommandHandler:
                     current_rank,
                 ) = await self.__state.get_level_changes(updated_mission)
 
-                # TODO talk to hani about how to handle setting rank here
                 # is just nicer to evolve them immediately after sending the message
                 # instead of before
                 await self.__state.messenger.player_completed_stage(
