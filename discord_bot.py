@@ -92,6 +92,11 @@ async def register_claim_command(interaction: discord.Interaction):
     await interaction.response.defer()
     return await reviewer_command_handler.claim_command(interaction)
 
+@register_slash_command(SlashCommand(SlashCommand.prepare))
+@discord.app_commands.default_permissions(administrator=True)
+async def register_prepare_command(interaction: discord.Interaction, users_work: str):
+    await interaction.response.defer()
+    return await reviewer_command_handler.prepare_command(interaction, users_work)
 
 @register_slash_command(SlashCommand(SlashCommand.reject))
 @discord.app_commands.default_permissions(administrator=True)

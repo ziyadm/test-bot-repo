@@ -183,21 +183,13 @@ class Mission:
     # TODO make a helper for calculating time in different
     # stages (code is mostly the same)
     def time_in_design(self) -> datetime.timedelta:
-        completion_time = UtcTime.of_string(self.fields.design_completion_time)
-        start_time = UtcTime.of_string(self.fields.start_time)
-        return completion_time.diff_to_nearest_second(start_time)
+        return self.fields.design_completion_time.diff_to_nearest_second(self.fields.start_time)
 
     def time_in_design_review(self) -> datetime.timedelta:
-        completion_time = UtcTime.of_string(self.fields.design_review_completion_time)
-        start_time = UtcTime.of_string(self.fields.design_completion_time)
-        return completion_time.diff_to_nearest_second(start_time)
+        return self.fields.design_review_completion_time.diff_to_nearest_second(self.fields.design_completion_time)
 
     def time_in_code(self) -> datetime.timedelta:
-        completion_time = UtcTime.of_string(self.fields.code_completion_time)
-        start_time = UtcTime.of_string(self.fields.design_review_completion_time)
-        return completion_time.diff_to_nearest_second(start_time)
+        return self.fields.code_completion_time.diff_to_nearest_second(self.fields.design_review_completion_time)
 
     def time_in_code_review(self) -> datetime.timedelta:
-        completion_time = UtcTime.of_string(self.fields.code_review_completion_time)
-        start_time = UtcTime.of_string(self.fields.code_completion_time)
-        return completion_time.diff_to_nearest_second(start_time)
+        return self.fields.code_review_completion_time.diff_to_nearest_second(self.fields.code_completion_time)

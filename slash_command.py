@@ -9,6 +9,7 @@ class SlashCommand:
     set_rank = 7
     wipe_state = 8
     give_up = 9
+    prepare = 10
 
     all_values = [
         train,
@@ -20,6 +21,7 @@ class SlashCommand:
         set_rank,
         wipe_state,
         give_up,
+        prepare,
     ]
 
     names = {
@@ -32,6 +34,7 @@ class SlashCommand:
         set_rank: "set_rank",
         wipe_state: "wipe_state",
         give_up: "give_up",
+        prepare: "prepare",
     }
 
     descriptions = {
@@ -44,6 +47,7 @@ class SlashCommand:
         set_rank: "Set a user's rank",
         wipe_state: "Wipe the entire discord and db state",
         give_up: "Give up on this mission",
+        prepare: "Add automated feedback as review",
     }
 
     def __init__(self, value: int):

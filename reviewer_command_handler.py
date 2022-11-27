@@ -1,5 +1,7 @@
 import discord
 import pyairtable
+import textstat
+import datetime
 
 import mission
 import question
@@ -78,8 +80,8 @@ class ReviewerCommandHandler:
                 return await interaction.followup.send("""Approval already provided!""")
 
             # 1) update mission to reflect review values/scores
-            state_field = mission.Fields.stage_field
-            state_value = mission_to_update.fields.stage.next()
+            stage_field = mission.Fields.stage_field
+            stage_value = mission_to_update.fields.stage.next()
 
             score_field = (
                 mission.Fields.code_score_field
@@ -91,7 +93,7 @@ class ReviewerCommandHandler:
             updated_mission = await mission_to_update.update(
                 fields=mission_to_update.fields.immutable_updates(
                     {
-                        state_field: state_value,
+                        stage_field: stage_value,
                         score_field: score,
                         mission.Fields.entered_stage_time_field: UtcTime.now(),
                         mission.Fields.review_discord_channel_id_field: "",
@@ -123,7 +125,7 @@ class ReviewerCommandHandler:
             )
 
             # 3) update the google doc with the score
-            self.__state.google_client.update_document(
+            self.__state.google_client.approve_document(
                 link=updated_mission.fields.link, score_field=score_field, score_value=score
             )
 
@@ -164,6 +166,58 @@ class ReviewerCommandHandler:
                     levels_until_evolution=levels_until_evolution,
                 )
 
+    async def prepare_command(self, interaction: discord.Interaction, design: str):
+        try:
+            mission_to_update = await Mission.row(
+                formula=pyairtable.formulas.match(
+                    {mission.Fields.review_discord_channel_id_field: str(interaction.channel.id)}
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
+            question_to_update = await Question.row(
+                formula=pyairtable.formulas.match(
+                    {question.Fields.question_id_field: mission_to_update.fields.question_id}
+                ),
+                airtable_client=self.__state.airtable_client,
+            )
+
+        except Exception:
+            _ = await self.__state.messenger.command_cannot_be_run_here(
+                where_to_follow_up=interaction.followup,
+                expected_location=None,
+                suggested_command=None,
+            )
+            return None
+
+        # see: https://pypi.org/project/textstat/
+        # how easy is their writing to understand?
+        reading_ease = textstat.flesch_reading_ease(design)
+        sentence_count = textstat.sentence_count(design)
+        word_count = textstat.lexicon_count(design, removepunct=True)
+
+        sentences_too_long = word_count / sentence_count >= 10.0
+        hard_to_read = reading_ease < 65.0
+
+        includes_runtime = 'complexity' in design and 'time' in design
+        includes_space = 'complexity' in design and ('space' in design or 'memory' in design)
+
+        slow_to_complete = mission_to_update.time_in_design() > datetime.timedelta(minutes=20)
+
+        feedback = {
+                "sentences_too_long": sentences_too_long,
+                "hard_to_read": hard_to_read,
+                "needs_runtime": not includes_runtime,
+                "needs_space": not includes_space,
+                "slow_to_complete": slow_to_complete
+        }
+
+        self.__state.google_client.prepare_document(
+                link=mission_to_update.fields.link, feedback=feedback, question_to_prepare=question_to_update, users_work=design
+
+        )
+
+        await interaction.followup.send("Document prepared with initial (automated) review.")
+
     async def reject_command(self, interaction: discord.Interaction):
         try:
             mission_to_update = await Mission.row(
@@ -183,14 +237,14 @@ class ReviewerCommandHandler:
             if not mission_to_update.fields.stage.in_review():
                 return await interaction.followup.send("""Review already completed!""")
 
-            state_field = mission.Fields.stage_field
-            state_value = mission_to_update.fields.stage.previous()
+            stage_field = mission.Fields.stage_field
+            stage_value = mission_to_update.fields.stage.previous()
             time_field = f"{mission_to_update.fields.stage}_completion_time"
 
             await mission_to_update.update(
                 fields=mission_to_update.fields.immutable_updates(
                     {
-                        state_field: state_value,
+                        stage_field: stage_value,
                         mission.Fields.entered_stage_time_field: UtcTime.now(),
                         time_field: UtcTime.now(),
                     }
@@ -204,6 +258,12 @@ class ReviewerCommandHandler:
 
             player = await self.__state.discord_client.member(
                 mission_to_update.fields.player_discord_id
+            )
+
+            # 3) update the google doc with the score
+            self.__state.google_client.update_document(
+                    link=mission_to_update.fields.link, stage_value=str(stage_value),
+
             )
 
             await self.__state.messenger.mission_rejected(
